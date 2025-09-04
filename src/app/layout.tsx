@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { OidcProvider } from "./providers";
+
+// Cognitoの設定
+const cognitoAuthConfig = {
+  authority: "https://cognito-idp.ap-northeast-1.amazonaws.com/ap-northeast-1_IXZ6Ws2y8",
+  client_id: "3ieiqhe71jkq813kta7i1onqio",
+  redirect_uri: "https://d84l1y8p4kdic.cloudfront.net",
+  response_type: "code",
+  scope: "phone openid email",
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,11 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {/* クライアント側でAuthProviderを適用 */}
+        <OidcProvider>{children}</OidcProvider>
       </body>
     </html>
   );
