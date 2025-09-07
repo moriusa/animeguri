@@ -14,6 +14,7 @@ const cognitoAuthConfig = {
   extraQueryParams: { lang: 'ja' },
   // LocalStorageにセッション情報を保存
   userStore: new WebStorageStateStore({ store: window.localStorage }),
+  stateStore: new WebStorageStateStore({ store: window.localStorage }),
 };
 
 export function OidcProvider({ children }: { children: React.ReactNode }) {
