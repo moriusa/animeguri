@@ -10,7 +10,7 @@ const page = () => {
   //   return <p>Loading...</p>;
   // }
 
-  return <AuthForm formType="login" />;
+  return <AuthForm />;
 };
 
 export default page;
