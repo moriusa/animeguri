@@ -3,6 +3,7 @@ import {
   AuthenticationDetails,
   CognitoUser,
   CognitoUserPool,
+  CognitoUserSession,
 } from "amazon-cognito-identity-js";
 
 // ユーザープール情報(環境変数から取得)
@@ -60,13 +61,13 @@ export const getCurrentUser = (): Promise<UserInfo | null> => {
   }
 
   return new Promise((resolve, reject) => {
-    cognitoUser.getSession((err, session) => {
+    cognitoUser.getSession((err: Error, session: CognitoUserSession | null) => {
       if (err) {
         reject(err);
         return;
       }
 
-      if (!session.isValid()) {
+      if (session === null || !session.isValid()) {
         resolve(null);
         console.log("セッションが無効です");
         return;
@@ -90,4 +91,11 @@ export const getCurrentUser = (): Promise<UserInfo | null> => {
       });
     });
   });
+};
+
+export const signOut = () => {
+  const cognitoUser = userPool.getCurrentUser();
+  if (cognitoUser) {
+    cognitoUser.signOut(); // cognitoが自動的にLocalStorageをクリアする
+  }
 };
