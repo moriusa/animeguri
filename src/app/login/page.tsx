@@ -3,11 +3,11 @@
 import { useLogin } from "@/features";
 
 const Page = () => {
-  const { handleSubmit, email, pass, setEmail, setPass } = useLogin();
+  const { handleSubmit, email, pass, setEmail, setPass, isLoading } = useLogin();
 
-  // if (loading) {
-  //   return <p>Loading...</p>;
-  // }
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <form onSubmit={handleSubmit}>

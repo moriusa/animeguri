@@ -1,10 +1,11 @@
+import { UserInfo } from "@/features";
 import {
   AuthenticationDetails,
   CognitoUser,
   CognitoUserPool,
 } from "amazon-cognito-identity-js";
 
-export const signIn = (email: string, password: string) => {
+export const signIn = (email: string, password: string): Promise<UserInfo> => {
   // ユーザープール情報(環境変数から取得)
   const userPool = new CognitoUserPool({
     UserPoolId: "ap-northeast-1_IXZ6Ws2y8",
@@ -28,13 +29,22 @@ export const signIn = (email: string, password: string) => {
     cognitoUser.authenticateUser(authenticationDetails, {
       // 成功時
       onSuccess: (result) => {
+        const accessToken = result.getAccessToken().getJwtToken();
+        const idToken = result.getIdToken().getJwtToken();
         // JWTトークンをローカルストレージに保存
-        localStorage.setItem(
-          "accessToken",
-          result.getAccessToken().getJwtToken()
-        );
-        localStorage.setItem("idToken", result.getIdToken().getJwtToken());
-        resolve(result);
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("idToken", idToken);
+
+        const userInfo: UserInfo = {
+          email: email,
+          userId: result.getIdToken().payload.sub, // CognitoのユーザーID
+          accessToken: accessToken,
+          idToken: idToken,
+          // 他の情報も必要に応じて追加
+          // name: result.getIdToken().payload.name || "",
+        };
+
+        resolve(userInfo);
       },
       // 失敗時
       onFailure: (err) => {
