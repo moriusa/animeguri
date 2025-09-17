@@ -5,13 +5,13 @@ import {
   CognitoUserPool,
 } from "amazon-cognito-identity-js";
 
-export const signIn = (email: string, password: string): Promise<UserInfo> => {
-  // ユーザープール情報(環境変数から取得)
-  const userPool = new CognitoUserPool({
-    UserPoolId: "ap-northeast-1_IXZ6Ws2y8",
-    ClientId: "3ieiqhe71jkq813kta7i1onqio",
-  });
+// ユーザープール情報(環境変数から取得)
+const userPool = new CognitoUserPool({
+  UserPoolId: "ap-northeast-1_IXZ6Ws2y8",
+  ClientId: "3ieiqhe71jkq813kta7i1onqio",
+});
 
+export const signIn = (email: string, password: string): Promise<UserInfo> => {
   // ユーザーログイン情報
   const authenticationDetails = new AuthenticationDetails({
     Username: email,
@@ -31,9 +31,6 @@ export const signIn = (email: string, password: string): Promise<UserInfo> => {
       onSuccess: (result) => {
         const accessToken = result.getAccessToken().getJwtToken();
         const idToken = result.getIdToken().getJwtToken();
-        // JWTトークンをローカルストレージに保存
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("idToken", idToken);
 
         const userInfo: UserInfo = {
           email: email,
@@ -50,6 +47,47 @@ export const signIn = (email: string, password: string): Promise<UserInfo> => {
       onFailure: (err) => {
         reject(err);
       },
+    });
+  });
+};
+
+// 現在のユーザーセッションを取得
+export const getCurrentUser = (): Promise<UserInfo | null> => {
+  const cognitoUser = userPool.getCurrentUser();
+
+  if (!cognitoUser) {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.getSession((err, session) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      if (!session.isValid()) {
+        resolve(null);
+        console.log("セッションが無効です");
+        return;
+      }
+
+      // セッションが有効
+      cognitoUser.getUserAttributes((err, attributes) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const userInfo: UserInfo = {
+          email: attributes?.find((attr) => attr.Name === "email")?.Value || "",
+          userId: session.getIdToken().payload.sub,
+          accessToken: session.getAccessToken().getJwtToken(),
+          idToken: session.getIdToken().getJwtToken(),
+        };
+
+        resolve(userInfo);
+      });
     });
   });
 };
