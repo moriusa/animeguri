@@ -1,11 +1,9 @@
-'use client';
+"use client";
 
-import { AuthForm } from "../components/feature/AuthForm";
+import { AuthForm } from "../components/feature/auth/AuthForm";
 
 const page = () => {
-  return(
-    <AuthForm formType="signUp" />
-  )
-}
+  return <AuthForm formType="signUp" />;
+};
 
 export default page;
