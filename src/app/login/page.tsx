@@ -6,7 +6,6 @@ import { useLogout } from "@/features/auth/useLogout";
 const Page = () => {
   const { handleSubmit, email, pass, setEmail, setPass, isLoading } =
     useLogin();
-  const { handleLogout } = useLogout();
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -29,7 +28,6 @@ const Page = () => {
         />
         <button type="submit">送信</button>
       </form>
-      <button onClick={handleLogout}>ログアウト</button>
     </>
   );
 };

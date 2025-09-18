@@ -1,9 +1,15 @@
+"use client";
 import { FC } from "react";
-// import { Button } from "../common/Button";
 import Link from "next/link";
 import { FaSearch } from "react-icons/fa";
+import { Button } from "@/components/Button";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useLogout } from "@/features/auth/useLogout";
 
 export const Header: FC = () => {
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { handleLogout } = useLogout();
   return (
     <nav className="text-secondary">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between p-3">
@@ -12,9 +18,15 @@ export const Header: FC = () => {
         </Link>
         <div className="flex items-center gap-8">
           <FaSearch size={20} className="cursor-pointer" />
-          <Link href={"/login"}>
-            {/* <Button text="ログイン" btnColor="blown" /> */}
-          </Link>
+          {isAuthenticated ? (
+            <div onClick={handleLogout}>
+              <Button text="ログアウト" />
+            </div>
+          ) : (
+            <Link href={"/login"}>
+              <Button text="ログイン" />
+            </Link>
+          )}
         </div>
       </div>
     </nav>
