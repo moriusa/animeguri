@@ -1,8 +1,9 @@
 import { signIn } from "@/lib";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { login, UserInfo } from "./AuthSlice";
+import { login, setUserProfile, UserInfo } from "./AuthSlice";
 import { useRouter } from "next/navigation";
+import { getUserProfile } from "@/lib/userProfile";
 
 export const useLogin = () => {
   const dispatch = useDispatch();
@@ -18,10 +19,14 @@ export const useLogin = () => {
 
     try {
       // cognitoでログイン試行
-      const userInfo: UserInfo = await signIn(email, pass);
-      // ユーザー情報をReduxに保存
-      dispatch(login(userInfo));
-      console.log("login success", userInfo);
+      const cognitoUser: UserInfo = await signIn(email, pass);
+      // 認証情報をReduxに保存
+      dispatch(login(cognitoUser));
+      // DynamoDBからユーザー情報を取得
+      const userProfile = await getUserProfile(cognitoUser.idToken);
+      console.log(userProfile)
+      // Reduxにユーザー情報を保存
+      dispatch(setUserProfile(userProfile));
       router.push("/");
     } catch (err) {
       console.log(err);

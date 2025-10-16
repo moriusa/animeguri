@@ -1,7 +1,12 @@
 'use client'
+
+import { RootState } from "@/store";
+import { useSelector } from "react-redux";
+
 // import { HomeArticles } from "./components";
 
 export default function Home() {
+  const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 
 
 
@@ -24,6 +29,14 @@ export default function Home() {
   return (
     <div className="space-y-16">
       <p>aboutpage</p>
+      {userProfile ? (
+        <div>
+          <p>Name: {userProfile.Name}</p>
+          <p>User ID: {userProfile.UserId}</p>
+        </div>
+      ) : (
+        <p>No user profile</p>
+      )}
       {/* <HomeArticles type="popularArticles" />
       <HomeArticles type="followArticles" />
       <HomeArticles type="latestArticles" />
