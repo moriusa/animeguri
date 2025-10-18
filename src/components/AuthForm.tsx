@@ -1,31 +1,45 @@
-"use client";
-
-import { Button, Input } from "@/components/common";
-import { useLogin } from "@/features";
+import React from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { Button, Input } from "./common";
 import Link from "next/link";
-import { SubmitHandler, useForm } from "react-hook-form";
 
-export interface FormValues {
+interface FormValues {
   email: string;
   password: string;
 }
 
-const Page = () => {
-  const { handleLogin, isLoading } = useLogin();
+interface ButtonProps {
+  formType: "login" | "signUp";
+}
+
+export const AuthForm = ({ formType }: ButtonProps) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ mode: "onChange" });
-
+  } = useForm<FormValues>({ mode: "onBlur" });
   const onSubmit: SubmitHandler<FormValues> = (data) => {
     console.log(data);
-    handleLogin(data);
   };
+
+  const formOptions = {
+    login: {
+      title: "ログイン",
+      linkText: "会員登録はこちら",
+      linkHref: "/signUp",
+    },
+    signUp: {
+      title: "新規登録",
+      linkText: "ログインはこちら",
+      linkHref: "/login",
+    },
+  };
+
+  const { title, linkText, linkHref } = formOptions[formType];
 
   return (
     <div className="mx-auto max-w-[34rem]">
-      <h2 className="font-bold text-2xl text-center">ログイン</h2>
+      <h2 className="font-bold text-2xl text-center">{title}</h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white mt-8 py-2 border border-gray-300"
@@ -66,18 +80,14 @@ const Page = () => {
             />
           </div>
           <div className="mt-7">
-            <Button
-              text={isLoading ? "ログイン中..." : "ログイン"}
-              disabled={isLoading}
-              btnColor="blown"
-            />
+            <Button text={title} btnColor="blown" />
           </div>
         </div>
         <div className="border-t-1 border-gray-300 p-10">
-          <div className="block text-center">
-            <Link href="/signUp">
+          <div className="block mt-7 text-center">
+            <Link href={linkHref}>
               <p className="border-b-1 inline hover:opacity-80 cursor-pointer">
-                会員登録はこちら
+                {linkText}
               </p>
             </Link>
           </div>
@@ -86,5 +96,3 @@ const Page = () => {
     </div>
   );
 };
-
-export default Page;

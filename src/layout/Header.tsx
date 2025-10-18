@@ -2,7 +2,7 @@
 import { FC } from "react";
 import Link from "next/link";
 import { FaSearch } from "react-icons/fa";
-import { Button } from "@/components/Button";
+import { Button } from "@/components/common";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useLogout } from "@/features/auth/useLogout";
@@ -23,9 +23,14 @@ export const Header: FC = () => {
               <Button text="ログアウト" />
             </div>
           ) : (
-            <Link href={"/login"}>
-              <Button text="ログイン" />
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href={"/signUp"}>
+                <Button text="新規登録" btnColor="white"/>
+              </Link>
+              <Link href={"/login"}>
+                <Button text="ログイン" />
+              </Link>
+            </div>
           )}
         </div>
       </div>
