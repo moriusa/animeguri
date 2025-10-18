@@ -2,6 +2,7 @@ import { UserInfo } from "@/features";
 import {
   AuthenticationDetails,
   CognitoUser,
+  CognitoUserAttribute,
   CognitoUserPool,
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
@@ -11,6 +12,105 @@ const userPool = new CognitoUserPool({
   UserPoolId: "ap-northeast-1_IXZ6Ws2y8",
   ClientId: "3ieiqhe71jkq813kta7i1onqio",
 });
+
+export interface SignUpData {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface SignUpResult {
+  user: CognitoUser;
+  userSub: string;
+}
+
+export const signUp = (signUpData: SignUpData) => {
+  const { email, name, password } = signUpData;
+  // ユーザー属性を設定
+  const attributeList: CognitoUserAttribute[] = [];
+
+  // メールアドレス属性（必須）
+  const dataEmail = {
+    Name: "email",
+    Value: email,
+  };
+  const attributeEmail = new CognitoUserAttribute(dataEmail);
+  attributeList.push(attributeEmail);
+
+  // 名前属性（オプション）
+  if (name) {
+    const dataName = {
+      Name: "name",
+      Value: name,
+    };
+    const attributeName = new CognitoUserAttribute(dataName);
+    attributeList.push(attributeName);
+  }
+
+  return new Promise((resolve, reject) => {
+    userPool.signUp(
+      email,
+      password,
+      attributeList,
+      [], // validationData（通常は空配列）
+      (err, result) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (!result) {
+          reject(new Error("サインアップに失敗しました"));
+          return;
+        }
+
+        resolve({
+          user: result.user,
+          userSub: result.userSub,
+        });
+      }
+    );
+  });
+};
+
+// 確認コードによる認証
+export const confirmSignUp = (
+  email: string,
+  confirmationCode: string
+): Promise<string> => {
+  const cognitoUser = new CognitoUser({
+    Username: email,
+    Pool: userPool,
+  });
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.confirmRegistration(confirmationCode, true, (err, result) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(result || "SUCCESS");
+    });
+  });
+};
+
+// 確認コードの再送信
+export const resendConfirmationCode = (email: string): Promise<string> => {
+  const cognitoUser = new CognitoUser({
+    Username: email,
+    Pool: userPool,
+  });
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.resendConfirmationCode((err, result) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(result || "SUCCESS");
+    });
+  });
+};
 
 export const signIn = (email: string, password: string): Promise<UserInfo> => {
   // ユーザーログイン情報

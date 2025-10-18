@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
@@ -7,8 +7,6 @@ import { useSelector } from "react-redux";
 
 export default function Home() {
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
-
-
 
   // // ログイン済みの場合
   // if (auth.isAuthenticated) {
@@ -23,8 +21,6 @@ export default function Home() {
   //     </div>
   //   );
   // }
-
-  
 
   return (
     <div className="space-y-16">
