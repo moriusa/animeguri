@@ -3,6 +3,11 @@
 import { signUp, confirmSignUp, resendConfirmationCode } from "@/lib";
 import { useState } from "react";
 
+interface SignUpFormValues {
+  email: string;
+  password: string;
+}
+
 const Page = () => {
   const [step, setStep] = useState<"signup" | "confirm">("signup");
   const [formData, setFormData] = useState({

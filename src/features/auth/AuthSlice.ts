@@ -1,4 +1,4 @@
-import { UserProfile } from "@/lib/userProfile";
+import { User } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface UserInfo {
@@ -11,7 +11,7 @@ export interface UserInfo {
 interface AuthState {
   isAuthenticated: boolean;
   user: UserInfo | null;
-  userProfile: UserProfile | null;
+  userProfile: User | null;
 }
 
 const initialState: AuthState = {
@@ -24,7 +24,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUserProfile: (state, action: PayloadAction<UserProfile>) => {
+    setUserProfile: (state, action: PayloadAction<User>) => {
       state.userProfile = action.payload;
     },
     login: (state, action: PayloadAction<UserInfo>) => {

@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { login, setUserProfile, UserInfo } from "./AuthSlice";
 import { useRouter } from "next/navigation";
 import { getUserProfile } from "@/lib/userProfile";
-import { FormValues } from "@/app/login/page";
+import { LoginFormValues } from "@/app/login/page";
 
 export const useLogin = () => {
   const dispatch = useDispatch();
@@ -12,9 +12,8 @@ export const useLogin = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (v: FormValues) => {
+  const handleLogin = async (v: LoginFormValues) => {
     setIsLoading(true);
-
     try {
       // cognitoでログイン試行
       const cognitoUser: UserInfo = await signIn(v.email, v.password);

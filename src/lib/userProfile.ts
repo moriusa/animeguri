@@ -1,11 +1,8 @@
+import { User } from "@/types";
+
 const API_ENDPOINT = "https://x44nkd1cc1.execute-api.ap-northeast-1.amazonaws.com";
 
-export interface UserProfile {
-  UserId: string;
-  Name: string;
-}
-
-export const getUserProfile = async (idToken: string): Promise<UserProfile> => {
+export const getUserProfile = async (idToken: string): Promise<User> => {
   const response = await fetch(`${API_ENDPOINT}/user`, {
     method: "GET",
     headers: {

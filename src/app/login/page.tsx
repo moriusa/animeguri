@@ -5,7 +5,7 @@ import { useLogin } from "@/features";
 import Link from "next/link";
 import { SubmitHandler, useForm } from "react-hook-form";
 
-export interface FormValues {
+export interface LoginFormValues {
   email: string;
   password: string;
 }
@@ -16,9 +16,9 @@ const Page = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ mode: "onChange" });
+  } = useForm<LoginFormValues>({ mode: "onChange" });
 
-  const onSubmit: SubmitHandler<FormValues> = (data) => {
+  const onSubmit: SubmitHandler<LoginFormValues> = (data) => {
     console.log(data);
     handleLogin(data);
   };
@@ -39,10 +39,6 @@ const Page = () => {
             register={register}
             validation={{
               required: "メールアドレスは必須です",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "正しいメールアドレスを入力してください",
-              },
             }}
             error={errors.email?.message}
           />
@@ -56,10 +52,6 @@ const Page = () => {
               register={register}
               validation={{
                 required: "パスワードは必須です",
-                minLength: {
-                  value: 6,
-                  message: "パスワードは6文字以上で入力してください",
-                },
               }}
               error={errors.password?.message}
               mask={true}
