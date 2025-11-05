@@ -28,9 +28,9 @@ export default function Home() {
       <p>aboutpage</p>
       {userProfile ? (
         <div>
-          <p>Name: {userProfile.Name}</p>
-          <p>User ID: {userProfile.UserId}</p>
-          <p>imageURL: {userProfile.profileImageUrl}</p>
+          <p>Name: {userProfile.userName}</p>
+          <p>User ID: {userProfile.userId}</p>
+          <p>imageURL: {userProfile.profileImgUrl}</p>
         </div>
       ) : (
         <p>No user profile</p>

@@ -1,3 +1,4 @@
+import { SignUpFormValues } from "@/app/signUp/page";
 import { UserInfo } from "@/features";
 import {
   AuthenticationDetails,
@@ -13,19 +14,13 @@ const userPool = new CognitoUserPool({
   ClientId: "3ieiqhe71jkq813kta7i1onqio",
 });
 
-export interface SignUpData {
-  email: string;
-  password: string;
-  name: string;
-}
-
 export interface SignUpResult {
   user: CognitoUser;
   userSub: string;
 }
 
-export const signUp = (signUpData: SignUpData) => {
-  const { email, name, password } = signUpData;
+export const signUp = (signUpData: SignUpFormValues): Promise<SignUpResult> => {
+  const { email, password } = signUpData;
   // ユーザー属性を設定
   const attributeList: CognitoUserAttribute[] = [];
 
@@ -38,14 +33,14 @@ export const signUp = (signUpData: SignUpData) => {
   attributeList.push(attributeEmail);
 
   // 名前属性（オプション）
-  if (name) {
-    const dataName = {
-      Name: "name",
-      Value: name,
-    };
-    const attributeName = new CognitoUserAttribute(dataName);
-    attributeList.push(attributeName);
-  }
+  // if (name) {
+  //   const dataName = {
+  //     Name: "name",
+  //     Value: name,
+  //   };
+  //   const attributeName = new CognitoUserAttribute(dataName);
+  //   attributeList.push(attributeName);
+  // }
 
   return new Promise((resolve, reject) => {
     userPool.signUp(

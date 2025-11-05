@@ -1,132 +1,141 @@
 "use client";
 
-import { signUp, confirmSignUp, resendConfirmationCode } from "@/lib";
-import { useState } from "react";
+import { Button, Input } from "@/components/common";
+import { useSignUp } from "@/features";
+import Link from "next/link";
+import { SubmitHandler, useForm } from "react-hook-form";
 
-interface SignUpFormValues {
+export interface SignUpFormValues {
   email: string;
   password: string;
+  confirmationCode?: string;
 }
 
 const Page = () => {
-  const [step, setStep] = useState<"signup" | "confirm">("signup");
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    name: "",
-    confirmationCode: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      await signUp({
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-      });
-
-      setStep("confirm");
-      alert("確認コードをメールに送信しました");
-    } catch (err: any) {
-      setError(err.message || "サインアップに失敗しました");
-    } finally {
-      setLoading(false);
-    }
+  const {
+    isLoading,
+    error,
+    step,
+    handleSignUp,
+    handleConfirmSignUp,
+    handleResendCode,
+  } = useSignUp();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpFormValues>({ mode: "onChange" });
+  const onSubmit: SubmitHandler<SignUpFormValues> = (data) => {
+    console.log(data);
+    handleSignUp(data);
   };
-
-  const handleConfirmSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      await confirmSignUp(formData.email, formData.confirmationCode);
-      alert("アカウントが正常に作成されました");
-      // ログインページにリダイレクト
-    } catch (err: any) {
-      setError(err.message || "確認コードの検証に失敗しました");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    try {
-      await resendConfirmationCode(formData.email);
-      alert("確認コードを再送信しました");
-    } catch (err: any) {
-      setError(err.message || "再送信に失敗しました");
-    }
+  const onConfirmSubmit: SubmitHandler<SignUpFormValues> = (data) => {
+    handleConfirmSignUp(data);
   };
 
   if (step === "confirm") {
     return (
-      <form onSubmit={handleConfirmSignUp}>
-        <h2>メール確認</h2>
-        <p>メールに送信された確認コードを入力してください</p>
+      <div className="mx-auto max-w-[34rem]">
+        <h2 className="font-bold text-2xl text-center">メール確認</h2>
+        <form
+          onSubmit={handleSubmit(onConfirmSubmit)}
+          className="bg-white mt-8 py-2 border border-gray-300"
+        >
+          <div className="p-10">
+            <p className="mb-4">
+              メールに送信された確認コードを入力してください
+            </p>
 
-        <input
-          type="text"
-          placeholder="確認コード"
-          value={formData.confirmationCode}
-          onChange={(e) =>
-            setFormData({ ...formData, confirmationCode: e.target.value })
-          }
-          required
-        />
+            <Input
+              id="confirmationCode"
+              text="確認コード"
+              type="text"
+              name="confirmationCode"
+              register={register}
+              validation={{
+                required: "確認コードは必須です",
+              }}
+              error={errors.confirmationCode?.message}
+            />
 
-        <button type="submit" disabled={loading}>
-          {loading ? "確認中..." : "確認"}
-        </button>
+            <div className="mt-7">
+              <Button
+                text={isLoading ? "確認中..." : "確認"}
+                disabled={isLoading}
+                btnColor="blown"
+              />
+            </div>
 
-        <button type="button" onClick={handleResendCode}>
-          確認コードを再送信
-        </button>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleResendCode}
+                className="text-blue-600 hover:underline"
+              >
+                確認コードを再送信
+              </button>
+            </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </form>
+            {error && <p className="text-red-500 mt-2">{error}</p>}
+          </div>
+        </form>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSignUp}>
-      <h2>サインアップ</h2>
+    <div className="mx-auto max-w-[34rem]">
+      <h2 className="font-bold text-2xl text-center">会員登録</h2>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white mt-8 py-2 border border-gray-300"
+      >
+        <div className="p-10">
+          <Input
+            id="email"
+            text="メールアドレス"
+            type="email"
+            name="email"
+            register={register}
+            validation={{
+              required: "メールアドレスは必須です",
+            }}
+            error={errors.email?.message}
+          />
 
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        required
-      />
-
-      <input
-        type="password"
-        placeholder="パスワード"
-        value={formData.password}
-        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-        required
-      />
-
-      <input
-        type="text"
-        placeholder="名前（オプション）"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-      />
-
-      <button type="submit" disabled={loading}>
-        {loading ? "サインアップ中..." : "サインアップ"}
-      </button>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-    </form>
+          <div className="mt-7 flex items-center">
+            <Input
+              id="password"
+              text="パスワード"
+              type="password"
+              name="password"
+              register={register}
+              validation={{
+                required: "パスワードは必須です",
+              }}
+              error={errors.password?.message}
+              mask={true}
+            />
+          </div>
+          <div className="mt-7">
+            <Button
+              text={isLoading ? "登録中..." : "登録"}
+              disabled={isLoading}
+              btnColor="blown"
+            />
+          </div>
+        </div>
+        <div className="border-t-1 border-gray-300 p-10">
+          <div className="block text-center">
+            <Link href="/login">
+              <p className="border-b-1 inline hover:opacity-80 cursor-pointer">
+                ログインはこちら
+              </p>
+            </Link>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };
 
