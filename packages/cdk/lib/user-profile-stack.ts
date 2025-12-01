@@ -61,6 +61,20 @@ export class UserProfileStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const createUserFn = new NodejsFunction(this, "CreateUserFn", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/createUser/index.ts"),
+      functionName: "animeguri-create-user",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: userImagesBucket.bucketName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
     // API Gateway
     const api = new apigwv2.HttpApi(this, "UserProfileHttpApi", {
       apiName: "animeguri-api",
@@ -80,16 +94,29 @@ export class UserProfileStack extends cdk.Stack {
       getUserFn
     );
 
-    // ルート定義（GET /user）
+    const createUserIntegration = new integrations.HttpLambdaIntegration(
+      "CreateUserIntegration",
+      createUserFn
+    );
+
+    // ルート定義
     api.addRoutes({
       path: "/user/{userId}",
       methods: [apigwv2.HttpMethod.GET],
       integration: getUserIntegration,
     });
 
+    api.addRoutes({
+      path: "/user",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: createUserIntegration,
+    });
+
     // ParamStore読み取り許可
     supabaseUrlParam.grantRead(getUserFn);
     supabaseAnonKeyParam.grantRead(getUserFn);
+    supabaseUrlParam.grantRead(createUserFn);
+    supabaseAnonKeyParam.grantRead(createUserFn);
     // s3読み書き許可
     userImagesBucket.grantReadWrite(getUserFn);
   }
