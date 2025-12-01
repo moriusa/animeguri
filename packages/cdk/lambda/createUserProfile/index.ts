@@ -1,7 +1,11 @@
-import { APIGatewayProxyEventV2 } from "aws-lambda";
+import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
 
-export const handler = async (event: APIGatewayProxyEventV2) => {
+export const handler = async (
+  event: APIGatewayProxyEventV2WithJWTAuthorizer
+) => {
+  const sub = event.requestContext.authorizer.jwt.claims.sub as string;
+  const email = event.requestContext.authorizer.jwt.claims.email as string;
   try {
     console.log("Event:", JSON.stringify(event, null, 2));
 
@@ -25,7 +29,8 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
       };
     }
 
-    const { id, email, user_name, bio, user_image_key } = payload;
+    const id = sub;
+    const { user_name } = payload;
 
     // 必須項目チェック（必要に応じて調整）
     if (!id || !email || !user_name) {
@@ -72,8 +77,6 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
         id,
         email,
         user_name,
-        bio: bio ?? null,
-        user_image_key: user_image_key ?? null,
       })
       .select("*")
       .single();

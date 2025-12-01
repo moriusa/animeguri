@@ -1,17 +1,34 @@
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
-import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 import * as path from "path";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Duration } from "aws-cdk-lib";
+import { HttpUserPoolAuthorizer } from "@aws-cdk/aws-apigatewayv2-authorizers-alpha";
+import * as cognito from "aws-cdk-lib/aws-cognito";
+import {
+  HttpApi,
+  HttpMethod,
+  CorsHttpMethod,
+} from "@aws-cdk/aws-apigatewayv2-alpha";
+import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
 export class UserProfileStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // cognito UserPool
+    const userPool = new cognito.UserPool(this, "UserPool", {
+      userPoolName: "animeguri-user-pool",
+      selfSignUpEnabled: true,
+      signInAliases: { email: true },
+    });
+
+    const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+      userPool,
+    });
 
     // S3(ユーザープロフィール画像) https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html
     const userImagesBucket = new s3.Bucket(this, "UserImagesBucket", {
@@ -64,7 +81,7 @@ export class UserProfileStack extends cdk.Stack {
     const createUserFn = new NodejsFunction(this, "CreateUserFn", {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/createUser/index.ts"),
+      entry: path.join(__dirname, "../lambda/createUserProfile/index.ts"),
       functionName: "animeguri-create-user",
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
@@ -76,25 +93,35 @@ export class UserProfileStack extends cdk.Stack {
     });
 
     // API Gateway
-    const api = new apigwv2.HttpApi(this, "UserProfileHttpApi", {
+    const api = new HttpApi(this, "UserProfileHttpApi", {
       apiName: "animeguri-api",
       description: "This service serves user profiles.",
       corsPreflight: {
         allowOrigins: ["*"], // 本番はドメインを絞る
         allowMethods: [
-          apigwv2.CorsHttpMethod.GET,
-          apigwv2.CorsHttpMethod.OPTIONS,
+          CorsHttpMethod.GET,
+          CorsHttpMethod.POST,
+          CorsHttpMethod.OPTIONS,
         ],
       },
     });
 
+    // cognito authorizer
+    const authorizer = new HttpUserPoolAuthorizer(
+      "UserPoolAuthorizer",
+      userPool,
+      {
+        userPoolClients: [userPoolClient],
+      }
+    );
+
     // Lambda 統合
-    const getUserIntegration = new integrations.HttpLambdaIntegration(
+    const getUserIntegration = new HttpLambdaIntegration(
       "GetUserIntegration",
       getUserFn
     );
 
-    const createUserIntegration = new integrations.HttpLambdaIntegration(
+    const createUserIntegration = new HttpLambdaIntegration(
       "CreateUserIntegration",
       createUserFn
     );
@@ -102,14 +129,15 @@ export class UserProfileStack extends cdk.Stack {
     // ルート定義
     api.addRoutes({
       path: "/user/{userId}",
-      methods: [apigwv2.HttpMethod.GET],
+      methods: [HttpMethod.GET],
       integration: getUserIntegration,
     });
 
     api.addRoutes({
-      path: "/user",
-      methods: [apigwv2.HttpMethod.POST],
+      path: "/user/me",
+      methods: [HttpMethod.POST],
       integration: createUserIntegration,
+      authorizer,
     });
 
     // ParamStore読み取り許可
