@@ -15,60 +15,25 @@ import {
 } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
+interface UserProfileStackProps extends cdk.StackProps {
+  userPool: cognito.IUserPool;
+  userPoolClient: cognito.IUserPoolClient;
+  supabaseUrlParam: ssm.IStringParameter;
+  supabaseAnonKeyParam: ssm.IStringParameter;
+  userImagesBucket: s3.IBucket;
+}
+
 export class UserProfileStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: UserProfileStackProps) {
     super(scope, id, props);
 
-    // cognito UserPool
-    const userPool = new cognito.UserPool(this, "UserPool", {
-      userPoolName: "animeguri-user-pool",
-      selfSignUpEnabled: true,
-      signInAliases: { email: true },
-      passwordPolicy: {
-        minLength: 8,
-        requireLowercase: true,
-        requireUppercase: true,
-        requireDigits: true,
-        requireSymbols: false,
-      },
-    });
-
-    const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+    const {
       userPool,
-    });
-
-    // S3(ユーザープロフィール画像) https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_s3.Bucket.html
-    const userImagesBucket = new s3.Bucket(this, "UserImagesBucket", {
-      bucketName: `animeguri-user-images`,
-      versioned: false,
-      publicReadAccess: false,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      cors: [
-        {
-          allowedMethods: [
-            s3.HttpMethods.GET,
-            s3.HttpMethods.POST,
-            s3.HttpMethods.PUT,
-          ],
-          allowedOrigins: ["*"], // 本番では特定のドメインに限定
-          allowedHeaders: ["*"], // 本番では特定のヘッダーに限定した方がよさそ
-        },
-      ],
-    });
-
-    // ParameterStoreにSupabaseの認証情報作成
-    const supabaseUrlParam = new ssm.StringParameter(this, "supabaseUrl", {
-      parameterName: "/animeguri/supabase/url",
-      stringValue: "CHANGE_AFTER_DEPLOY", // デプロイ後に手動で変更する
-    });
-    const supabaseAnonKeyParam = new ssm.StringParameter(
-      this,
-      "supabaseAnonKey",
-      {
-        parameterName: "/animeguri/supabase/anon-key",
-        stringValue: "CHANGE_AFTER_DEPLOY", // デプロイ後に手動で変更する
-      }
-    );
+      userPoolClient,
+      supabaseUrlParam,
+      supabaseAnonKeyParam,
+      userImagesBucket,
+    } = props;
 
     // lambda関数
     const getPublicUserFn = new NodejsFunction(this, "GetPublicUserFn", {
