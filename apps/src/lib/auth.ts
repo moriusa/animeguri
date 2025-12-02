@@ -10,8 +10,8 @@ import {
 
 // ユーザープール情報(環境変数から取得)
 const userPool = new CognitoUserPool({
-  UserPoolId: "ap-northeast-1_IXZ6Ws2y8",
-  ClientId: "3ieiqhe71jkq813kta7i1onqio",
+  UserPoolId: "ap-northeast-1_ZyF0iAGIL",
+  ClientId: "2b803qm157j116gp379nn1cmqk",
 });
 
 export interface SignUpResult {
@@ -32,15 +32,6 @@ export const signUp = (signUpData: SignUpFormValues): Promise<SignUpResult> => {
   const attributeEmail = new CognitoUserAttribute(dataEmail);
   attributeList.push(attributeEmail);
 
-  // 名前属性（オプション）
-  // if (name) {
-  //   const dataName = {
-  //     Name: "name",
-  //     Value: name,
-  //   };
-  //   const attributeName = new CognitoUserAttribute(dataName);
-  //   attributeList.push(attributeName);
-  // }
 
   return new Promise((resolve, reject) => {
     userPool.signUp(
@@ -133,8 +124,6 @@ export const signIn = (email: string, password: string): Promise<UserInfo> => {
           userId: result.getIdToken().payload.sub, // CognitoのユーザーID
           accessToken: accessToken,
           idToken: idToken,
-          // 他の情報も必要に応じて追加
-          // name: result.getIdToken().payload.name || "",
         };
 
         resolve(userInfo);

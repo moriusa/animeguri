@@ -19,7 +19,7 @@ export const useLogin = () => {
       const cognitoUser: UserInfo = await signIn(v.email, v.password);
       // 認証情報をReduxに保存
       dispatch(login(cognitoUser));
-      // DynamoDBからユーザー情報を取得
+      // DBからユーザー情報を取得
       const userProfile = await getUserProfile(cognitoUser.idToken);
       console.log(userProfile)
       // Reduxにユーザー情報を保存

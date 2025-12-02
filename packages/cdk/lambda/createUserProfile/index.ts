@@ -6,34 +6,12 @@ export const handler = async (
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
   const email = event.requestContext.authorizer.jwt.claims.email as string;
+  const defaultUserName = `user_${sub.slice(0, 8)}`;
   try {
     console.log("Event:", JSON.stringify(event, null, 2));
 
-    if (!event.body) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "Request body is required" }),
-      };
-    }
-
-    // JSON パース
-    let payload: any;
-    try {
-      payload = JSON.parse(event.body);
-    } catch {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "Invalid JSON" }),
-      };
-    }
-
-    const id = sub;
-    const { user_name } = payload;
-
     // 必須項目チェック（必要に応じて調整）
-    if (!id || !email || !user_name) {
+    if (!sub || !email) {
       return {
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
@@ -49,7 +27,7 @@ export const handler = async (
     const { data: existing, error: existingError } = await supabase
       .from("users")
       .select("id")
-      .eq("id", id)
+      .eq("id", sub)
       .maybeSingle();
 
     if (existingError) {
@@ -74,9 +52,9 @@ export const handler = async (
     const { data, error } = await supabase
       .from("users")
       .insert({
-        id,
+        id: sub,
         email,
-        user_name,
+        user_name: defaultUserName,
       })
       .select("*")
       .single();

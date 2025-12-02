@@ -30,6 +30,7 @@ export const Button: FC<ButtonProps> = ({
   return (
     <button
       className={`${color} rounded-md p-2 w-full font-bold ${disabledStyle}`}
+      disabled={disabled}
       {...props}
     >
       {text}

@@ -1,8 +1,9 @@
 import { SignUpFormValues } from "@/app/signUp/page";
-import { confirmSignUp, resendConfirmationCode, signUp } from "@/lib";
+import { confirmSignUp, resendConfirmationCode, signIn, signUp } from "@/lib";
 import { createUserProfile } from "@/lib/userProfile";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { UserInfo } from "./AuthSlice";
 
 export const useSignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,23 +11,20 @@ export const useSignUp = () => {
   const [step, setStep] = useState<"signup" | "confirm">("signup");
   // emailだけ確認コードのために別で状態管理しとく
   const [email, setEmail] = useState("");
-  // DB保存のためにid取得
-  const [cognitoUserId, setCognitoUserId] = useState('');
   const router = useRouter();
 
   // cognitoでサインアップ
   const handleSignUp = async (v: SignUpFormValues) => {
+    if (isLoading) return; // ★ 二重クリック対策
     setIsLoading(true);
     setError("");
     try {
       setEmail(v.email);
-      const result = await signUp({
+      await signUp({
         email: v.email,
         password: v.password,
       });
       setStep("confirm");
-      // signUpのレスポンスにuserIdが含まれている
-      setCognitoUserId(result.userSub);
       alert("確認コードをメールに送信しました");
     } catch (err: any) {
       setError(err.message || "サインアップに失敗しました");
@@ -45,8 +43,12 @@ export const useSignUp = () => {
       if (!v.confirmationCode) {
         throw new Error("確認コードが入力されていません");
       }
-      await createUserProfile(v, cognitoUserId);
+      // 1. サインアップ検証
       await confirmSignUp(v.email, v.confirmationCode);
+      // 2. ログインしてidToken取得(cognito)
+      const cognitoUser: UserInfo = await signIn(v.email, v.password);
+      // 3. idTokenを使用してAPI叩く
+      await createUserProfile(cognitoUser.idToken);
       alert("アカウントが正常に作成されました");
       router.push("/login");
     } catch (err: any) {

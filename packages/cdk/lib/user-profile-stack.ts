@@ -24,6 +24,13 @@ export class UserProfileStack extends cdk.Stack {
       userPoolName: "animeguri-user-pool",
       selfSignUpEnabled: true,
       signInAliases: { email: true },
+      passwordPolicy: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireDigits: true,
+        requireSymbols: false,
+      },
     });
 
     const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
@@ -64,11 +71,25 @@ export class UserProfileStack extends cdk.Stack {
     );
 
     // lambda関数
-    const getUserFn = new NodejsFunction(this, "GetUserFn", {
+    const getPublicUserFn = new NodejsFunction(this, "GetPublicUserFn", {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/getUserProfile/index.ts"),
-      functionName: "animeguri-get-user",
+      entry: path.join(__dirname, "../lambda/getPublicUserProfile/index.ts"),
+      functionName: "animeguri-get-public-user",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: userImagesBucket.bucketName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const getMeFn = new NodejsFunction(this, "GetMeFn", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getMyProfile/index.ts"),
+      functionName: "animeguri-get-my-profile",
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
@@ -97,6 +118,7 @@ export class UserProfileStack extends cdk.Stack {
       apiName: "animeguri-api",
       description: "This service serves user profiles.",
       corsPreflight: {
+        allowHeaders: ["Content-Type", "Authorization"],
         allowOrigins: ["*"], // 本番はドメインを絞る
         allowMethods: [
           CorsHttpMethod.GET,
@@ -118,7 +140,12 @@ export class UserProfileStack extends cdk.Stack {
     // Lambda 統合
     const getUserIntegration = new HttpLambdaIntegration(
       "GetUserIntegration",
-      getUserFn
+      getPublicUserFn
+    );
+
+    const getMeIntegration = new HttpLambdaIntegration(
+      "GetMeIntegration",
+      getMeFn
     );
 
     const createUserIntegration = new HttpLambdaIntegration(
@@ -135,17 +162,27 @@ export class UserProfileStack extends cdk.Stack {
 
     api.addRoutes({
       path: "/user/me",
+      methods: [HttpMethod.GET],
+      integration: getMeIntegration,
+      authorizer, // Cognito UserPool Authorizer
+    });
+
+    api.addRoutes({
+      path: "/user/me",
       methods: [HttpMethod.POST],
       integration: createUserIntegration,
       authorizer,
     });
 
     // ParamStore読み取り許可
-    supabaseUrlParam.grantRead(getUserFn);
-    supabaseAnonKeyParam.grantRead(getUserFn);
+    supabaseUrlParam.grantRead(getPublicUserFn);
+    supabaseAnonKeyParam.grantRead(getPublicUserFn);
+    supabaseUrlParam.grantRead(getMeFn);
+    supabaseAnonKeyParam.grantRead(getMeFn);
     supabaseUrlParam.grantRead(createUserFn);
     supabaseAnonKeyParam.grantRead(createUserFn);
-    // s3読み書き許可
-    userImagesBucket.grantReadWrite(getUserFn);
+    // s3読み許可
+    userImagesBucket.grantRead(getPublicUserFn);
+    userImagesBucket.grantReadWrite(getMeFn);
   }
 }
