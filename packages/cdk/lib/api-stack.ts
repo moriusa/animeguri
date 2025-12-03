@@ -15,16 +15,16 @@ import {
 } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
-interface UserProfileStackProps extends cdk.StackProps {
+interface ApiStackProps extends cdk.StackProps {
   userPool: cognito.IUserPool;
   userPoolClient: cognito.IUserPoolClient;
   supabaseUrlParam: ssm.IStringParameter;
   supabaseAnonKeyParam: ssm.IStringParameter;
-  userImagesBucket: s3.IBucket;
+  imagesBucket: s3.IBucket;
 }
 
-export class UserProfileStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: UserProfileStackProps) {
+export class ApiStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
     const {
@@ -32,7 +32,7 @@ export class UserProfileStack extends cdk.Stack {
       userPoolClient,
       supabaseUrlParam,
       supabaseAnonKeyParam,
-      userImagesBucket,
+      imagesBucket,
     } = props;
 
     // lambda関数
@@ -44,7 +44,7 @@ export class UserProfileStack extends cdk.Stack {
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-        S3_BUCKET_NAME: userImagesBucket.bucketName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -58,7 +58,7 @@ export class UserProfileStack extends cdk.Stack {
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-        S3_BUCKET_NAME: userImagesBucket.bucketName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -72,25 +72,24 @@ export class UserProfileStack extends cdk.Stack {
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-        S3_BUCKET_NAME: userImagesBucket.bucketName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
     });
 
-    // API Gateway
-    const api = new HttpApi(this, "UserProfileHttpApi", {
-      apiName: "animeguri-api",
-      description: "This service serves user profiles.",
-      corsPreflight: {
-        allowHeaders: ["Content-Type", "Authorization"],
-        allowOrigins: ["*"], // 本番はドメインを絞る
-        allowMethods: [
-          CorsHttpMethod.GET,
-          CorsHttpMethod.POST,
-          CorsHttpMethod.OPTIONS,
-        ],
+    const getListArticles = new NodejsFunction(this, "GetListArticles", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getListArticles/index.ts"),
+      functionName: "animeguri-get-articles",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
       },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
     });
 
     // cognito authorizer
@@ -118,6 +117,25 @@ export class UserProfileStack extends cdk.Stack {
       createUserFn
     );
 
+    const getListArticlesIntegration = new HttpLambdaIntegration(
+      "GetListArticlesIntegration",
+      getListArticles
+    );
+
+    // API Gateway
+    const api = new HttpApi(this, "AnimeguriApi", {
+      apiName: "animeguri-api",
+      corsPreflight: {
+        allowHeaders: ["Content-Type", "Authorization"],
+        allowOrigins: ["*"], // 本番はドメインを絞る
+        allowMethods: [
+          CorsHttpMethod.GET,
+          CorsHttpMethod.POST,
+          CorsHttpMethod.OPTIONS,
+        ],
+      },
+    });
+
     // ルート定義
     api.addRoutes({
       path: "/user/{userId}",
@@ -139,6 +157,12 @@ export class UserProfileStack extends cdk.Stack {
       authorizer,
     });
 
+    api.addRoutes({
+      path: "/articles",
+      methods: [HttpMethod.GET],
+      integration: getListArticlesIntegration,
+    });
+
     // ParamStore読み取り許可
     supabaseUrlParam.grantRead(getPublicUserFn);
     supabaseAnonKeyParam.grantRead(getPublicUserFn);
@@ -146,8 +170,11 @@ export class UserProfileStack extends cdk.Stack {
     supabaseAnonKeyParam.grantRead(getMeFn);
     supabaseUrlParam.grantRead(createUserFn);
     supabaseAnonKeyParam.grantRead(createUserFn);
+    supabaseUrlParam.grantRead(getListArticles);
+    supabaseAnonKeyParam.grantRead(getListArticles);
     // s3読み許可
-    userImagesBucket.grantRead(getPublicUserFn);
-    userImagesBucket.grantReadWrite(getMeFn);
+    imagesBucket.grantRead(getPublicUserFn);
+    imagesBucket.grantReadWrite(getMeFn);
+    imagesBucket.grantRead(getListArticles);
   }
 }

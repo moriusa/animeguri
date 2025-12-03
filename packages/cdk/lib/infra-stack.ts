@@ -3,14 +3,15 @@ import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
+import { CorsHttpMethod, HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
 
-export class CoreStack extends cdk.Stack {
+export class InfraStack extends cdk.Stack {
   // 他スタックから使うために public に出す
   public readonly userPool: cognito.UserPool;
   public readonly userPoolClient: cognito.UserPoolClient;
   public readonly supabaseUrlParam: ssm.IStringParameter;
   public readonly supabaseAnonKeyParam: ssm.IStringParameter;
-  public readonly userImagesBucket: s3.Bucket;
+  public readonly imagesBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -34,9 +35,9 @@ export class CoreStack extends cdk.Stack {
     });
 
     // S3 (ユーザープロフィール画像)
-    this.userImagesBucket = new s3.Bucket(this, "UserImagesBucket", {
+    this.imagesBucket = new s3.Bucket(this, "ImagesBucket", {
       // bucketName は省略でも可（CDK に任せる方が安全）
-      bucketName: `animeguri-user-images`,
+      bucketName: `animeguri-images`,
       versioned: false,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,

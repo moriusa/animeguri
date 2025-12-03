@@ -1,24 +1,22 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import { UserProfileStack } from '../lib/user-profile-stack';
-import { CoreStack } from "../lib/core-stack";
+import { ApiStack } from "../lib/api-stack";
+import { InfraStack } from "../lib/infra-stack";
 
 const app = new cdk.App();
 
-const core = new CoreStack(app, "CoreStack", {
+const infra = new InfraStack(app, "InfraStack", {
   env: { account: "661303382183", region: "ap-northeast-1" }, // 必要に応じて
 });
 
-
-new UserProfileStack(app, 'UserProfileStack', {
+new ApiStack(app, "ApiStack", {
   env: {
-    account: '661303382183',
-    region: 'ap-northeast-1',
+    account: "661303382183",
+    region: "ap-northeast-1",
   },
-  userPool: core.userPool,
-  userPoolClient: core.userPoolClient,
-  supabaseUrlParam: core.supabaseUrlParam,
-  supabaseAnonKeyParam: core.supabaseAnonKeyParam,
-  userImagesBucket: core.userImagesBucket,
-
+  userPool: infra.userPool,
+  userPoolClient: infra.userPoolClient,
+  supabaseUrlParam: infra.supabaseUrlParam,
+  supabaseAnonKeyParam: infra.supabaseAnonKeyParam,
+  imagesBucket: infra.imagesBucket,
 });
