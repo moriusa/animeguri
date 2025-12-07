@@ -82,7 +82,21 @@ export class ApiStack extends cdk.Stack {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/getListArticles/index.ts"),
-      functionName: "animeguri-get-articles",
+      functionName: "animeguri-get-list-articles",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const getArticle = new NodejsFunction(this, "GetArticle", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getArticle/index.ts"),
+      functionName: "animeguri-get-article",
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
@@ -120,6 +134,11 @@ export class ApiStack extends cdk.Stack {
     const getListArticlesIntegration = new HttpLambdaIntegration(
       "GetListArticlesIntegration",
       getListArticles
+    );
+
+    const getArticleIntegration = new HttpLambdaIntegration(
+      "GetArticleIntegration",
+      getArticle
     );
 
     // API Gateway
@@ -163,6 +182,12 @@ export class ApiStack extends cdk.Stack {
       integration: getListArticlesIntegration,
     });
 
+    api.addRoutes({
+      path: "/articles/{id}",
+      methods: [HttpMethod.GET],
+      integration: getArticleIntegration,
+    });
+
     // ParamStore読み取り許可
     supabaseUrlParam.grantRead(getPublicUserFn);
     supabaseAnonKeyParam.grantRead(getPublicUserFn);
@@ -172,9 +197,12 @@ export class ApiStack extends cdk.Stack {
     supabaseAnonKeyParam.grantRead(createUserFn);
     supabaseUrlParam.grantRead(getListArticles);
     supabaseAnonKeyParam.grantRead(getListArticles);
+    supabaseUrlParam.grantRead(getArticle);
+    supabaseAnonKeyParam.grantRead(getArticle);
     // s3読み許可
     imagesBucket.grantRead(getPublicUserFn);
     imagesBucket.grantReadWrite(getMeFn);
     imagesBucket.grantRead(getListArticles);
+    imagesBucket.grantRead(getArticle);
   }
 }
