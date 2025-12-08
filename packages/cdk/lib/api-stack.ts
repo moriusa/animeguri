@@ -106,6 +106,38 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const createArticle = new NodejsFunction(this, "CreateArticle", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/createArticle/index.ts"),
+      functionName: "animeguri-create-article",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const generatePresignedUrl = new NodejsFunction(
+      this,
+      "GeneratePresignedUrl",
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/generatePresignedUrl/index.ts"),
+        functionName: "animeguri-generate-presigned-url",
+        environment: {
+          SUPABASE_URL: supabaseUrlParam.parameterName,
+          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+          S3_BUCKET_NAME: imagesBucket.bucketName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      }
+    );
+
     // cognito authorizer
     const authorizer = new HttpUserPoolAuthorizer(
       "UserPoolAuthorizer",
@@ -139,6 +171,16 @@ export class ApiStack extends cdk.Stack {
     const getArticleIntegration = new HttpLambdaIntegration(
       "GetArticleIntegration",
       getArticle
+    );
+
+    const createArticleIntegration = new HttpLambdaIntegration(
+      "CreateArticleIntegration",
+      createArticle
+    );
+
+    const generatePresignedUrlIntegration = new HttpLambdaIntegration(
+      "GeneratePresignedUrl",
+      generatePresignedUrl
     );
 
     // API Gateway
@@ -188,6 +230,20 @@ export class ApiStack extends cdk.Stack {
       integration: getArticleIntegration,
     });
 
+    api.addRoutes({
+      path: "/articles",
+      methods: [HttpMethod.POST],
+      integration: createArticleIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/presigned-url",
+      methods: [HttpMethod.POST],
+      integration: generatePresignedUrlIntegration,
+      authorizer,
+    });
+
     // ParamStore読み取り許可
     supabaseUrlParam.grantRead(getPublicUserFn);
     supabaseAnonKeyParam.grantRead(getPublicUserFn);
@@ -199,10 +255,14 @@ export class ApiStack extends cdk.Stack {
     supabaseAnonKeyParam.grantRead(getListArticles);
     supabaseUrlParam.grantRead(getArticle);
     supabaseAnonKeyParam.grantRead(getArticle);
+    supabaseUrlParam.grantRead(createArticle);
+    supabaseAnonKeyParam.grantRead(createArticle);
     // s3読み許可
     imagesBucket.grantRead(getPublicUserFn);
     imagesBucket.grantReadWrite(getMeFn);
     imagesBucket.grantRead(getListArticles);
     imagesBucket.grantRead(getArticle);
+    // S3への署名付きURL生成権限を付与
+    imagesBucket.grantPut(generatePresignedUrl);
   }
 }
