@@ -5,14 +5,33 @@ import { Report } from "@/components/post";
 import { useForm } from "react-hook-form";
 import { usePopup } from "@/features/popup";
 
+// interface CreateArticleBody {
+//   title: string;
+//   thumbnail_url?: string;
+//   anime_name: string;
+//   article_status?: "draft" | "published" | "archived";
+//   reports: {
+//     title: string;
+//     description?: string;
+//     location: string;
+//     display_order: number; // 1~10
+//     images: {
+//       image_url: string;
+//       caption?: string;
+//       display_order: number; // 1~10
+//     }[];
+//   }[];
+// }
 export interface ReportTypes {
   id: number;
-  images: File[]; // 複数画像データ
+  images: File[];
   inputValue: string;
   prefecture: string;
   city: string;
   overseasRegion: string;
   previewUrls: string[];
+  location: string;
+  captions: string[];
 }
 
 export interface PostFormValues {
@@ -45,12 +64,12 @@ const Page = () => {
           city: "",
           overseasRegion: "",
           previewUrls: [],
+          location: "",
+          captions: [],
         },
       ],
     },
   });
-
-  const {closePopup, popupState, showPopup} = usePopup();
 
   const reports = watch("reports");
 
@@ -64,6 +83,8 @@ const Page = () => {
       city: "",
       overseasRegion: "",
       previewUrls: [],
+      location: "",
+      captions: [],
     };
     setValue("reports", [...reports, newReport]);
   };

@@ -8,14 +8,12 @@ import {
 } from "react-hook-form";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { PostFormValues, ReportTypes } from "@/app/post/page";
-import { RegionInput } from "./RegionInput";
+import { Input } from "../common";
 
 export const Report = ({
   index,
   onDelete,
   register,
-  resetField,
-  clearErrors,
   errors,
   onImageChange,
   reportData,
@@ -35,23 +33,25 @@ export const Report = ({
 
       {/* 画像アップロード */}
       <UploadImage
-        name={`reports.${index}.images`}
-        maxFiles={4}
+        maxFiles={10}
         error={errors.reports?.[index]?.images?.message}
         register={register}
         images={reportData.images}
         previewUrls={reportData.previewUrls}
         onChange={onImageChange}
         index={index}
+        errors={errors}
       />
 
       {/* 聖地の場所 */}
-      <RegionInput
+      <Input
+        id={"location"}
+        text="タイトル"
+        name={`reports.${index}.location`}
         register={register}
-        error={errors}
-        index={index}
-        resetField={resetField}
-        clearErrors={clearErrors}
+        placeholder="聖地の場所を入力"
+        validation={{ required: "聖地の場所を入力してください" }}
+        error={errors?.reports?.[index]?.location?.message}
       />
 
       {/* レポート内容 */}
