@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 
 interface CreateArticleBody {
   title: string;
-  thumbnail_url?: string;
+  thumbnail_s3_key?: string;
   anime_name: string;
   article_status?: "draft" | "published" | "archived";
   reports: {
@@ -13,7 +13,7 @@ interface CreateArticleBody {
     location: string;
     display_order: number; // 1~10
     images: {
-      image_url: string;
+      s3_key: string;
       caption?: string;
       display_order: number; // 1~10
     }[];
@@ -81,7 +81,7 @@ export const handler = async (
         id: articleId,
         user_id: sub,
         title: body.title,
-        thumbnail_url: body.thumbnail_url || null,
+        thumbnail_url: body.thumbnail_s3_key || null,
         anime_name: body.anime_name,
         article_status: body.article_status || "draft",
         published_at: body.article_status === "published" ? now : null,
@@ -142,7 +142,7 @@ export const handler = async (
           const imagesToInsert = reportImages.map((img) => ({
             id: randomUUID(),
             report_id: reports[i].id,
-            image_url: img.image_url,
+            s3_key: img.s3_key,
             caption: img.caption || null,
             display_order: img.display_order,
           }));

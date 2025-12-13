@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SubTitle } from "./common/SubTitle";
 import { ArticleCard } from "./common/ArticleCard";
-import { getArticleCards } from "@/lib/articleCards";
+import { getArticleCards } from "@/lib/articles";
 import { ArticleCard as ArticleCardType } from "@/types";
 
 interface Props {

@@ -21,7 +21,11 @@ interface PresignedUrlRequest {
   file_name: string;
   content_type: string;
   file_size: number;
-  image_type: "thumbnail" | "report"; // 画像の用途
+  image_type: "thumbnail" | "report";
+}
+
+interface PresignedUrlBatchRequest {
+  files: PresignedUrlRequest[];
 }
 
 export const handler = async (
@@ -30,11 +34,6 @@ export const handler = async (
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
 
   try {
-    console.log(
-      "Generate Presigned URL Event:",
-      JSON.stringify(event, null, 2)
-    );
-
     if (!event.body) {
       return {
         statusCode: 400,
@@ -43,90 +42,73 @@ export const handler = async (
       };
     }
 
-    const body: PresignedUrlRequest = JSON.parse(event.body);
+    const body: PresignedUrlBatchRequest = JSON.parse(event.body);
 
-    // ========================================
-    // バリデーション
-    // ========================================
-
-    // 1. Content-Type チェック
-    if (!ALLOWED_CONTENT_TYPES.includes(body.content_type)) {
+    if (!body.files || body.files.length === 0) {
       return {
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: "Invalid content type",
-          allowed_types: ALLOWED_CONTENT_TYPES,
-        }),
+        body: JSON.stringify({ message: "files is required" }),
       };
     }
 
-    // 2. ファイルサイズチェック
-    if (body.file_size > MAX_FILE_SIZE) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `File size exceeds limit of ${
-            MAX_FILE_SIZE / 1024 / 1024
-          }MB`,
-        }),
-      };
-    }
+    // ここでまとめて処理
+    const results = await Promise.all(
+      body.files.map(async (file) => {
+        // =============================
+        // バリデーション
+        // =============================
+        if (!ALLOWED_CONTENT_TYPES.includes(file.content_type)) {
+          throw new Error(`Invalid content type: ${file.content_type}`);
+        }
 
-    // 3. ファイル名の検証
-    if (!body.file_name || body.file_name.length > 255) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: "Invalid file name",
-        }),
-      };
-    }
+        if (file.file_size > MAX_FILE_SIZE) {
+          throw new Error(
+            `File size exceeds limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`
+          );
+        }
 
-    // ========================================
-    // S3キーの生成
-    // ========================================
-    const imageId = randomUUID();
-    const extension = body.content_type.split("/")[1]; // jpeg, png, webp, gif
-    const timestamp = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        if (!file.file_name || file.file_name.length > 255) {
+          throw new Error("Invalid file name");
+        }
 
-    // パスの構造: uploads/{user_id}/{image_type}/{date}/{uuid}.{ext}
-    const s3Key = `uploads/${sub}/${body.image_type}/${timestamp}/${imageId}.${extension}`;
+        // =============================
+        // S3キーの生成
+        // =============================
+        const imageId = randomUUID();
+        const extension = file.content_type.split("/")[1];
+        const timestamp = new Date().toISOString().split("T")[0];
 
-    // ========================================
-    // 署名付きURL生成（制約付き）
-    // ========================================
-    const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: s3Key,
-      ContentType: body.content_type, // ✅ アップロード時にこのContent-Typeを強制
-      ContentLength: body.file_size, // ✅ 指定したサイズのみ許可
-      Metadata: {
-        "uploaded-by": sub,
-        "original-filename": body.file_name,
-        "upload-timestamp": new Date().toISOString(),
-        "image-type": body.image_type,
-      },
-    });
+        const s3Key = `uploads/${sub}/${file.image_type}/${timestamp}/${imageId}.${extension}`;
 
-    // 署名付きURL生成（1時間有効）
-    const presignedUrl = await getSignedUrl(s3Client, command, {
-      expiresIn: 3600, // 1時間
-    });
+        const command = new PutObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: s3Key,
+          ContentType: file.content_type,
+          ContentLength: file.file_size,
+          Metadata: {
+            "uploaded-by": sub,
+            "original-filename": file.file_name,
+            "upload-timestamp": new Date().toISOString(),
+            "image-type": file.image_type,
+          },
+        });
 
-    // ========================================
-    // レスポンス
-    // ========================================
-    const response = {
-      presigned_url: presignedUrl,
-      image_id: imageId,
-      s3_key: s3Key,
-      // ✅ フロントがアップロード完了後にDBに保存するURL
-      public_url: `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${s3Key}`,
-      expires_at: new Date(Date.now() + 3600000).toISOString(), // 1時間後
-    };
+        const presignedUrl = await getSignedUrl(s3Client, command, {
+          expiresIn: 3600,
+        });
+
+        return {
+          file_name: file.file_name,
+          image_type: file.image_type,
+          presigned_url: presignedUrl,
+          image_id: imageId,
+          s3_key: s3Key,
+          public_url: `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${s3Key}`,
+          expires_at: new Date(Date.now() + 3600000).toISOString(),
+        };
+      })
+    );
 
     return {
       statusCode: 200,
@@ -134,7 +116,7 @@ export const handler = async (
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(response),
+      body: JSON.stringify({ urls: results }),
     };
   } catch (e: any) {
     console.error("Generate Presigned URL error:", e);
@@ -142,7 +124,7 @@ export const handler = async (
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: "Failed to generate presigned URL",
+        message: "Failed to generate presigned URLs",
         error: e.message,
       }),
     };

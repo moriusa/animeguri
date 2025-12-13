@@ -4,6 +4,7 @@ import { Thumbnail } from "@/components/post/Thumbnail";
 import { Report } from "@/components/post";
 import { useForm } from "react-hook-form";
 import { usePopup } from "@/features/popup";
+import { createArticleWithImages } from "@/features/articles/createArticleWithImages";
 
 // interface CreateArticleBody {
 //   title: string;
@@ -26,12 +27,10 @@ export interface ReportTypes {
   id: number;
   images: File[];
   inputValue: string;
-  prefecture: string;
-  city: string;
-  overseasRegion: string;
   previewUrls: string[];
   location: string;
   captions: string[];
+  description: string;
 }
 
 export interface PostFormValues {
@@ -60,12 +59,10 @@ const Page = () => {
           id: 1,
           images: [],
           inputValue: "",
-          prefecture: "",
-          city: "",
-          overseasRegion: "",
           previewUrls: [],
           location: "",
           captions: [],
+          description: "",
         },
       ],
     },
@@ -79,12 +76,10 @@ const Page = () => {
       id: Date.now(),
       images: [],
       inputValue: "",
-      prefecture: "",
-      city: "",
-      overseasRegion: "",
       previewUrls: [],
       location: "",
       captions: [],
+      description: "",
     };
     setValue("reports", [...reports, newReport]);
   };
@@ -116,6 +111,7 @@ const Page = () => {
 
   const onSubmit = (data: PostFormValues) => {
     console.log("フォーム送信データ:", data);
+    createArticleWithImages(data, "draft"); // status分岐
   };
 
   return (
