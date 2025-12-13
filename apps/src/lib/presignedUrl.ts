@@ -14,7 +14,8 @@ const API_ENDPOINT =
   "https://39vstgp97a.execute-api.ap-northeast-1.amazonaws.com";
 
 export const genPresignedUrl = async (
-  files: File[]
+  files: File[],
+  idToken: string
 ): Promise<PresignedUrlRes> => {
   const payload = {
     files: files.map((file) => ({
@@ -24,9 +25,12 @@ export const genPresignedUrl = async (
       image_type: "report" as const,
     })),
   };
-  const response = await fetch(`${API_ENDPOINT}/presignedUrl`, {
+  const response = await fetch(`${API_ENDPOINT}/presigned-url`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(payload),
   });
 

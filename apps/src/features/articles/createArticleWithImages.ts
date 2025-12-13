@@ -58,7 +58,8 @@ const toReqArticle = (
 
 export const createArticleWithImages = async (
   formValues: PostFormValues,
-  status: ArticleStatus = "draft"
+  status: ArticleStatus = "draft",
+  idToken: string,
 ) => {
   // 1. アップロード対象ファイルを 1 本の配列にまとめる
   const files: File[] = [];
@@ -87,7 +88,7 @@ export const createArticleWithImages = async (
   // }
 
   // 2. 署名付きURLを取得
-  const presigned = await genPresignedUrl(files);
+  const presigned = await genPresignedUrl(files, idToken);
 
   // 3. S3 にアップロード
   const uploaded = await uploadImageToS3(presigned, files);
@@ -124,6 +125,7 @@ export const createArticleWithImages = async (
   });
 
   // 6. DB 保存
-  const article = await createArticle(reqBody);
+  const article = await createArticle(reqBody, idToken);
+  console.log('投稿完了')
   return article;
 };

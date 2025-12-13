@@ -81,7 +81,7 @@ export const handler = async (
         id: articleId,
         user_id: sub,
         title: body.title,
-        thumbnail_url: body.thumbnail_s3_key || null,
+        thumbnail_s3_key: body.thumbnail_s3_key || null,
         anime_name: body.anime_name,
         article_status: body.article_status || "draft",
         published_at: body.article_status === "published" ? now : null,

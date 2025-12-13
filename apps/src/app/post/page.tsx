@@ -2,9 +2,11 @@
 import { Input } from "@/components/common";
 import { Thumbnail } from "@/components/post/Thumbnail";
 import { Report } from "@/components/post";
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { usePopup } from "@/features/popup";
 import { createArticleWithImages } from "@/features/articles/createArticleWithImages";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 // interface CreateArticleBody {
 //   title: string;
@@ -41,6 +43,8 @@ export interface PostFormValues {
 }
 
 const Page = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const {
     register,
     handleSubmit,
@@ -109,9 +113,13 @@ const Page = () => {
     }
   };
 
-  const onSubmit = (data: PostFormValues) => {
+  if (!user) {
+    return <p>ログインしてください</p>;
+  }
+
+  const onSubmit: SubmitHandler<PostFormValues> = (data) => {
     console.log("フォーム送信データ:", data);
-    createArticleWithImages(data, "draft"); // status分岐
+    createArticleWithImages(data, "draft", user.idToken); // status分岐
   };
 
   return (
@@ -125,6 +133,15 @@ const Page = () => {
           placeholder="タイトルを入力"
           validation={{ required: "タイトルを入力してください" }}
           error={errors?.title?.message}
+        />
+        <Input
+          id={"animeName"}
+          text="アニメ名"
+          name={"animeName"}
+          register={register}
+          placeholder="アニメ名を入力"
+          validation={{ required: "アニメ名を入力してください" }}
+          error={errors?.animeName?.message}
         />
         <div className="mt-8">
           <Thumbnail register={register} error={errors} setValue={setValue} />

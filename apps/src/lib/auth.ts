@@ -10,8 +10,8 @@ import {
 
 // ユーザープール情報(環境変数から取得)
 const userPool = new CognitoUserPool({
-  UserPoolId: "ap-northeast-1_ZyF0iAGIL",
-  ClientId: "2b803qm157j116gp379nn1cmqk",
+  UserPoolId: "ap-northeast-1_2h6EbChqj",
+  ClientId: "1b3hcee8p6643fvkp726uumsj5",
 });
 
 export interface SignUpResult {

@@ -2,7 +2,7 @@ import { SignUpFormValues } from "@/app/signUp/page";
 import { User } from "@/types";
 
 const API_ENDPOINT =
-  "https://lfflug68wb.execute-api.ap-northeast-1.amazonaws.com";
+  "https://39vstgp97a.execute-api.ap-northeast-1.amazonaws.com";
 
 export const createUserProfile = async (idToken: string) => {
   try {
