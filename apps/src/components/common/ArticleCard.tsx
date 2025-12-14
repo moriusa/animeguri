@@ -9,10 +9,10 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
   console.log(data);
   return (
     <div className="rounded bg-secondary text-xs">
-      <Link href={`/article/${data.articleId}`}>
-        <p className="py-1 px-2 text-white">{data.animeName}</p>
+      <Link href={`/article/${data.id}`}>
+        <p className="py-1 px-2 text-white">{data.anime_name}</p>
         <Image
-          src={data.thumbnailImgUrl}
+          src={data.thumbnail_url}
           alt=""
           className="aspect-video object-cover"
           width={250}
@@ -22,7 +22,7 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
           <p className="text-black text-base font-bold line-clamp-2 h-[48px]">
             {data.title}
           </p>
-          <div className="flex items-center gap-1 mt-3">
+          {/* <div className="flex items-center gap-1 mt-3">
             <FaMapMarkerAlt size={14} />
             <p>
               {data.prefectureName} {data.cityName}
@@ -37,19 +37,19 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
               height={250}
             />
             <p className="line-clamp-1">{data.author.userName}</p>
-          </div>
+          </div> */}
           <div className="flex justify-between items-center mt-3">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-0.5">
                 <FaRegHeart />
-                <p>{data.likesCount}</p>
+                <p>{data.likes_count}</p>
               </div>
               <div className="flex items-center gap-0.5">
                 <FaRegComment />
-                <p>{data.commentCount}</p>
+                <p>{data.comment_count}</p>
               </div>
             </div>
-            <p className="">{daysAgoConvert(new Date(data.publishedAt))}</p>
+            <p className="">{daysAgoConvert(new Date(data.published_at))}</p>
           </div>
         </div>
       </Link>

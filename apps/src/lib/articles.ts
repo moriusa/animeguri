@@ -3,7 +3,7 @@ import { ArticleCard } from "@/types";
 
 interface ArticleListResponse {
   success: boolean;
-  data: ArticleCard[];
+  items: ArticleCard[];
   count?: number;
   error?: string;
   message?: string;
@@ -38,7 +38,7 @@ export const getArticleCards = async (
   }
 
   const resData: ArticleListResponse = await response.json();
-  return resData.data;
+  return resData.items;
 };
 
 export interface CreateArticleBody {

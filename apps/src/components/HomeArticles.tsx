@@ -24,6 +24,7 @@ export default function HomeArticles({ type }: Props) {
         setError(null);
 
         const fetchedArticles = await getArticleCards(10);
+        console.log(fetchedArticles)
         setArticles(fetchedArticles);
       } catch (err) {
         console.error("Failed to fetch articles:", err);
@@ -47,7 +48,7 @@ export default function HomeArticles({ type }: Props) {
         <SubTitle type={type} />
         <div className="grid grid-cols-[repeat(auto-fill,_minmax(200px,_1fr))] gap-2 mt-5 justify-center">
           {articles.map((article) => (
-            <ArticleCard data={article} key={article.articleId} />
+            <ArticleCard data={article} key={article.id} />
           ))}
         </div>
       </div>

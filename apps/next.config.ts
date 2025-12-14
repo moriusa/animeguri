@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "d3gzga84fhq0dj.cloudfront.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "animeguri-public-images.s3.ap-northeast-1.amazonaws.com",
         pathname: "/**",
       },

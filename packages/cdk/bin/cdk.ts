@@ -19,4 +19,5 @@ new ApiStack(app, "ApiStack", {
   supabaseUrlParam: infra.supabaseUrlParam,
   supabaseAnonKeyParam: infra.supabaseAnonKeyParam,
   imagesBucket: infra.imagesBucket,
+  cloudFrontDistribution: infra.imagesDistribution,
 });

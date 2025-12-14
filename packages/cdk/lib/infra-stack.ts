@@ -56,6 +56,7 @@ export class InfraStack extends cdk.Stack {
       ],
     });
 
+    // cloudFront
     this.imagesDistribution = new cloudfront.Distribution(
       this,
       "ImagesDistribution",
@@ -86,11 +87,5 @@ export class InfraStack extends cdk.Stack {
         stringValue: "CHANGE_AFTER_DEPLOY", // デプロイ後に手動で変更する
       }
     );
-
-    // CloudFront のドメインを SSM に
-    new ssm.StringParameter(this, "ImagesCdnDomain", {
-      parameterName: "/animeguri/cdn/images-domain",
-      stringValue: this.imagesDistribution.distributionDomainName,
-    });
   }
 }

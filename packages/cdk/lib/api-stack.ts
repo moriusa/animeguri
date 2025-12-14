@@ -14,6 +14,7 @@ import {
   CorsHttpMethod,
 } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import { CloudFrontWebDistributionAttributes } from "aws-cdk-lib/aws-cloudfront";
 
 interface ApiStackProps extends cdk.StackProps {
   userPool: cognito.IUserPool;
@@ -21,6 +22,7 @@ interface ApiStackProps extends cdk.StackProps {
   supabaseUrlParam: ssm.IStringParameter;
   supabaseAnonKeyParam: ssm.IStringParameter;
   imagesBucket: s3.IBucket;
+  cloudFrontDistribution: CloudFrontWebDistributionAttributes;
 }
 
 export class ApiStack extends cdk.Stack {
@@ -33,6 +35,7 @@ export class ApiStack extends cdk.Stack {
       supabaseUrlParam,
       supabaseAnonKeyParam,
       imagesBucket,
+      cloudFrontDistribution,
     } = props;
 
     // lambda関数
@@ -87,6 +90,7 @@ export class ApiStack extends cdk.Stack {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
         S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,

@@ -1,6 +1,10 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
 
+const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN!;
+const buildImageUrl = (s3Key?: string | null) =>
+  s3Key ? `https://${CLOUDFRONT_DOMAIN}/${s3Key}` : null;
+
 export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
@@ -37,10 +41,18 @@ export const handler = async (
       };
     }
 
+    // ここで CloudFront URL に整形
+    const items = (data ?? []).map((row) => ({
+      ...row,
+      // サムネのみ(今後user画像も追加)
+      thumbnail_url: buildImageUrl(row.thumbnail_s3_key),
+    }));
+    console.log(items);
+
     return {
       statusCode: 200,
       body: JSON.stringify({
-        items: data,
+        items,
         limit,
         offset,
       }),

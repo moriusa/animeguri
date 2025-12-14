@@ -20,14 +20,12 @@ export interface Article {
 
 // カード記事
 export interface ArticleCard {
-  articleId: string;
+  id: string;
   title: string;
-  thumbnailImgUrl: string;
-  prefectureName: string;
-  cityName: string;
-  animeName: string;
-  likesCount: string;
-  commentCount: string;
-  publishedAt: string;
-  author: Pick<User, "userId" | "userName" | "profileImgUrl">;
+  thumbnail_url: string;
+  anime_name: string;
+  likes_count: string;
+  comment_count: string;
+  published_at: string;
+  // author: Pick<User, "userId" | "userName" | "profileImgUrl">;
 }
