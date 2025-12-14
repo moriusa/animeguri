@@ -5,11 +5,12 @@ import { FaSearch } from "react-icons/fa";
 import { Button } from "@/components/common";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { useLogout } from "@/features/auth/useLogout";
+import { UserMenu } from "@/components/header/UserMenu";
 
 export const Header: FC = () => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const { handleLogout } = useLogout();
+  const { isAuthenticated, userProfile } = useSelector(
+    (state: RootState) => state.auth
+  );
   return (
     <nav className="text-secondary">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between p-3">
@@ -18,14 +19,17 @@ export const Header: FC = () => {
         </Link>
         <div className="flex items-center gap-8">
           <FaSearch size={20} className="cursor-pointer" />
-          {isAuthenticated ? (
-            <div onClick={handleLogout}>
-              <Button text="ログアウト" />
+          {isAuthenticated && userProfile ? (
+            <div className="flex items-center gap-4">
+              <Link href={"/post"}>
+                <Button text="投稿" btnColor="white" />
+              </Link>
+              <UserMenu userProfile={userProfile}/>
             </div>
           ) : (
             <div className="flex items-center gap-4">
               <Link href={"/signUp"}>
-                <Button text="新規登録" btnColor="white"/>
+                <Button text="新規登録" btnColor="white" />
               </Link>
               <Link href={"/login"}>
                 <Button text="ログイン" />
