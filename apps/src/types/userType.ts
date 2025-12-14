@@ -1,10 +1,8 @@
 export interface User {
-  userId: string;
-  userName: string;
-  profileImgUrl: string;
+  id: string;
+  user_name: string;
+  profile_image_url: string;
   bio: string;
-  articleCount: number;
-  followingCount: number;
-  createdAt: string;
-  updatedAt: string;
+  article_count: number;
+  following_count: number;
 }

@@ -28,6 +28,16 @@ export const handler = async (
       )
       .eq("id", articleId)
       .eq("article_status", "published")
+      // reports の並び順
+      .order("display_order", {
+        foreignTable: "reports",
+        ascending: true,
+      })
+      // report_images の並び順
+      .order("display_order", {
+        foreignTable: "reports.report_images",
+        ascending: true,
+      })
       .single(); // 単一レコード取得
 
     if (error) {

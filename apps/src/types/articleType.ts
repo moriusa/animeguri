@@ -1,21 +1,31 @@
 import { User } from "./userType";
 
-export interface Article {
-  articleId: string;
+export interface ReportsImages {
+  id: string;
+  image_url: string;
+  caption: string;
+  display_order: string;
+}
+
+export interface Reports {
+  id: string;
   title: string;
-  thumbnailImgUrl: string;
-  prefectureName: string;
-  cityName: string;
-  animeName: string;
-  likesCount: number;
-  commentCount: number;
-  postUserId: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-  articleStatus: boolean;
-  statusCreatedAt: string;
-  prefectureCity: string;
+  description: string;
+  location: string;
+  display_order: number;
+  images: ReportsImages[]
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  thumbnail_url: string;
+  anime_name: string;
+  likes_count: number;
+  comment_count: number;
+  published_at: string;
+  reports: Reports[];
+  author: Pick<User, "id" | "user_name" | "profile_image_url">;
 }
 
 // カード記事
@@ -27,10 +37,5 @@ export interface ArticleCard {
   likes_count: string;
   comment_count: string;
   published_at: string;
-  author: {
-    id: string,
-    user_name: string,
-    profile_image_url: string,
-  }
-  // author: Pick<User, "userId" | "userName" | "profileImgUrl">;
+  author: Pick<User, "id" | "user_name" | "profile_image_url">;
 }
