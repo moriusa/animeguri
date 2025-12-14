@@ -3,7 +3,8 @@ import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
-import { CorsHttpMethod, HttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
 
 export class InfraStack extends cdk.Stack {
   // 他スタックから使うために public に出す
@@ -12,6 +13,7 @@ export class InfraStack extends cdk.Stack {
   public readonly supabaseUrlParam: ssm.IStringParameter;
   public readonly supabaseAnonKeyParam: ssm.IStringParameter;
   public readonly imagesBucket: s3.Bucket;
+  public readonly imagesDistribution: cloudfront.Distribution;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -54,6 +56,22 @@ export class InfraStack extends cdk.Stack {
       ],
     });
 
+    this.imagesDistribution = new cloudfront.Distribution(
+      this,
+      "ImagesDistribution",
+      {
+        defaultRootObject: "", // 静的サイトじゃないので基本不要
+        defaultBehavior: {
+          // ← ここが「最新の OAC を使う S3 オリジン」の書き方
+          origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
+            this.imagesBucket
+          ),
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        },
+      }
+    );
+
     // Supabase URL / anon-key を ParameterStore に作成
     this.supabaseUrlParam = new ssm.StringParameter(this, "SupabaseUrl", {
       parameterName: "/animeguri/supabase/url",
@@ -68,5 +86,11 @@ export class InfraStack extends cdk.Stack {
         stringValue: "CHANGE_AFTER_DEPLOY", // デプロイ後に手動で変更する
       }
     );
+
+    // CloudFront のドメインを SSM に
+    new ssm.StringParameter(this, "ImagesCdnDomain", {
+      parameterName: "/animeguri/cdn/images-domain",
+      stringValue: this.imagesDistribution.distributionDomainName,
+    });
   }
 }
