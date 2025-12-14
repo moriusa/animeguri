@@ -27,5 +27,10 @@ export interface ArticleCard {
   likes_count: string;
   comment_count: string;
   published_at: string;
+  author: {
+    id: string,
+    user_name: string,
+    profile_image_url: string,
+  }
   // author: Pick<User, "userId" | "userName" | "profileImgUrl">;
 }

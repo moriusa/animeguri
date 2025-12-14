@@ -29,7 +29,16 @@ export const handler = async (
 
     const { data, error } = await supabase
       .from("articles")
-      .select("*")
+      .select(
+        `
+          *,
+          user:users (
+            id,
+            user_name,
+            profile_image_s3_key
+          )
+        `
+      )
       .order("created_at", { ascending: false }) // 新しい順など
       .range(from, to);
 
@@ -44,8 +53,11 @@ export const handler = async (
     // ここで CloudFront URL に整形
     const items = (data ?? []).map((row) => ({
       ...row,
-      // サムネのみ(今後user画像も追加)
       thumbnail_url: buildImageUrl(row.thumbnail_s3_key),
+      author: {
+        ...row.user,
+        profile_image_url: buildImageUrl(row.user.profile_image_s3_key),
+      },
     }));
     console.log(items);
 

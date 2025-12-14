@@ -27,17 +27,17 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
             <p>
               {data.prefectureName} {data.cityName}
             </p>
-          </div>
+          </div> */}
           <div className="flex items-center gap-1 mt-3">
             <Image
-              src={data.author.profileImgUrl}
+              src={data.author.profile_image_url}
               alt=""
               className="w-7 rounded-full"
               width={250}
               height={250}
             />
-            <p className="line-clamp-1">{data.author.userName}</p>
-          </div> */}
+            <p className="line-clamp-1">{data.author.user_name}</p>
+          </div>
           <div className="flex justify-between items-center mt-3">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-0.5">
