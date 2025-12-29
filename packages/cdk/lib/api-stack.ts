@@ -81,6 +81,21 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const getListMyArticles = new NodejsFunction(this, "GetListMyArticles", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getListMyArticles/index.ts"),
+      functionName: "animeguri-get-list-My-articles",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
     const getListArticles = new NodejsFunction(this, "GetListArticles", {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -167,6 +182,11 @@ export class ApiStack extends cdk.Stack {
       createUserFn
     );
 
+    const getListMyArticlesIntegration = new HttpLambdaIntegration(
+      "GetListMyArticlesIntegration",
+      getListMyArticles
+    );
+
     const getListArticlesIntegration = new HttpLambdaIntegration(
       "GetListArticlesIntegration",
       getListArticles
@@ -223,6 +243,13 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
+      path: "/user/me/articles",
+      methods: [HttpMethod.GET],
+      integration: getListMyArticlesIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
       path: "/articles",
       methods: [HttpMethod.GET],
       integration: getListArticlesIntegration,
@@ -255,6 +282,8 @@ export class ApiStack extends cdk.Stack {
     supabaseAnonKeyParam.grantRead(getMeFn);
     supabaseUrlParam.grantRead(createUserFn);
     supabaseAnonKeyParam.grantRead(createUserFn);
+    supabaseUrlParam.grantRead(getListMyArticles);
+    supabaseAnonKeyParam.grantRead(getListMyArticles);
     supabaseUrlParam.grantRead(getListArticles);
     supabaseAnonKeyParam.grantRead(getListArticles);
     supabaseUrlParam.grantRead(getArticle);
@@ -265,6 +294,7 @@ export class ApiStack extends cdk.Stack {
     imagesBucket.grantRead(getPublicUserFn);
     imagesBucket.grantReadWrite(getMeFn);
     imagesBucket.grantRead(getListArticles);
+    imagesBucket.grantRead(getListMyArticles);
     imagesBucket.grantRead(getArticle);
     // S3への署名付きURL生成権限を付与
     imagesBucket.grantPut(generatePresignedUrl);

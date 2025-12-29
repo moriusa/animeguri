@@ -41,6 +41,34 @@ export const getArticleCards = async (
   return resData.items;
 };
 
+
+export const getMyArticleCards = async (
+  idToken: string,
+  limit: number
+): Promise<ArticleCard[]> => {
+  const response = await fetch(`${API_ENDPOINT}/user/me/articles?limit=${limit}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  // レスポンスの状態チェック
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to fetch articles"
+      }`
+    );
+  }
+
+  const resData: ArticleListResponse = await response.json();
+  return resData.items;
+};
+
 export interface CreateArticleBody {
   title: string;
   thumbnail_s3_key: string | null;
