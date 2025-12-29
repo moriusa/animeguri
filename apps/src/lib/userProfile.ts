@@ -1,4 +1,4 @@
-import { SignUpFormValues } from "@/app/signUp/page";
+'use cache'
 import { User } from "@/types";
 
 const API_ENDPOINT =
@@ -16,7 +16,7 @@ export const createUserProfile = async (idToken: string) => {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${idToken}`,
-      }
+      },
     });
 
     console.log("Response status:", request.status); // 🔍 レスポンスステータス確認
@@ -69,4 +69,38 @@ export const getUserProfile = async (idToken: string): Promise<User> => {
   return response.json();
 };
 
-const updateUserProfile = () => {};
+interface UserProfileUpdateDbType {
+  user_name: string;
+  bio: string;
+  profile_image_s3_key: string;
+  x_url: string;
+  facebook_url: string;
+  youtube_url: string;
+  website_url: string;
+}
+export const updateUserProfile = async (
+  payload: UserProfileUpdateDbType,
+  idToken: string
+) => {
+  const response = await fetch(`${API_ENDPOINT}/user/me`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  // レスポンスの状態チェック
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to fetch user profile"
+      }`
+    );
+  }
+
+  return response.json();
+};

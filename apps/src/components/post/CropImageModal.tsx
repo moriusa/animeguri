@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import { useRef } from "react";
 import Cropper, { ReactCropperElement } from "react-cropper";
 import "cropperjs/dist/cropper.css"; // Cropper.jsのスタイルをインポート
 import { Button } from "../common/Button";
@@ -8,11 +8,16 @@ interface Props {
   imageSrc: string;
   onClose: () => void;
   onCrop: (croppedIMage: string) => void;
+  aspectRatio: number;
 }
 
-export const CropImageModal = ({ imageSrc, onClose, onCrop }: Props) => {
+export const CropImageModal = ({
+  imageSrc,
+  onClose,
+  onCrop,
+  aspectRatio,
+}: Props) => {
   const cropperRef = useRef<ReactCropperElement>(null); // Cropperの参照を保持
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
 
   // 画像のトリミングを処理する関数
   const handleCrop = () => {
@@ -31,7 +36,7 @@ export const CropImageModal = ({ imageSrc, onClose, onCrop }: Props) => {
         <Cropper
           src={imageSrc}
           className="w-full h-96"
-          aspectRatio={16 / 9}
+          aspectRatio={aspectRatio}
           guides={false} // ガイド線を表示しない
           ref={cropperRef} // Cropperインスタンスへの参照を設定
           viewMode={1} // トリミングエリアが画像の外に出ないように設定

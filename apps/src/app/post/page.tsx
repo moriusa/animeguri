@@ -53,6 +53,7 @@ const Page = () => {
     resetField,
     formState: { errors },
     watch,
+    control
   } = useForm<PostFormValues>({
     defaultValues: {
       title: "",
@@ -144,7 +145,7 @@ const Page = () => {
           error={errors?.animeName?.message}
         />
         <div className="mt-8">
-          <Thumbnail register={register} error={errors} setValue={setValue} />
+          <Thumbnail control={control} errors={errors} />
         </div>
 
         {/* レポート一覧 */}

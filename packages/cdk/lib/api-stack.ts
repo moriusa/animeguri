@@ -62,6 +62,7 @@ export class ApiStack extends cdk.Stack {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
         S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -72,6 +73,20 @@ export class ApiStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/createUserProfile/index.ts"),
       functionName: "animeguri-create-user",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const patchUserProfile = new NodejsFunction(this, "PatchUserProfile", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/patchUserProfile/index.ts"),
+      functionName: "animeguri-patch-user",
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
@@ -182,6 +197,11 @@ export class ApiStack extends cdk.Stack {
       createUserFn
     );
 
+    const patchUserProfileIntegration = new HttpLambdaIntegration(
+      "PatchUserProfileIntegration",
+      patchUserProfile
+    );
+
     const getListMyArticlesIntegration = new HttpLambdaIntegration(
       "GetListMyArticlesIntegration",
       getListMyArticles
@@ -216,6 +236,7 @@ export class ApiStack extends cdk.Stack {
         allowMethods: [
           CorsHttpMethod.GET,
           CorsHttpMethod.POST,
+          CorsHttpMethod.PATCH,
           CorsHttpMethod.OPTIONS,
         ],
       },
@@ -239,6 +260,13 @@ export class ApiStack extends cdk.Stack {
       path: "/user/me",
       methods: [HttpMethod.POST],
       integration: createUserIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/user/me",
+      methods: [HttpMethod.PATCH],
+      integration: patchUserProfileIntegration,
       authorizer,
     });
 
@@ -282,6 +310,8 @@ export class ApiStack extends cdk.Stack {
     supabaseAnonKeyParam.grantRead(getMeFn);
     supabaseUrlParam.grantRead(createUserFn);
     supabaseAnonKeyParam.grantRead(createUserFn);
+    supabaseUrlParam.grantRead(patchUserProfile);
+    supabaseAnonKeyParam.grantRead(patchUserProfile);
     supabaseUrlParam.grantRead(getListMyArticles);
     supabaseAnonKeyParam.grantRead(getListMyArticles);
     supabaseUrlParam.grantRead(getListArticles);
