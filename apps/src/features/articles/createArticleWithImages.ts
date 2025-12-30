@@ -1,6 +1,8 @@
+"use server"
 import { PostFormValues } from "@/app/post/page";
 import { createArticle, CreateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
+import { revalidatePath } from "next/cache";
 
 type ArticleStatus = "draft" | "published" | "archived";
 
@@ -38,7 +40,7 @@ const toReqArticle = (
       }));
 
       return {
-        title: report.inputValue, // ← ここをどの値にするかは要件次第
+        title: report.title,
         description: report.description, // フォームに description があればここでマッピング
         location: report.location,
         display_order: reportIndex + 1,
@@ -59,7 +61,7 @@ const toReqArticle = (
 export const createArticleWithImages = async (
   formValues: PostFormValues,
   status: ArticleStatus = "draft",
-  idToken: string,
+  idToken: string
 ) => {
   // 1. アップロード対象ファイルを 1 本の配列にまとめる
   const files: File[] = [];
@@ -126,6 +128,9 @@ export const createArticleWithImages = async (
 
   // 6. DB 保存
   const article = await createArticle(reqBody, idToken);
-  console.log('投稿完了')
+  console.log("投稿完了");
+  // キャッシュを無効化
+  revalidatePath("/articles");
+  revalidatePath("/");
   return article;
 };

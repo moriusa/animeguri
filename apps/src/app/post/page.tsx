@@ -7,28 +7,12 @@ import { usePopup } from "@/features/popup";
 import { createArticleWithImages } from "@/features/articles/createArticleWithImages";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { redirect } from "next/navigation";
 
-// interface CreateArticleBody {
-//   title: string;
-//   thumbnail_url?: string;
-//   anime_name: string;
-//   article_status?: "draft" | "published" | "archived";
-//   reports: {
-//     title: string;
-//     description?: string;
-//     location: string;
-//     display_order: number; // 1~10
-//     images: {
-//       image_url: string;
-//       caption?: string;
-//       display_order: number; // 1~10
-//     }[];
-//   }[];
-// }
 export interface ReportTypes {
   id: number;
+  title: string;
   images: File[];
-  inputValue: string;
   previewUrls: string[];
   location: string;
   captions: string[];
@@ -51,9 +35,10 @@ const Page = () => {
     setValue,
     clearErrors,
     resetField,
+    reset,
     formState: { errors },
     watch,
-    control
+    control,
   } = useForm<PostFormValues>({
     defaultValues: {
       title: "",
@@ -63,7 +48,7 @@ const Page = () => {
         {
           id: 1,
           images: [],
-          inputValue: "",
+          title: "",
           previewUrls: [],
           location: "",
           captions: [],
@@ -80,7 +65,7 @@ const Page = () => {
     const newReport = {
       id: Date.now(),
       images: [],
-      inputValue: "",
+      title: "",
       previewUrls: [],
       location: "",
       captions: [],
@@ -118,9 +103,12 @@ const Page = () => {
     return <p>ログインしてください</p>;
   }
 
-  const onSubmit: SubmitHandler<PostFormValues> = (data) => {
+  const onSubmit: SubmitHandler<PostFormValues> = async (data) => {
     console.log("フォーム送信データ:", data);
-    createArticleWithImages(data, "draft", user.idToken); // status分岐
+    await createArticleWithImages(data, "published", user.idToken); // status分岐
+    // フォームクリア
+    reset();
+    redirect("/");
   };
 
   return (

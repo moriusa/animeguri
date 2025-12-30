@@ -1,5 +1,6 @@
 "use client";
 import { useGetArticle } from "@/features/articles/useGetArticle";
+import { JapaneseDateTime } from "@/utils/formatDate";
 import { s3KeyToImageUrl } from "@/utils/s3KeyToImageUrl";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,7 +25,9 @@ const Page = () => {
 
         <h1 className="font-bold text-2xl sm:text-3xl mt-4">{article.title}</h1>
 
-        <p className="mt-2 text-sm text-gray-500">{article.published_at}</p>
+        <p className="mt-2 text-sm text-gray-500">
+          {new JapaneseDateTime(article.published_at).toJST()}
+        </p>
 
         <p className="mt-1 text-sm text-gray-600">{article.anime_name}</p>
       </header>

@@ -43,26 +43,41 @@ export const Report = ({
         errors={errors}
       />
 
+      {/* タイトル */}
+      <div className="mt-8">
+        <Input
+          id={"reportTitle"}
+          text="タイトル"
+          name={`reports.${index}.title`}
+          register={register}
+          placeholder="タイトルを入力"
+          validation={{ required: "タイトルを入力してください" }}
+          error={errors?.reports?.[index]?.title?.message}
+        />
+      </div>
+
       {/* 聖地の場所 */}
-      <Input
-        id={"location"}
-        text="タイトル"
-        name={`reports.${index}.location`}
-        register={register}
-        placeholder="聖地の場所を入力"
-        validation={{ required: "聖地の場所を入力してください" }}
-        error={errors?.reports?.[index]?.location?.message}
-      />
+      <div className="mt-8">
+        <Input
+          id={"location"}
+          text="聖地の場所"
+          name={`reports.${index}.location`}
+          register={register}
+          placeholder="聖地の場所を入力"
+          validation={{ required: "聖地の場所を入力してください" }}
+          error={errors?.reports?.[index]?.location?.message}
+        />
+      </div>
 
       {/* レポート内容 */}
       <div className="mt-8">
         <TextArea
-          name={`reports.${index}.inputValue`}
+          name={`reports.${index}.description`}
           register={register}
           validation={{
             required: "内容を入力してください",
           }}
-          error={errors.reports?.[index]?.inputValue?.message}
+          error={errors.reports?.[index]?.description?.message}
           text="説明"
           placeholder="この聖地はどうだった？"
         />
