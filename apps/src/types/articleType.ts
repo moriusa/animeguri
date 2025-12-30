@@ -2,7 +2,7 @@ import { User } from "./userType";
 
 export interface ReportsImages {
   id: string;
-  image_url: string;
+  s3_key: string;
   caption: string;
   display_order: string;
 }
@@ -13,13 +13,13 @@ export interface Reports {
   description: string;
   location: string;
   display_order: number;
-  images: ReportsImages[]
+  report_images: ReportsImages[]
 }
 
 export interface Article {
   id: string;
   title: string;
-  thumbnail_url: string;
+  thumbnail_s3_key: string;
   anime_name: string;
   likes_count: number;
   comment_count: number;

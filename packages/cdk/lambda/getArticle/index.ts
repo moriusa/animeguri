@@ -23,6 +23,11 @@ export const handler = async (
         reports (
           *,
           report_images (*)
+        ),
+        author:users (
+          id,
+          user_name,
+          profile_image_s3_key
         )
       `
       )
@@ -46,6 +51,8 @@ export const handler = async (
         body: JSON.stringify({ error: error.message }),
       };
     }
+
+    console.log(JSON.stringify(data));
 
     return {
       statusCode: 200,

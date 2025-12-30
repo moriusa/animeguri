@@ -4,6 +4,7 @@ import { FaMapMarkerAlt, FaRegHeart, FaRegComment } from "react-icons/fa";
 import { daysAgoConvert } from "@/utils/daysAgoConvert";
 import Image from "next/image";
 import { ArticleCard as ArticleCardType } from "@/types";
+import { s3KeyToImageUrl } from "@/utils/s3KeyToImageUrl";
 
 export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
   console.log(data);
@@ -30,7 +31,7 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
           </div> */}
           <div className="flex items-center gap-1 mt-3">
             <Image
-              src={data.author.profile_image_url}
+              src={s3KeyToImageUrl(data.author.profile_image_s3_key)}
               alt=""
               className="w-7 rounded-full"
               width={250}

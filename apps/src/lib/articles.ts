@@ -1,5 +1,5 @@
 "use cache";
-import { ArticleCard } from "@/types";
+import { Article, ArticleCard } from "@/types";
 
 interface ArticleListResponse {
   success: boolean;
@@ -14,7 +14,28 @@ interface ArticleListResponse {
 }
 
 const API_ENDPOINT =
-  "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com/";
+  "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
+
+export const getArticle = async (id: string) => {
+  const response = await fetch(`${API_ENDPOINT}/articles/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to fetch articles"
+      }`
+    );
+  }
+  const resData: Article = await response.json();
+  return resData;
+};
 
 export const getArticleCards = async (
   limit: number
@@ -41,18 +62,20 @@ export const getArticleCards = async (
   return resData.items;
 };
 
-
 export const getMyArticleCards = async (
   idToken: string,
   limit: number
 ): Promise<ArticleCard[]> => {
-  const response = await fetch(`${API_ENDPOINT}/user/me/articles?limit=${limit}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${idToken}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await fetch(
+    `${API_ENDPOINT}/user/me/articles?limit=${limit}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
   // レスポンスの状態チェック
   if (!response.ok) {
     const errorData = await response
@@ -87,7 +110,10 @@ export interface CreateArticleBody {
   }[];
 }
 
-export const createArticle = async (article: CreateArticleBody, idToken: string) => {
+export const createArticle = async (
+  article: CreateArticleBody,
+  idToken: string
+) => {
   const response = await fetch(`${API_ENDPOINT}/articles`, {
     method: "POST",
     body: JSON.stringify(article),

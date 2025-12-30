@@ -39,6 +39,7 @@ export const handler = async (
           )
         `
       )
+      .eq("article_status", "published")
       .order("created_at", { ascending: false }) // 新しい順など
       .range(from, to);
 

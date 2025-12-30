@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "animeguri-public-images.s3.ap-northeast-1.amazonaws.com",
+        hostname: "animeguri-images.s3.ap-northeast-1.amazonaws.com",
         pathname: "/**",
       },
     ],
