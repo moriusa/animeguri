@@ -8,7 +8,7 @@ import { useLogout } from "@/features/auth/useLogout";
 type Props = {
   userProfile: {
     user_name: string;
-    profile_image_url: string;
+    profile_image_s3_key: string;
   };
 };
 
@@ -44,7 +44,7 @@ export const UserMenu = ({ userProfile }: Props) => {
         className="w-10 h-10 relative rounded-full overflow-hidden border border-gray-200 cursor-pointer"
       >
         <Image
-          src={userProfile.profile_image_url}
+          src={userProfile.profile_image_s3_key}
           alt={userProfile.user_name}
           fill
           className="object-cover"

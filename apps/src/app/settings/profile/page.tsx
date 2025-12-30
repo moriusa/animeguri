@@ -7,7 +7,6 @@ import { RootState } from "@/store";
 import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
 
 export interface ProfileFormValues {
   userName: string;

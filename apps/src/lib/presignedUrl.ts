@@ -11,7 +11,7 @@ interface PresignedUrlRes {
 }
 
 const API_ENDPOINT =
-  "https://39vstgp97a.execute-api.ap-northeast-1.amazonaws.com";
+  "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
 
 export const genPresignedUrl = async (
   files: File[],

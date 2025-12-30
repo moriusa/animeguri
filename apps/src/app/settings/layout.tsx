@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/dashboard/Sidebar";
+import { Sidebar } from "@/components/settings/Sidebar";
 
 export default function ArticlesLayout({
   children,

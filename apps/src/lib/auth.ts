@@ -10,8 +10,8 @@ import {
 
 // ユーザープール情報(環境変数から取得)
 const userPool = new CognitoUserPool({
-  UserPoolId: "ap-northeast-1_2h6EbChqj",
-  ClientId: "1b3hcee8p6643fvkp726uumsj5",
+  UserPoolId: "ap-northeast-1_YUxI6TH2r",
+  ClientId: "3u3c8mot9i7dkqihb47oa1p51f",
 });
 
 export interface SignUpResult {
@@ -31,7 +31,6 @@ export const signUp = (signUpData: SignUpFormValues): Promise<SignUpResult> => {
   };
   const attributeEmail = new CognitoUserAttribute(dataEmail);
   attributeList.push(attributeEmail);
-
 
   return new Promise((resolve, reject) => {
     userPool.signUp(
@@ -181,5 +180,211 @@ export const signOut = () => {
   const cognitoUser = userPool.getCurrentUser();
   if (cognitoUser) {
     cognitoUser.signOut(); // cognitoが自動的にLocalStorageをクリアする
+  }
+};
+
+// ============================================
+// 🆕 ユーザー属性の更新
+// ============================================
+export interface UpdateUserAttributesParams {
+  email?: string;
+  name?: string;
+  phoneNumber?: string;
+  // カスタム属性も追加可能
+  // customAttribute?: string;
+}
+
+const updateUserAttributes = (
+  attributes: UpdateUserAttributesParams
+): Promise<string> => {
+  const cognitoUser = userPool.getCurrentUser();
+
+  if (!cognitoUser) {
+    return Promise.reject(new Error("ユーザーがログインしていません"));
+  }
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.getSession((err: Error, session: CognitoUserSession | null) => {
+      if (err || !session || !session.isValid()) {
+        reject(new Error("セッションが無効です"));
+        return;
+      }
+
+      const attributeList: CognitoUserAttribute[] = [];
+
+      // メールアドレス
+      if (attributes.email) {
+        attributeList.push(
+          new CognitoUserAttribute({
+            Name: "email",
+            Value: attributes.email,
+          })
+        );
+      }
+
+      // // 名前
+      // if (attributes.name) {
+      //   attributeList.push(
+      //     new CognitoUserAttribute({
+      //       Name: "name",
+      //       Value: attributes.name,
+      //     })
+      //   );
+      // }
+
+      // // 電話番号
+      // if (attributes.phoneNumber) {
+      //   attributeList.push(
+      //     new CognitoUserAttribute({
+      //       Name: "phone_number",
+      //       Value: attributes.phoneNumber,
+      //     })
+      //   );
+      // }
+
+      cognitoUser.updateAttributes(attributeList, (err, result) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result || "SUCCESS");
+      });
+    });
+  });
+};
+
+// ============================================
+// 🆕 メールアドレス変更（確認コード送信）
+// ============================================
+export const updateEmail = (newEmail: string): Promise<string> => {
+  return updateUserAttributes({ email: newEmail });
+};
+
+// ============================================
+// 🆕 メールアドレス変更の確認
+// ============================================
+export const verifyEmailChange = (
+  attributeName: string,
+  confirmationCode: string
+): Promise<string> => {
+  const cognitoUser = userPool.getCurrentUser();
+
+  if (!cognitoUser) {
+    return Promise.reject(new Error("ユーザーがログインしていません"));
+  }
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.getSession((err: Error, session: CognitoUserSession | null) => {
+      if (err || !session || !session.isValid()) {
+        reject(new Error("セッションが無効です"));
+        return;
+      }
+
+      cognitoUser.verifyAttribute(attributeName, confirmationCode, {
+        onSuccess: (result) => {
+          resolve(result || "SUCCESS");
+        },
+        onFailure: (err) => {
+          reject(err);
+        },
+      });
+    });
+  });
+};
+
+// ============================================
+// 🆕 パスワード変更
+// ============================================
+export const changePassword = (
+  oldPassword: string,
+  newPassword: string
+): Promise<string> => {
+  const cognitoUser = userPool.getCurrentUser();
+
+  if (!cognitoUser) {
+    return Promise.reject(new Error("ユーザーがログインしていません"));
+  }
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.getSession((err: Error, session: CognitoUserSession | null) => {
+      if (err || !session || !session.isValid()) {
+        reject(new Error("セッションが無効です"));
+        return;
+      }
+
+      cognitoUser.changePassword(oldPassword, newPassword, (err, result) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result || "SUCCESS");
+      });
+    });
+  });
+};
+
+// ============================================
+// 🆕 パスワードリセットリクエスト（忘れた場合）
+// ============================================
+export const forgotPassword = (email: string): Promise<string> => {
+  const cognitoUser = new CognitoUser({
+    Username: email,
+    Pool: userPool,
+  });
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.forgotPassword({
+      onSuccess: (data) => {
+        resolve(data.CodeDeliveryDetails?.Destination || "SUCCESS");
+      },
+      onFailure: (err) => {
+        reject(err);
+      },
+    });
+  });
+};
+
+// ============================================
+// 🆕 パスワードリセットの確認
+// ============================================
+export const confirmPassword = (
+  email: string,
+  confirmationCode: string,
+  newPassword: string
+): Promise<string> => {
+  const cognitoUser = new CognitoUser({
+    Username: email,
+    Pool: userPool,
+  });
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.confirmPassword(confirmationCode, newPassword, {
+      onSuccess: () => {
+        resolve("SUCCESS");
+      },
+      onFailure: (err) => {
+        reject(err);
+      },
+    });
+  });
+};
+
+// ============================================
+// 🆕 ユーザーアカウント削除（推奨: バックエンド経由）
+// ============================================
+export const deleteUserViaBackend = async (idToken: string): Promise<void> => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/delete`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("アカウントの削除に失敗しました");
   }
 };

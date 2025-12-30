@@ -25,7 +25,7 @@ export interface Article {
   comment_count: number;
   published_at: string;
   reports: Reports[];
-  author: Pick<User, "id" | "user_name" | "profile_image_url">;
+  author: Pick<User, "id" | "user_name" | "profile_image_s3_key">;
 }
 
 // カード記事
@@ -37,5 +37,5 @@ export interface ArticleCard {
   likes_count: string;
   comment_count: string;
   published_at: string;
-  author: Pick<User, "id" | "user_name" | "profile_image_url">;
+  author: Pick<User, "id" | "user_name" | "profile_image_s3_key">;
 }
