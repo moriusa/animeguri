@@ -36,7 +36,7 @@ export class InfraStack extends cdk.Stack {
       userPool: this.userPool,
     });
 
-    // S3 (ユーザープロフィール画像)
+    // S3バケット
     this.imagesBucket = new s3.Bucket(this, "ImagesBucket", {
       // bucketName は省略でも可（CDK に任せる方が安全）
       bucketName: `animeguri-images`,
