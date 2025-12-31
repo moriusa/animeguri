@@ -1,7 +1,7 @@
 "use client";
-import { Control, Controller, FieldErrors } from "react-hook-form";
+import { Control, Controller, FieldErrors, useWatch } from "react-hook-form";
 import { ImageUploadWithCrop } from "../common/ImageUploadWithCrop";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProfileFormValues } from "@/app/settings/profile/page";
 
 interface Props {
@@ -13,19 +13,42 @@ interface Props {
 export const ProfileImageUpload = ({
   control,
   errors,
-  defaultImage,
+  defaultImage = "https://placehold.jp/150x150.png",
 }: Props) => {
-  const [croppedImage, setCroppedImage] = useState<string | null>(
-    defaultImage || null
-  );
+  const [croppedImage, setCroppedImage] = useState<string | null>(defaultImage);
+
+  // フォームの値を監視
+  const profileImageValue = useWatch({
+    control,
+    name: "profileImage",
+  });
+
+  // 値が変更されたらプレビューを更新
+  useEffect(() => {
+    const updatePreview = async () => {
+      if (typeof profileImageValue === "string") {
+        // 既存のURL
+        setCroppedImage(profileImageValue);
+      } else if (profileImageValue instanceof File) {
+        // 新規ファイル
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setCroppedImage(reader.result as string);
+        };
+        reader.readAsDataURL(profileImageValue);
+      } else {
+        // null or undefined
+        setCroppedImage(defaultImage);
+      }
+    };
+
+    updatePreview();
+  }, [profileImageValue, defaultImage]);
 
   return (
     <Controller
       name="profileImage"
       control={control}
-      rules={{
-        required: false, // プロフィール画像は任意
-      }}
       render={({ field }) => (
         <ImageUploadWithCrop
           label=""
@@ -35,8 +58,8 @@ export const ProfileImageUpload = ({
             setCroppedImage(croppedDataUrl);
           }}
           onImageRemove={() => {
-            field.onChange(undefined);
-            setCroppedImage(null);
+            field.onChange(null);
+            setCroppedImage(defaultImage);
           }}
           aspectRatio={1}
           shape="circle"

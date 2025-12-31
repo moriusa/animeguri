@@ -11,7 +11,7 @@ import { useSelector } from "react-redux";
 export interface ProfileFormValues {
   userName: string;
   bio: string;
-  profileImage: File | null;
+  profileImage: File | string | null;
   xUrl: string;
   facebookUrl: string;
   youtubeUrl: string;
@@ -48,7 +48,7 @@ const Page = () => {
       reset({
         userName: profile.user_name || "",
         bio: profile.bio || "",
-        profileImage: null, // 既存画像はURLで表示
+        profileImage: profile.profile_image_s3_key || null, // 既存画像はURLで表示
         xUrl: profile.x_url || "",
         facebookUrl: profile.facebook_url || "",
         youtubeUrl: profile.youtube_url || "",
@@ -59,7 +59,6 @@ const Page = () => {
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     try {
-      console.log("Submitting:", data);
       await updateUserProfileWithImages(data, user!.idToken);
       // フォームの状態をリセット（これで isDirty が false になる）
       reset(data);
@@ -81,7 +80,7 @@ const Page = () => {
       reset({
         userName: profile.user_name || "",
         bio: profile.bio || "",
-        profileImage: null,
+        profileImage: profile.profile_image_s3_key || null,
         xUrl: profile.x_url || "",
         facebookUrl: profile.facebook_url || "",
         youtubeUrl: profile.youtube_url || "",

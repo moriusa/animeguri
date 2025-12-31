@@ -32,7 +32,7 @@ export const handler = async (
       .select(
         `
           *,
-          user:users (
+          author:users (
             id,
             user_name,
             profile_image_s3_key
@@ -62,20 +62,20 @@ export const handler = async (
     }
 
     // ここで CloudFront URL に整形
-    const items = (data ?? []).map((row) => ({
-      ...row,
-      thumbnail_url: buildImageUrl(row.thumbnail_s3_key),
-      author: {
-        ...row.user,
-        profile_image_url: buildImageUrl(row.user.profile_image_s3_key),
-      },
-    }));
-    console.log(items);
+    // const items = (data ?? []).map((row) => ({
+    //   ...row,
+    //   thumbnail_url: buildImageUrl(row.thumbnail_s3_key),
+    //   author: {
+    //     ...row.user,
+    //     profile_image_url: buildImageUrl(row.user.profile_image_s3_key),
+    //   },
+    // }));
+    // console.log(items);
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        items,
+        data,
         status: statusFilter,
         limit,
         offset,

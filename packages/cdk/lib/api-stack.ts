@@ -126,6 +126,20 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const getListUserArticles = new NodejsFunction(this, "GetListUserArticles", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getListUserArticles/index.ts"),
+      functionName: "animeguri-get-list-user-articles",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
     const getArticle = new NodejsFunction(this, "GetArticle", {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -212,6 +226,11 @@ export class ApiStack extends cdk.Stack {
       getListArticles
     );
 
+    const getListUserArticlesIntegration = new HttpLambdaIntegration(
+      "GetListUserArticlesIntegration",
+      getListUserArticles
+    );
+
     const getArticleIntegration = new HttpLambdaIntegration(
       "GetArticleIntegration",
       getArticle
@@ -284,6 +303,12 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
+      path: "/user/{id}/articles",
+      methods: [HttpMethod.GET],
+      integration: getListUserArticlesIntegration,
+    });
+
+    api.addRoutes({
       path: "/articles/{id}",
       methods: [HttpMethod.GET],
       integration: getArticleIntegration,
@@ -316,12 +341,13 @@ export class ApiStack extends cdk.Stack {
     supabaseAnonKeyParam.grantRead(getListMyArticles);
     supabaseUrlParam.grantRead(getListArticles);
     supabaseAnonKeyParam.grantRead(getListArticles);
+    supabaseUrlParam.grantRead(getListUserArticles);
+    supabaseAnonKeyParam.grantRead(getListUserArticles);
     supabaseUrlParam.grantRead(getArticle);
     supabaseAnonKeyParam.grantRead(getArticle);
     supabaseUrlParam.grantRead(createArticle);
     supabaseAnonKeyParam.grantRead(createArticle);
     // s3読み許可
-    imagesBucket.grantRead(getPublicUserFn);
     imagesBucket.grantReadWrite(getMeFn);
     imagesBucket.grantRead(getListArticles);
     imagesBucket.grantRead(getListMyArticles);

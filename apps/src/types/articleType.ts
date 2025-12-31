@@ -32,7 +32,7 @@ export interface Article {
 export interface ArticleCard {
   id: string;
   title: string;
-  thumbnail_url: string;
+  thumbnail_s3_key: string;
   anime_name: string;
   likes_count: string;
   comment_count: string;

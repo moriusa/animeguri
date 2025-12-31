@@ -3,7 +3,7 @@ import { Article, ArticleCard } from "@/types";
 
 interface ArticleListResponse {
   success: boolean;
-  items: ArticleCard[];
+  data: ArticleCard[];
   count?: number;
   error?: string;
   message?: string;
@@ -59,7 +59,33 @@ export const getArticleCards = async (
   }
 
   const resData: ArticleListResponse = await response.json();
-  return resData.items;
+  return resData.data;
+};
+
+export const getUserArticleCards = async (
+  id: string,
+  limit: number
+): Promise<ArticleCard[]> => {
+  const response = await fetch(`${API_ENDPOINT}/user/${id}/articles?limit=${limit}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  // レスポンスの状態チェック
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to fetch articles"
+      }`
+    );
+  }
+
+  const resData: ArticleListResponse = await response.json();
+  return resData.data;
 };
 
 export const getMyArticleCards = async (
@@ -89,7 +115,7 @@ export const getMyArticleCards = async (
   }
 
   const resData: ArticleListResponse = await response.json();
-  return resData.items;
+  return resData.data;
 };
 
 export interface CreateArticleBody {

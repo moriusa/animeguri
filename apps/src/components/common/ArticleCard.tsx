@@ -13,7 +13,7 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
       <Link href={`/article/${data.id}`}>
         <p className="py-1 px-2 text-white">{data.anime_name}</p>
         <Image
-          src={data.thumbnail_url}
+          src={s3KeyToImageUrl(data.thumbnail_s3_key)}
           alt=""
           className="aspect-video object-cover"
           width={250}

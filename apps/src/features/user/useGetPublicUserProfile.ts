@@ -1,26 +1,19 @@
-import { getUserProfile } from "@/lib/userProfile";
+"use client";
+
+import { getPublicUserProfile } from "@/lib/userProfile";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { User } from "@/types";
 
-// res型
-export interface UserProfile {
-  id: string;
-  user_name: string;
-  bio?: string;
-  profile_image_s3_key: string;
-  x_url?: string;
-  facebook_url?: string;
-  youtube_url?: string;
-  website_url?: string;
-}
-
-export const useGetUserProfile = (idToken: string) => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+export const useGetPublicUserProfile = () => {
+  const params = useParams();
+  const id = params.id as string;
+  const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // idTokenがない場合は何もしない
-    if (!idToken) {
+    if (!id) {
       setLoading(false);
       return;
     }
@@ -30,7 +23,7 @@ export const useGetUserProfile = (idToken: string) => {
         setLoading(true);
         setError(null);
 
-        const res = await getUserProfile(idToken);
+        const res = await getPublicUserProfile(id);
         setProfile(res);
       } catch (err) {
         console.error("Failed to fetch profile:", err);
@@ -44,7 +37,7 @@ export const useGetUserProfile = (idToken: string) => {
     };
 
     fetchProfile();
-  }, [idToken]);
+  }, [id]);
 
   return { profile, loading, error };
 };
