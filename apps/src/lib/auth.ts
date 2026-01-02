@@ -144,6 +144,7 @@ export const getCurrentUser = (): Promise<UserInfo | null> => {
   }
 
   return new Promise((resolve, reject) => {
+    // getSessionは内部で自動的にトークンをリフレッシュしてくれる
     cognitoUser.getSession((err: Error, session: CognitoUserSession | null) => {
       if (err) {
         reject(err);
@@ -168,6 +169,7 @@ export const getCurrentUser = (): Promise<UserInfo | null> => {
           userId: session.getIdToken().payload.sub,
           accessToken: session.getAccessToken().getJwtToken(),
           idToken: session.getIdToken().getJwtToken(),
+          refreshToken: session.getRefreshToken().getToken(),
         };
 
         resolve(userInfo);

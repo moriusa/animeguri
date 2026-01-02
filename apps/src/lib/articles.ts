@@ -1,5 +1,6 @@
 "use cache";
 import { Article, ArticleCard } from "@/types";
+import { getCurrentUser } from "./auth";
 
 interface ArticleListResponse {
   success: boolean;
@@ -92,6 +93,7 @@ export const getMyArticleCards = async (
   idToken: string,
   limit: number
 ): Promise<ArticleCard[]> => {
+  await getCurrentUser();
   const response = await fetch(
     `${API_ENDPOINT}/user/me/articles?limit=${limit}`,
     {

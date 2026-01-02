@@ -6,6 +6,7 @@ export interface UserInfo {
   userId: string;
   accessToken: string;
   idToken: string;
+  refreshToken?: string;
 }
 
 interface AuthState {

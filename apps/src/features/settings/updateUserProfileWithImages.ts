@@ -52,11 +52,11 @@ export const updateUserProfileWithImages = async (
   console.log("form変換", reqBody)
 
   // 4. DB保存
-  const article = await updateUserProfile(reqBody, idToken);
+  const profile = await updateUserProfile(reqBody, idToken);
   console.log("更新完了");
-  revalidatePath("/");
-  revalidatePath("/user");
-  revalidatePath("/dashboard");
+  revalidatePath("/", "layout");
+  // revalidatePath("/user");
+  // revalidatePath("/dashboard");
   // revalidatePath("/settings");
-  return article;
+  return profile
 };

@@ -6,7 +6,7 @@ import { useGetUserProfile } from "@/features/settings/useGetUserProfile";
 import { RootState } from "@/store";
 import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export interface ProfileFormValues {
   userName: string;
@@ -19,6 +19,7 @@ export interface ProfileFormValues {
 }
 
 const Page = () => {
+  // const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const { profile, error, loading } = useGetUserProfile(user?.idToken || "");
 
@@ -60,6 +61,7 @@ const Page = () => {
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     try {
       await updateUserProfileWithImages(data, user!.idToken);
+      // dispatch(setUserProfile(newUserProfile)); // Todo
       // フォームの状態をリセット（これで isDirty が false になる）
       reset(data);
     } catch (error) {
