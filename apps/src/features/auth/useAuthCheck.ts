@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser } from "@/lib/auth";
 import { login, logout, setUserProfile } from "./AuthSlice";
+import { RootState } from "@/store";
 import { getUserProfile } from "@/lib/userProfile";
 
 export const useAuthCheck = () => {
   const dispatch = useDispatch();
+  const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -18,9 +20,11 @@ export const useAuthCheck = () => {
         if (userInfo) {
           // セッションが有効ならReduxに復元
           dispatch(login(userInfo));
-          // DynamoDBのユーザー情報も
-          const userProfile = await getUserProfile(userInfo.idToken);
-          dispatch(setUserProfile(userProfile));
+          if (!userProfile) {
+            // DynamoDBのユーザー情報も
+            const dbUserProfile = await getUserProfile(userInfo.idToken);
+            dispatch(setUserProfile(dbUserProfile));
+          }
         } else {
           dispatch(logout());
         }
@@ -31,5 +35,6 @@ export const useAuthCheck = () => {
     };
 
     checkAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 };

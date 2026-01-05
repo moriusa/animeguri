@@ -1,12 +1,13 @@
 "use client";
 import { Input } from "@/components/common";
 import { ProfileImageUpload } from "@/components/settings/ProfileImageUpload";
+import { useAuthCheck } from "@/features/auth/useAuthCheck";
 import { updateUserProfileWithImages } from "@/features/settings/updateUserProfileWithImages";
 import { useGetUserProfile } from "@/features/settings/useGetUserProfile";
 import { RootState } from "@/store";
 import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 export interface ProfileFormValues {
   userName: string;
@@ -19,9 +20,9 @@ export interface ProfileFormValues {
 }
 
 const Page = () => {
-  // const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const { profile, error, loading } = useGetUserProfile(user?.idToken || "");
+  useAuthCheck()
 
   const {
     control,
