@@ -34,6 +34,13 @@ export class InfraStack extends cdk.Stack {
 
     this.userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
       userPool: this.userPool,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+      },
+      accessTokenValidity: cdk.Duration.hours(1), // アクセストークン有効期限
+      idTokenValidity: cdk.Duration.hours(1), // IDトークン有効期限
+      refreshTokenValidity: cdk.Duration.days(30), // リフレッシュトークン有効期限
     });
 
     // S3バケット

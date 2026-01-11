@@ -1,5 +1,6 @@
 "use client";
 import { useGetArticle } from "@/features/articles/useGetArticle";
+import { useBookmark } from "@/features/bookmarks/useBookmark";
 import { JapaneseDateTime } from "@/utils/formatDate";
 import { s3KeyToImageUrl } from "@/utils/s3KeyToImageUrl";
 import Image from "next/image";
@@ -8,6 +9,14 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 
 const Page = () => {
   const { article, loading, error } = useGetArticle();
+  const {
+    isBookmarked,
+    toggleBookmark,
+    loading: bookmarkLoading,
+    checkLoading,
+    error: bookmarkError,
+  } = useBookmark();
+  if (loading) return <p>記事取得中...</p>;
   if (!article) return <p>記事が見つかりません</p>;
   console.log(article);
   return (
@@ -52,7 +61,31 @@ const Page = () => {
           </div>
         </Link>
       </section>
+      <div>
+        <button
+          onClick={toggleBookmark}
+          disabled={bookmarkLoading}
+          className={`bookmark-btn ${isBookmarked ? "active" : ""}`}
+        >
+          {bookmarkLoading ? (
+            <>
+              <span className="spinner" />
+              処理中...
+            </>
+          ) : isBookmarked ? (
+            "★ ブックマーク済み"
+          ) : (
+            "☆ ブックマーク"
+          )}
+        </button>
 
+        {bookmarkError && (
+          <div className="error-message">
+            <p>{bookmarkError}</p>
+            <button onClick={toggleBookmark}>再試行</button>
+          </div>
+        )}
+      </div>
       {/* レポート一覧 */}
       <section className="space-y-8 px-4">
         {article.reports.map((report, idx) => (

@@ -126,19 +126,23 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
-    const getListUserArticles = new NodejsFunction(this, "GetListUserArticles", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/getListUserArticles/index.ts"),
-      functionName: "animeguri-get-list-user-articles",
-      environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
+    const getListUserArticles = new NodejsFunction(
+      this,
+      "GetListUserArticles",
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/getListUserArticles/index.ts"),
+        functionName: "animeguri-get-list-user-articles",
+        environment: {
+          SUPABASE_URL: supabaseUrlParam.parameterName,
+          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+          S3_BUCKET_NAME: imagesBucket.bucketName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      }
+    );
 
     const getArticle = new NodejsFunction(this, "GetArticle", {
       handler: "handler",
@@ -180,6 +184,72 @@ export class ApiStack extends cdk.Stack {
           SUPABASE_URL: supabaseUrlParam.parameterName,
           SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
           S3_BUCKET_NAME: imagesBucket.bucketName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      }
+    );
+
+    const createBookmark = new NodejsFunction(this, "CreateBookmark", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/createBookmark/index.ts"),
+      functionName: "animeguri-create-bookmark",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const deleteBookmark = new NodejsFunction(this, "DeleteBookmark", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/deleteBookmark/index.ts"),
+      functionName: "animeguri-delete-bookmark",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const getBookmarkArticlesList = new NodejsFunction(
+      this,
+      "GetBookmarkArticlesList",
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(
+          __dirname,
+          "../lambda/getBookmarkArticlesList/index.ts"
+        ),
+        functionName: "animeguri-get-bookmark-articles-list",
+        environment: {
+          SUPABASE_URL: supabaseUrlParam.parameterName,
+          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      }
+    );
+
+    const getBookmarkCheckSingle = new NodejsFunction(
+      this,
+      "GetBookmarkCheckSingle",
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(
+          __dirname,
+          "../lambda/getBookmarkCheckSingle/index.ts"
+        ),
+        functionName: "animeguri-get-bookmark-check-single",
+        environment: {
+          SUPABASE_URL: supabaseUrlParam.parameterName,
+          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
         },
         timeout: Duration.seconds(10),
         memorySize: 256,
@@ -242,8 +312,28 @@ export class ApiStack extends cdk.Stack {
     );
 
     const generatePresignedUrlIntegration = new HttpLambdaIntegration(
-      "GeneratePresignedUrl",
+      "GeneratePresignedUrlIntegration",
       generatePresignedUrl
+    );
+
+    const createBookmarkIntegration = new HttpLambdaIntegration(
+      "CreateBookmarkIntegration",
+      createBookmark
+    );
+
+    const deleteBookmarkIntegration = new HttpLambdaIntegration(
+      "DeleteBookmarkIntegration",
+      deleteBookmark
+    );
+
+    const getBookmarkArticlesListIntegration = new HttpLambdaIntegration(
+      "GetBookmarkArticlesListIntegration",
+      getBookmarkArticlesList
+    );
+
+    const getBookmarkCheckSingleIntegration = new HttpLambdaIntegration(
+      "GetBookmarkCheckSingleIntegration",
+      getBookmarkCheckSingle
     );
 
     // API Gateway
@@ -328,25 +418,56 @@ export class ApiStack extends cdk.Stack {
       authorizer,
     });
 
+    api.addRoutes({
+      path: "/bookmarks",
+      methods: [HttpMethod.POST],
+      integration: createBookmarkIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/bookmarks",
+      methods: [HttpMethod.DELETE],
+      integration: deleteBookmarkIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/users/bookmarks",
+      methods: [HttpMethod.GET],
+      integration: getBookmarkArticlesListIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/bookmarks/check",
+      methods: [HttpMethod.GET],
+      integration: getBookmarkCheckSingleIntegration,
+      authorizer,
+    });
+
     // ParamStore読み取り許可
-    supabaseUrlParam.grantRead(getPublicUserFn);
-    supabaseAnonKeyParam.grantRead(getPublicUserFn);
-    supabaseUrlParam.grantRead(getMeFn);
-    supabaseAnonKeyParam.grantRead(getMeFn);
-    supabaseUrlParam.grantRead(createUserFn);
-    supabaseAnonKeyParam.grantRead(createUserFn);
-    supabaseUrlParam.grantRead(patchUserProfile);
-    supabaseAnonKeyParam.grantRead(patchUserProfile);
-    supabaseUrlParam.grantRead(getListMyArticles);
-    supabaseAnonKeyParam.grantRead(getListMyArticles);
-    supabaseUrlParam.grantRead(getListArticles);
-    supabaseAnonKeyParam.grantRead(getListArticles);
-    supabaseUrlParam.grantRead(getListUserArticles);
-    supabaseAnonKeyParam.grantRead(getListUserArticles);
-    supabaseUrlParam.grantRead(getArticle);
-    supabaseAnonKeyParam.grantRead(getArticle);
-    supabaseUrlParam.grantRead(createArticle);
-    supabaseAnonKeyParam.grantRead(createArticle);
+    const fnList = [
+      getPublicUserFn,
+      getMeFn,
+      createUserFn,
+      patchUserProfile,
+      getListMyArticles,
+      getListArticles,
+      getListUserArticles,
+      getArticle,
+      createArticle,
+      createBookmark,
+      deleteBookmark,
+      getBookmarkArticlesList,
+      getBookmarkCheckSingle,
+    ];
+
+    fnList.map((fn) => {
+      supabaseUrlParam.grantRead(fn);
+      supabaseAnonKeyParam.grantRead(fn);
+    });
+
     // s3読み許可
     imagesBucket.grantReadWrite(getMeFn);
     imagesBucket.grantRead(getListArticles);
