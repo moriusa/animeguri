@@ -41,12 +41,13 @@ export const ReportImage = ({ reportImages }: ReportImageProps) => {
           onClick={() => handleImageClick(index)}
           className="cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <div className="relative w-full aspect-[4/3] overflow-hidden rounded-md">
+          <div className="aspect-[4/3] overflow-hidden rounded-md">
             <Image
               src={s3KeyToImageUrl(image.s3_key)}
               alt={image.caption || `Image ${index + 1}`}
-              fill
-              className="object-cover"
+              width={800}
+              height={600}
+              className="w-full h-full object-cover"
             />
           </div>
           {image.caption && (
