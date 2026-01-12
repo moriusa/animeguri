@@ -1,4 +1,5 @@
 "use client";
+import { ReportImage } from "@/components/article/ReportImage";
 import { useGetArticle } from "@/features/articles/useGetArticle";
 import { useBookmark } from "@/features/bookmarks/useBookmark";
 import { JapaneseDateTime } from "@/utils/formatDate";
@@ -18,7 +19,6 @@ const Page = () => {
   } = useBookmark();
   if (loading) return <p>記事取得中...</p>;
   if (!article) return <p>記事が見つかりません</p>;
-  console.log(article);
   return (
     <article className="max-w-3xl mx-auto pb-16">
       {/* HERO 部分 */}
@@ -111,23 +111,7 @@ const Page = () => {
             {/* 画像エリア */}
             {report.report_images.length > 0 && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {report.report_images.map((image) => (
-                  <figure key={image.id}>
-                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-md">
-                      <Image
-                        src={s3KeyToImageUrl(image.s3_key)}
-                        alt={image.caption || report.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    {image.caption && (
-                      <figcaption className="mt-1 text-xs text-gray-600">
-                        {image.caption}
-                      </figcaption>
-                    )}
-                  </figure>
-                ))}
+                <ReportImage reportImages={report.report_images} />
               </div>
             )}
           </div>
