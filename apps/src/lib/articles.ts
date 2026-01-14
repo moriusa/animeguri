@@ -162,3 +162,28 @@ export const createArticle = async (
     );
   }
 };
+
+export const deleteArticle = async (
+  articleId: string,
+  idToken: string
+) => {
+  const response = await fetch(`${API_ENDPOINT}/articles`, {
+    method: "DELETE",
+    body: JSON.stringify({ articleId: articleId }),
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  // レスポンスの状態チェック
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to delete articles"
+      }`
+    );
+  }
+};

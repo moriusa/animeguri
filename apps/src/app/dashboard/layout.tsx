@@ -6,7 +6,7 @@ export default function ArticlesLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#e8d9cc]">
+    <div className="flex min-h-screen">
       {/* サイドバー */}
       <aside className="w-64 p-8">
         <h1 className="text-3xl font-bold mb-8">記事</h1>

@@ -1,13 +1,12 @@
 import React from "react";
 import Link from "next/link";
-import { FaMapMarkerAlt, FaRegHeart, FaRegComment } from "react-icons/fa";
+import { FaRegHeart, FaRegComment } from "react-icons/fa";
 import { daysAgoConvert } from "@/utils/daysAgoConvert";
 import Image from "next/image";
 import { ArticleCard as ArticleCardType } from "@/types";
 import { s3KeyToImageUrl } from "@/utils/s3KeyToImageUrl";
 
 export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
-  console.log(data);
   return (
     <div className="rounded bg-secondary text-xs">
       <Link href={`/article/${data.id}`}>

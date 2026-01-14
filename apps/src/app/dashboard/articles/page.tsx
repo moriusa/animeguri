@@ -1,35 +1,10 @@
-'use client'
-import { ArticleCard } from "@/components/common/ArticleCard";
-import { getMyArticleCards } from "@/lib/articles";
-import { RootState } from "@/store";
-import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
-import { ArticleCard as ArticleCardType } from "@/types";
+"use client";
+
+import { ArticleCard02 } from "@/components/common/ArticleCard02";
+import { useGetMyArticleCards } from "@/features/articles/useGetMyArticleCards";
 
 const Page = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const [articles, setArticles] = useState<ArticleCardType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        setLoading(true);
-        const data = await getMyArticleCards(user!.idToken, 10);
-        setArticles(data);
-      } catch (err) {
-        console.error("Failed to fetch articles:", err);
-        setError("記事の取得に失敗しました");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchArticles();
-    }
-  }, [user]); // userが変わったら再取得
+  const { articles, loading, error } = useGetMyArticleCards();
 
   if (loading) {
     return <div className="text-center py-8">読み込み中...</div>;
@@ -44,12 +19,10 @@ const Page = () => {
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {articles.map((article) => (
-          <ArticleCard key={article.id} data={article} />
-        ))}
-      </div>
+    <div className="space-y-4">
+      {articles.map((article) => (
+        <ArticleCard02 data={article} key={article.id} />
+      ))}
     </div>
   );
 };

@@ -172,6 +172,19 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const deleteArticle = new NodejsFunction(this, "DeleteArticle", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/deleteArticle/index.ts"),
+      functionName: "animeguri-delete-article",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
     const generatePresignedUrl = new NodejsFunction(
       this,
       "GeneratePresignedUrl",
@@ -311,6 +324,11 @@ export class ApiStack extends cdk.Stack {
       createArticle
     );
 
+    const deleteArticleIntegration = new HttpLambdaIntegration(
+      "DeleteArticleIntegration",
+      deleteArticle
+    );
+
     const generatePresignedUrlIntegration = new HttpLambdaIntegration(
       "GeneratePresignedUrlIntegration",
       generatePresignedUrl
@@ -412,6 +430,13 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
+      path: "/articles",
+      methods: [HttpMethod.DELETE],
+      integration: deleteArticleIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
       path: "/presigned-url",
       methods: [HttpMethod.POST],
       integration: generatePresignedUrlIntegration,
@@ -457,6 +482,7 @@ export class ApiStack extends cdk.Stack {
       getListUserArticles,
       getArticle,
       createArticle,
+      deleteArticle,
       createBookmark,
       deleteBookmark,
       getBookmarkArticlesList,
