@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmDialog from "@/components/common/Popup";
 import HomeArticles from "@/components/HomeArticles";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
@@ -26,15 +27,7 @@ export default function Home() {
   return (
     <div className="space-y-16">
       <p>aboutpage</p>
-      {userProfile ? (
-        <div>
-          <p>Name: {userProfile.userName}</p>
-          <p>User ID: {userProfile.userId}</p>
-          <p>imageURL: {userProfile.profileImgUrl}</p>
-        </div>
-      ) : (
-        <p>No user profile</p>
-      )}
+      <ConfirmDialog />
       <HomeArticles type="latestArticles" />
       {/* <HomeArticles type="popularArticles" />
       <HomeArticles type="followArticles" />

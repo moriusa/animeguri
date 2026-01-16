@@ -1,63 +1,97 @@
-import { MESSAGES } from "@/features/popup";
+"use client";
 
-type MessageKeys = keyof typeof MESSAGES;
+import * as Dialog from "@radix-ui/react-dialog";
+// import { X } from 'lucide-react'; // アイコン用（オプション）
 
-interface PopupProps<T extends MessageKeys> {
-  messageKey: T;
-  params?: Parameters<(typeof MESSAGES)[T]["message"]>[0];
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm?: () => void; // confirm タイプの場合のみ使用
+interface ConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  children?: React.ReactNode;
+  onConfirm: () => void;
+  onCancel?: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  confirmVariant?: "default" | "danger";
 }
 
-export function Popup<T extends MessageKeys>({
-  messageKey,
-  params,
-  isOpen,
-  onClose,
+export default function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
   onConfirm,
-}: PopupProps<T>) {
-  if (!isOpen) return null;
-
-  const messageConfig = MESSAGES[messageKey];
-  const { type, title, message } = messageConfig;
-
-  // パラメータを渡してメッセージを生成
-  const messageText = message(params as any);
-
+  onCancel,
+  confirmText = "OK",
+  cancelText = "キャンセル",
+  confirmVariant = "default",
+}: ConfirmDialogProps) {
   const handleConfirm = () => {
-    onConfirm?.();
-    onClose();
+    onConfirm();
+    onOpenChange(false);
+  };
+
+  const handleCancel = () => {
+    onCancel?.();
+    onOpenChange(false);
   };
 
   return (
-    <div className="popup-overlay">
-      <div className={`popup-content popup-${type}`}>
-        <div className="popup-header">
-          <h3>{title}</h3>
-        </div>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        {/* オーバーレイ */}
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 z-50" />
 
-        <div className="popup-body">
-          <p>{messageText}</p>
-        </div>
-
-        <div className="popup-footer">
-          {type === "confirm" ? (
-            <>
-              <button onClick={onClose} className="btn-cancel">
-                キャンセル
-              </button>
-              <button onClick={handleConfirm} className="btn-confirm">
-                確認
-              </button>
-            </>
-          ) : (
-            <button onClick={onClose} className="btn-ok">
-              OK
+        {/* コンテンツ */}
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-lg shadow-lg p-6 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 z-50">
+          {/* 閉じるボタン（×） */}
+          <Dialog.Close asChild>
+            <button
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-white focus:ring-offset-2"
+              aria-label="閉じる"
+            >
+              x
             </button>
+          </Dialog.Close>
+
+          {/* タイトル */}
+          <Dialog.Title className="text-lg font-semibold mb-2">
+            {title}
+          </Dialog.Title>
+
+          {/* 説明文 */}
+          {description && (
+            <Dialog.Description className="text-sm text-gray-600 mb-4">
+              {description}
+            </Dialog.Description>
           )}
-        </div>
-      </div>
-    </div>
+
+          {/* カスタムコンテンツ */}
+          {children && <div className="mb-6">{children}</div>}
+
+          {/* ボタンエリア */}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={handleCancel}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+            >
+              {cancelText}
+            </button>
+            <button
+              onClick={handleConfirm}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+                confirmVariant === "danger"
+                  ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                  : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+              }`}
+            >
+              {confirmText}
+            </button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
