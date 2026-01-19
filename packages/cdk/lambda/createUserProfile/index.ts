@@ -23,7 +23,7 @@ export const handler = async (
 
     const supabase = await initSupabase();
 
-    // 既存ユーザー確認（必要なら）
+    // 既存ユーザー確認
     const { data: existing, error: existingError } = await supabase
       .from("users")
       .select("id")
@@ -40,7 +40,6 @@ export const handler = async (
     }
 
     if (existing) {
-      // 既に存在するなら 409 など
       return {
         statusCode: 409,
         headers: { "Content-Type": "application/json" },

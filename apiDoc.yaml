@@ -1,0 +1,763 @@
+# docs/openapi.yaml
+openapi: 3.0.0
+info:
+  title: animeguri API
+  description: アニメ聖地巡礼記事投稿プラットフォームのAPI仕様書
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: shirousagi.morikan@gmail.com
+
+servers:
+  - url: https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com
+    description: v1
+
+# 認証設定
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito id token
+
+  # 共通スキーマ定義
+  schemas:
+    # ユーザー関連
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ユーザーID
+          example: "user_abc123"
+        email:
+          type: string
+          format: email
+          example: "tanaka@example.com"
+        username:
+          type: string
+          description: ユーザー名
+          example: "tanaka_taro"
+        profile_image_s3_key:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/image.jpg"
+        bio:
+          type: string
+          nullable: true
+          example: "アニメ好きです"
+        article_count:
+          type: number
+          example: 0
+        bookmark_count:
+          type: number
+          example: 0
+        x_url:
+          type: string
+          example: "x.com"
+        facebook_url:
+          type: string
+          example: "facebook.com"
+        youtube_url:
+          type: string
+          example: "youtube.com"
+        website_url:
+          type: string
+          example: "website.com"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+
+    # 記事関連
+    Article:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "article_xyz789"
+        user_id:
+          type: string
+          example: "user_abc123"
+        title:
+          type: string
+          example: "鬼滅の刃の考察"
+        content:
+          type: string
+          example: "この作品は..."
+        anime_name:
+          type: string
+          example: "鬼滅の刃"
+        thumbnail_s3_key:
+          type: string
+          example: "thumbnails/article_xyz789.jpg"
+        article_status:
+          type: string
+          enum: [draft, public]
+          example: "public"
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # エラーレスポンス
+    DBError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Internal server error"
+
+    UnauthorizedError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Unauthorized
+
+# エンドポイント定義
+paths:
+  # ============================================
+  # ユーザー関連API
+  # ============================================
+  /users/me:
+    post:
+      summary: ユーザー作成
+      description: 新規ユーザーをusersテーブルに作成
+      operationId: createUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "text@example.com"
+      responses:
+        "201":
+          description: ユーザー作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: ユーザーID
+                        example: "user_abc123"
+                      username:
+                        type: string
+                        description: ユーザー名
+                        example: "user_abc123"
+                      email:
+                        type: string
+                        format: email
+                        example: "tanaka@example.com"
+                      profile_image_s3_key:
+                        type: string
+                        format: uri
+                        nullable: true
+                        example: "デフォルト画像S3key"
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2024-01-01T00:00:00Z"
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: "2024-01-01T00:00:00Z"
+
+        # '400':
+        #   description: バリデーションエラー
+        #   content:
+        #     application/json:
+        #       schema:
+        #         $ref: '#/components/schemas/DBError'
+        #       example:
+        #         error:
+        #           code: "VALIDATION_ERROR"
+        #           message: "Invalid request parameters"
+        #           details:
+        #             - field: "username"
+        #               message: "Username must be at least 3 characters"
+        "401":
+          description: 認証エラー(APIGatewayから返却)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "409":
+          description: ユーザーが既に存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "このユーザーは既に存在しています"
+                  email:
+                    type: string
+                    example: "test@example.com"
+
+    get:
+      summary: ユーザー情報取得（自分）
+      description: 認証済みユーザー自身の情報を取得
+      operationId: getMyUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    patch:
+      summary: ユーザー情報更新
+      description: 認証済みユーザー自身の情報を更新
+      operationId: updateUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 30
+                bio:
+                  type: string
+                  maxLength: 200
+                profile_image_url:
+                  type: string
+                  format: uri
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    delete:
+      summary: ユーザー削除
+      description: 認証済みユーザー自身のアカウントを削除
+      operationId: deleteUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: 削除成功（レスポンスボディなし）
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /users/{id}:
+    get:
+      summary: ユーザー情報取得（他ユーザー）
+      description: 指定したユーザーの公開プロフィール情報を取得
+      operationId: getPublicUser
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ユーザーID
+          schema:
+            type: string
+          example: "user_abc123"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "404":
+          description: ユーザーが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  # ============================================
+  # 記事関連API
+  # ============================================
+  /articles:
+    get:
+      summary: 複数記事取得
+      description: 公開されている記事一覧を取得（ページネーション対応）
+      operationId: getArticles
+      tags:
+        - Articles
+      parameters:
+        - name: limit
+          in: query
+          description: 取得件数
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+        - name: offset
+          in: query
+          description: オフセット
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        - name: anime_name
+          in: query
+          description: アニメ名でフィルタ
+          schema:
+            type: string
+          example: "鬼滅の刃"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Article"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      limit:
+                        type: integer
+                        example: 20
+                      offset:
+                        type: integer
+                        example: 0
+        "400":
+          description: パラメータエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    post:
+      summary: 記事投稿
+      description: 新規記事を作成
+      operationId: createArticle
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+                - anime_name
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  example: "鬼滅の刃の考察"
+                content:
+                  type: string
+                  minLength: 1
+                  example: "この作品について..."
+                anime_name:
+                  type: string
+                  example: "鬼滅の刃"
+                thumbnail_s3_key:
+                  type: string
+                  example: "thumbnails/xxx.jpg"
+                article_status:
+                  type: string
+                  enum: [draft, public]
+                  default: draft
+                  example: "draft"
+      responses:
+        "201":
+          description: 記事作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Article"
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /articles/{id}:
+    get:
+      summary: 単体記事取得
+      description: 指定したIDの記事を取得
+      operationId: getArticle
+      tags:
+        - Articles
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+          example: "article_xyz789"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Article"
+        "404":
+          description: 記事が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    patch:
+      summary: 記事更新
+      description: 指定した記事を更新
+      operationId: updateArticle
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                anime_name:
+                  type: string
+                article_status:
+                  type: string
+                  enum: [draft, public]
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Article"
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "403":
+          description: 権限なし（他人の記事）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "404":
+          description: 記事が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    delete:
+      summary: 記事削除
+      description: 指定した記事を削除
+      operationId: deleteArticle
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 削除成功
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "403":
+          description: 権限なし
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "404":
+          description: 記事が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  # ============================================
+  # ブックマーク関連API
+  # ============================================
+  /bookmarks:
+    post:
+      summary: ブックマーク追加
+      description: 記事をブックマークに追加
+      operationId: createBookmark
+      tags:
+        - Bookmarks
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - article_id
+              properties:
+                article_id:
+                  type: string
+                  example: "article_xyz789"
+      responses:
+        "201":
+          description: ブックマーク追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      bookmark_id:
+                        type: string
+                      article_id:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "409":
+          description: 既にブックマーク済み
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    delete:
+      summary: ブックマーク削除
+      description: ブックマークを削除
+      operationId: deleteBookmark
+      tags:
+        - Bookmarks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: article_id
+          in: query
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+          example: "article_xyz789"
+      responses:
+        "204":
+          description: 削除成功
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "404":
+          description: ブックマークが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /bookmarks/check:
+    get:
+      summary: ブックマーク状態確認（単一記事）
+      description: 指定した記事がブックマークされているか確認
+      operationId: checkBookmark
+      tags:
+        - Bookmarks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: articleId
+          in: query
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+          example: "article_xyz789"
+      responses:
+        "200":
+          description: 確認成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      is_bookmarked:
+                        type: boolean
+                        example: true
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+# タグの説明
+tags:
+  - name: Users
+    description: ユーザー関連API
+  - name: Articles
+    description: 記事関連API
+  - name: Bookmarks
+    description: ブックマーク関連API
