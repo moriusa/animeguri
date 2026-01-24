@@ -1,12 +1,9 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
-
-const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN!;
-const buildImageUrl = (s3Key?: string | null) =>
-  s3Key ? `https://${CLOUDFRONT_DOMAIN}/${s3Key}` : null;
+import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   try {
     const sub = event.requestContext.authorizer.jwt.claims.sub as string;
@@ -15,7 +12,7 @@ export const handler = async (
     const qs = event.queryStringParameters || {};
     const limit = qs.limit ? parseInt(qs.limit, 10) : 20; // デフォルト 20 件
     const offset = qs.offset ? parseInt(qs.offset, 10) : 0; // デフォルト 0 件目から
-    const statusFilter = qs.status; // 'draft', 'public', 'all'const status = qs.status ?? "all";
+    const statusFilter = qs.status ?? "draft"; // 'draft', 'public', 'all'
 
     if (Number.isNaN(limit) || Number.isNaN(offset)) {
       return {
@@ -37,7 +34,7 @@ export const handler = async (
             user_name,
             profile_image_s3_key
           )
-        `
+        `,
       )
       .eq("user_id", sub)
       .order("created_at", { ascending: false }) // 新しい順など
@@ -49,7 +46,6 @@ export const handler = async (
     } else if (statusFilter === "public") {
       query = query.eq("status", "public");
     }
-    // 'all' or 未指定 →
 
     const { data, error } = await query;
 
@@ -61,24 +57,37 @@ export const handler = async (
       };
     }
 
-    // ここで CloudFront URL に整形
-    // const items = (data ?? []).map((row) => ({
-    //   ...row,
-    //   thumbnail_url: buildImageUrl(row.thumbnail_s3_key),
-    //   author: {
-    //     ...row.user,
-    //     profile_image_url: buildImageUrl(row.user.profile_image_s3_key),
-    //   },
-    // }));
-    // console.log(items);
+    const transData = data.map((article) => ({
+      id: article.id,
+      userId: article.user_id,
+      title: article.title,
+      animeName: article.anime_name,
+      thumbnailUrl: getArticleImageUrl(article.thumbnail_s3_key),
+      likesCount: article.likes_count,
+      bookmarkCount: article.bookmark_count,
+      commentCount: article.comment_count,
+      reportCount: article.report_count,
+      articleStatus: article.article_status,
+      publishedAt: article.published_at,
+      createdAt: article.created_at,
+      updatedAt: article.updated_at,
+      author: {
+        id: article.author.id,
+        userName: article.author.user_name,
+        profileImageUrl: getUserImageUrl(article.author.profile_image_s3_key),
+      },
+    }));
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        data,
+        data: transData,
+        pagination: {
+          total: offset + limit,
+          limit: limit,
+          offset: offset,
+        },
         status: statusFilter,
-        limit,
-        offset,
       }),
     };
   } catch (e) {

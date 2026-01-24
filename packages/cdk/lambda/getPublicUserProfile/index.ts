@@ -6,16 +6,7 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
   try {
     const supabase = await initSupabase();
     const userId = event.pathParameters?.userId;
-    if (!userId) {
-      console.log("User ID not found");
-      return {
-        statusCode: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: "User ID not found" }),
-      };
-    }
+
     const { data, error } = await supabase
       .from("users")
       .select("*")
@@ -26,14 +17,14 @@ export const handler = async (event: APIGatewayProxyEventV2) => {
       console.error("supabase error:", error);
       return {
         statusCode: 500,
-        body: JSON.stringify({ message: "Failed to fetch user profile" }),
+        body: JSON.stringify({ message: "Internal server error" }),
       };
     }
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: { data: data },
     };
   } catch (error: any) {
     console.error("Error fetching user profile:", error);

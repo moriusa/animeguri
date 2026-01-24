@@ -39,35 +39,35 @@ export const handler = async (
     const body: CreateArticleBody = JSON.parse(event.body);
 
     // バリデーション
-    if (!body.title || !body.anime_name) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: "title and anime_name are required",
-        }),
-      };
-    }
+    // if (!body.title || !body.anime_name) {
+    //   return {
+    //     statusCode: 400,
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       message: "title and anime_name are required",
+    //     }),
+    //   };
+    // }
 
-    if (body.title.length > 200) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: "title must be 200 characters or less",
-        }),
-      };
-    }
+    // if (body.title.length > 200) {
+    //   return {
+    //     statusCode: 400,
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       message: "title must be 200 characters or less",
+    //     }),
+    //   };
+    // }
 
-    if (body.anime_name.length > 200) {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: "anime_name must be 200 characters or less",
-        }),
-      };
-    }
+    // if (body.anime_name.length > 200) {
+    //   return {
+    //     statusCode: 400,
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       message: "anime_name must be 200 characters or less",
+    //     }),
+    //   };
+    // }
 
     const supabase = await initSupabase();
 

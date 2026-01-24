@@ -430,7 +430,7 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
-      path: "/articles",
+      path: "/articles/{id}",
       methods: [HttpMethod.DELETE],
       integration: deleteArticleIntegration,
       authorizer,
@@ -451,7 +451,7 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
-      path: "/bookmarks",
+      path: "/bookmarks/{id}",
       methods: [HttpMethod.DELETE],
       integration: deleteBookmarkIntegration,
       authorizer,

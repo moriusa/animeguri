@@ -1,8 +1,9 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
+import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
 
@@ -32,35 +33,62 @@ export const handler = async (
       id,
       created_at,
       article:articles (
-        id,
-        title,
-        thumbnail_s3_key,
+        *,
         author:users (
           id,
           user_name,
           profile_image_s3_key
         ),
-        bookmark_count,
-        published_at
       )
     `,
-        { count: "exact" }
+        { count: "exact" },
       )
       .eq("user_id", sub)
       .order("created_at", { ascending: false })
       .range(from, to);
 
     if (error || !data || !count) {
-      console.log(error)
+      console.log(error);
       return {
         statusCode: 404,
         body: JSON.stringify({ error: "Bookmark not found" }),
       };
     }
+
+    // TODO: ちゃんとしたレスポンスの型に
+    const bookmarksData = data as any;
+
+    const transData = bookmarksData.map((bookmark: any) => ({
+      id: bookmark.id,
+      createdAt: bookmark.created_at,
+      article: {
+        id: bookmark.article.id,
+        userId: bookmark.article.user_id,
+        title: bookmark.title,
+        animeName: bookmark.anime_name,
+        thumbnailUrl: getArticleImageUrl(bookmark.article.thumbnail_s3_key),
+        likesCount: bookmark.article.likes_count,
+        bookmarkCount: bookmark.article.bookmark_count,
+        commentCount: bookmark.article.comment_count,
+        reportCount: bookmark.article.report_count,
+        articleStatus: bookmark.article.article_status,
+        publishedAt: bookmark.article.published_at,
+        createdAt: bookmark.article.created_at,
+        updatedAt: bookmark.article.updated_at,
+        author: {
+          id: bookmark.article.author.id,
+          userName: bookmark.article.author.user_name,
+          profileImageUrl: getUserImageUrl(
+            bookmark.article.author.profile_image_s3_key,
+          ),
+        },
+      },
+    }));
+
     return {
       statusCode: 200,
       body: JSON.stringify({
-        data,
+        data: transData,
         pagination: {
           from,
           to,
@@ -76,7 +104,6 @@ export const handler = async (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: "Internal server error",
-        error: e.message,
       }),
     };
   }

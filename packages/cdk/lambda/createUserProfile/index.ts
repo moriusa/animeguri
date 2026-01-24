@@ -16,7 +16,7 @@ export const handler = async (
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: "id, email, user_name are required",
+          message: "id, email are required",
         }),
       };
     }
@@ -35,7 +35,7 @@ export const handler = async (
       return {
         statusCode: 500,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "DB error" }),
+        body: JSON.stringify({ message: "Internal server error" }),
       };
     }
 
@@ -43,7 +43,10 @@ export const handler = async (
       return {
         statusCode: 409,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "User already exists" }),
+        body: JSON.stringify({
+          message: "User already exists",
+          email: email,
+        }),
       };
     }
 
@@ -63,14 +66,17 @@ export const handler = async (
       return {
         statusCode: 500,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "Failed to create user" }),
+        body: JSON.stringify({ message: "Internal server error" }),
       };
     }
 
     return {
       statusCode: 201,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        message: "User created successfully",
+        data: data,
+      }),
     };
   } catch (e: any) {
     console.error("Handler error:", e);
@@ -79,8 +85,6 @@ export const handler = async (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: "Internal server error",
-        error: e.message,
-        errorType: e.name,
       }),
     };
   }

@@ -29,7 +29,7 @@ interface PresignedUrlBatchRequest {
 }
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
 
@@ -64,7 +64,7 @@ export const handler = async (
 
         if (file.file_size > MAX_FILE_SIZE) {
           throw new Error(
-            `File size exceeds limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`
+            `File size exceeds limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
           );
         }
 
@@ -99,15 +99,15 @@ export const handler = async (
         });
 
         return {
-          file_name: file.file_name,
-          image_type: file.image_type,
-          presigned_url: presignedUrl,
-          image_id: imageId,
-          s3_key: s3Key,
-          public_url: `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${s3Key}`,
-          expires_at: new Date(Date.now() + 3600000).toISOString(),
+          fileName: file.file_name,
+          imageType: file.image_type,
+          presignedUrl: presignedUrl,
+          imageId: imageId,
+          s3Key: s3Key,
+          publicUrl: `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${s3Key}`,
+          expiresAt: new Date(Date.now() + 3600000).toISOString(),
         };
-      })
+      }),
     );
 
     return {
@@ -116,7 +116,7 @@ export const handler = async (
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify({ urls: results }),
+      body: JSON.stringify({ data: results }),
     };
   } catch (e: any) {
     console.error("Generate Presigned URL error:", e);
@@ -124,8 +124,7 @@ export const handler = async (
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: "Failed to generate presigned URLs",
-        error: e.message,
+        message: "Internal server error",
       }),
     };
   }

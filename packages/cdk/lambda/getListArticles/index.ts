@@ -1,12 +1,9 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
-
-const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN!;
-const buildImageUrl = (s3Key?: string | null) =>
-  s3Key ? `https://${CLOUDFRONT_DOMAIN}/${s3Key}` : null;
+import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
-  event: APIGatewayProxyEventV2
+  event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   try {
     const supabase = await initSupabase();
@@ -37,7 +34,7 @@ export const handler = async (
             user_name,
             profile_image_s3_key
           )
-        `
+        `,
       )
       .eq("article_status", "published")
       .order("created_at", { ascending: false }) // 新しい順など
@@ -47,7 +44,7 @@ export const handler = async (
       console.error("supabase error:", error);
       return {
         statusCode: 500,
-        body: JSON.stringify({ message: "Failed to fetch articles" }),
+        body: JSON.stringify({ message: "Internal server error" }),
       };
     }
 
@@ -62,12 +59,36 @@ export const handler = async (
     // }));
     // console.log(items);
 
+    const transData = data.map((article) => ({
+      id: article.id,
+      userId: article.user_id,
+      title: article.title,
+      animeName: article.anime_name,
+      thumbnailUrl: getArticleImageUrl(article.thumbnail_s3_key),
+      likesCount: article.likes_count,
+      bookmarkCount: article.bookmark_count,
+      commentCount: article.comment_count,
+      reportCount: article.report_count,
+      articleStatus: article.article_status,
+      publishedAt: article.published_at,
+      createdAt: article.created_at,
+      updatedAt: article.updated_at,
+      author: {
+        id: article.author.id,
+        userName: article.author.user_name,
+        profileImageUrl: getUserImageUrl(article.author.profile_image_s3_key),
+      },
+    }));
+
     return {
       statusCode: 200,
       body: JSON.stringify({
-        data,
-        limit,
-        offset,
+        data: transData,
+        pagination: {
+          total: offset + limit,
+          limit: limit,
+          offset: offset,
+        },
       }),
     };
   } catch (e) {
