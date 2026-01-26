@@ -153,6 +153,7 @@ export class ApiStack extends cdk.Stack {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
         S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,

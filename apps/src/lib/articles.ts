@@ -1,6 +1,7 @@
 "use cache";
 import { Article, ArticleCard } from "@/types";
 import { getCurrentUser } from "./auth";
+import { ArticleCardResponse, ArticleResponse } from "@/types/api/article";
 
 interface ArticleListResponse {
   success: boolean;
@@ -31,16 +32,16 @@ export const getArticle = async (id: string) => {
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch articles"
-      }`
+      }`,
     );
   }
-  const resData: Article = await response.json();
+  const resData: ArticleResponse = await response.json();
   return resData;
 };
 
 export const getArticleCards = async (
-  limit: number
-): Promise<ArticleCard[]> => {
+  limit: number,
+): Promise<ArticleCardResponse> => {
   const response = await fetch(`${API_ENDPOINT}/articles?limit=${limit}`, {
     method: "GET",
     headers: {
@@ -55,24 +56,27 @@ export const getArticleCards = async (
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch articles"
-      }`
+      }`,
     );
   }
 
-  const resData: ArticleListResponse = await response.json();
-  return resData.data;
+  const resData: ArticleCardResponse = await response.json();
+  return resData;
 };
 
 export const getUserArticleCards = async (
   id: string,
-  limit: number
+  limit: number,
 ): Promise<ArticleCard[]> => {
-  const response = await fetch(`${API_ENDPOINT}/user/${id}/articles?limit=${limit}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${API_ENDPOINT}/user/${id}/articles?limit=${limit}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
   // レスポンスの状態チェック
   if (!response.ok) {
     const errorData = await response
@@ -81,7 +85,7 @@ export const getUserArticleCards = async (
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch articles"
-      }`
+      }`,
     );
   }
 
@@ -91,7 +95,7 @@ export const getUserArticleCards = async (
 
 export const getMyArticleCards = async (
   idToken: string,
-  limit: number
+  limit: number,
 ): Promise<ArticleCard[]> => {
   await getCurrentUser();
   const response = await fetch(
@@ -102,7 +106,7 @@ export const getMyArticleCards = async (
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
       },
-    }
+    },
   );
   // レスポンスの状態チェック
   if (!response.ok) {
@@ -112,7 +116,7 @@ export const getMyArticleCards = async (
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch articles"
-      }`
+      }`,
     );
   }
 
@@ -140,7 +144,7 @@ export interface CreateArticleBody {
 
 export const createArticle = async (
   article: CreateArticleBody,
-  idToken: string
+  idToken: string,
 ) => {
   const response = await fetch(`${API_ENDPOINT}/articles`, {
     method: "POST",
@@ -158,15 +162,12 @@ export const createArticle = async (
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch articles"
-      }`
+      }`,
     );
   }
 };
 
-export const deleteArticle = async (
-  articleId: string,
-  idToken: string
-) => {
+export const deleteArticle = async (articleId: string, idToken: string) => {
   const response = await fetch(`${API_ENDPOINT}/articles`, {
     method: "DELETE",
     body: JSON.stringify({ articleId: articleId }),
@@ -183,7 +184,7 @@ export const deleteArticle = async (
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to delete articles"
-      }`
+      }`,
     );
   }
 };

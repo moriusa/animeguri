@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
 import { SubTitle } from "./common/SubTitle";
 import { ArticleCard } from "./common/ArticleCard";
-import { getArticleCards } from "@/lib/articles";
-import { ArticleCard as ArticleCardType } from "@/types";
+import { useGetHomeArticleCards } from "@/features/articles/useGetHomeArticleCards";
 
 interface Props {
   type:
@@ -14,31 +12,9 @@ interface Props {
 }
 
 export default function HomeArticles({ type }: Props) {
-  const [articles, setArticles] = useState<ArticleCardType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const {articles, error, loading} = useGetHomeArticleCards()
 
-        const fetchedArticles = await getArticleCards(10);
-        console.log(fetchedArticles)
-        setArticles(fetchedArticles);
-      } catch (err) {
-        console.error("Failed to fetch articles:", err);
-        setError(
-          err instanceof Error ? err.message : "記事の取得に失敗しました"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticles();
-  }, [type]); // typeが変わったら再取得
-
+  if (!articles) return <p>article not found</p>;
   if (loading) return <p>loading</p>;
   if (error) return <p>fetchError</p>;
 
@@ -47,7 +23,7 @@ export default function HomeArticles({ type }: Props) {
       <div>
         <SubTitle type={type} />
         <div className="grid grid-cols-[repeat(auto-fill,_minmax(200px,_1fr))] gap-2 mt-5 justify-center">
-          {articles.map((article) => (
+          {articles.data.map((article) => (
             <ArticleCard data={article} key={article.id} />
           ))}
         </div>

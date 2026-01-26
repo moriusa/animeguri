@@ -159,43 +159,45 @@ components:
           type: string
           format: date-time
         reports:
-          type: object
-          properties:
-            id:
-              type: string
-            title:
-              type: string
-            location:
-              type: string
-            articleId:
-              type: string
-            createdAt:
-              type: string
-            updatedAt:
-              type: string
-            description:
-              type: string
-            displayOrder:
-              type: string
-            reportImages:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  imageUrl:
-                    type: string
-                  caption:
-                    type: string
-                  reportId:
-                    type: string
-                  createdAt:
-                    type: string
-                  updatedAt:
-                    type: string
-                  displayOrder:
-                    type: string
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              location:
+                type: string
+              articleId:
+                type: string
+              createdAt:
+                type: string
+              updatedAt:
+                type: string
+              description:
+                type: string
+              displayOrder:
+                type: string
+              reportImages:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    imageUrl:
+                      type: string
+                    caption:
+                      type: string
+                    reportId:
+                      type: string
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                    displayOrder:
+                      type: string
         author:
           type: object
           properties:
