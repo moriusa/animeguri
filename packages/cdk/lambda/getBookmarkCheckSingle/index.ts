@@ -29,11 +29,11 @@ export const handler = async (
 
     return {
       statusCode: 200,
-      body: {
+      body: JSON.stringify({
         data: {
           isBookmarked: !!data,
         },
-      },
+      }),
     };
   } catch (e: any) {
     console.error("Handler error:", e);

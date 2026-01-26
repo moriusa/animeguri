@@ -1177,7 +1177,7 @@ paths:
                   data:
                     type: object
                     properties:
-                      is_bookmarked:
+                      isBookmarked:
                         type: boolean
                         example: true
         "400":
