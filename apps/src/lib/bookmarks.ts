@@ -3,9 +3,10 @@ import {
   BookmarkArticleCardResponse,
   BookmarkCheckResponse,
 } from "@/types/api/bookmark";
+import dotenv from "dotenv";
 
-const API_ENDPOINT =
-  "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
+dotenv.config();
+const API_ENDPOINT = process.env.API_ENDPOINT;
 
 export const addBookmark = async (articleId: string, idToken: string) => {
   const response = await fetch(`${API_ENDPOINT}/bookmarks`, {

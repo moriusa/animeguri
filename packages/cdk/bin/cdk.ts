@@ -2,6 +2,11 @@
 import * as cdk from "aws-cdk-lib";
 import { ApiStack } from "../lib/api-stack";
 import { InfraStack } from "../lib/infra-stack";
+import * as dotenv from "dotenv";
+import * as path from "path";
+
+// .envファイルを読み込み
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = new cdk.App();
 
@@ -16,8 +21,6 @@ new ApiStack(app, "ApiStack", {
   },
   userPool: infra.userPool,
   userPoolClient: infra.userPoolClient,
-  supabaseUrlParam: infra.supabaseUrlParam,
-  supabaseAnonKeyParam: infra.supabaseAnonKeyParam,
   imagesBucket: infra.imagesBucket,
   cloudFrontDistribution: infra.imagesDistribution,
 });

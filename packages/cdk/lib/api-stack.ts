@@ -1,7 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as ssm from "aws-cdk-lib/aws-ssm";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from "constructs";
 import * as path from "path";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -14,29 +14,23 @@ import {
   CorsHttpMethod,
 } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
-import { CloudFrontWebDistributionAttributes } from "aws-cdk-lib/aws-cloudfront";
 
 interface ApiStackProps extends cdk.StackProps {
   userPool: cognito.IUserPool;
   userPoolClient: cognito.IUserPoolClient;
-  supabaseUrlParam: ssm.IStringParameter;
-  supabaseAnonKeyParam: ssm.IStringParameter;
   imagesBucket: s3.IBucket;
-  cloudFrontDistribution: CloudFrontWebDistributionAttributes;
+  cloudFrontDistribution: cloudfront.Distribution;
 }
 
 export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const {
-      userPool,
-      userPoolClient,
-      supabaseUrlParam,
-      supabaseAnonKeyParam,
-      imagesBucket,
-      cloudFrontDistribution,
-    } = props;
+    const supabaseUrl = process.env.SUPABASE_URL!;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+    const { userPool, userPoolClient, imagesBucket, cloudFrontDistribution } =
+      props;
 
     // lambda関数
     const getPublicUserFn = new NodejsFunction(this, "GetPublicUserFn", {
@@ -45,9 +39,9 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/getPublicUserProfile/index.ts"),
       functionName: "animeguri-get-public-user",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -59,10 +53,10 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/getMyProfile/index.ts"),
       functionName: "animeguri-get-my-profile",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
         S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -74,10 +68,10 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/createUserProfile/index.ts"),
       functionName: "animeguri-create-user",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
         S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -89,10 +83,10 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/patchUserProfile/index.ts"),
       functionName: "animeguri-patch-user",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
         S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -104,10 +98,10 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/getListMyArticles/index.ts"),
       functionName: "animeguri-get-list-My-articles",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
         S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -119,10 +113,10 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/getListArticles/index.ts"),
       functionName: "animeguri-get-list-articles",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
         S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -137,13 +131,13 @@ export class ApiStack extends cdk.Stack {
         entry: path.join(__dirname, "../lambda/getListUserArticles/index.ts"),
         functionName: "animeguri-get-list-user-articles",
         environment: {
-          SUPABASE_URL: supabaseUrlParam.parameterName,
-          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-          CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
         },
         timeout: Duration.seconds(10),
         memorySize: 256,
-      }
+      },
     );
 
     const getArticle = new NodejsFunction(this, "GetArticle", {
@@ -152,10 +146,10 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/getArticle/index.ts"),
       functionName: "animeguri-get-article",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
         S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -167,10 +161,10 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/createArticle/index.ts"),
       functionName: "animeguri-create-article",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
         S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -182,8 +176,8 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/deleteArticle/index.ts"),
       functionName: "animeguri-delete-article",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -198,14 +192,14 @@ export class ApiStack extends cdk.Stack {
         entry: path.join(__dirname, "../lambda/generatePresignedUrl/index.ts"),
         functionName: "animeguri-generate-presigned-url",
         environment: {
-          SUPABASE_URL: supabaseUrlParam.parameterName,
-          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
           S3_BUCKET_NAME: imagesBucket.bucketName,
-          CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
         },
         timeout: Duration.seconds(10),
         memorySize: 256,
-      }
+      },
     );
 
     const createBookmark = new NodejsFunction(this, "CreateBookmark", {
@@ -214,9 +208,9 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/createBookmark/index.ts"),
       functionName: "animeguri-create-bookmark",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -228,8 +222,8 @@ export class ApiStack extends cdk.Stack {
       entry: path.join(__dirname, "../lambda/deleteBookmark/index.ts"),
       functionName: "animeguri-delete-bookmark",
       environment: {
-        SUPABASE_URL: supabaseUrlParam.parameterName,
-        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -243,17 +237,17 @@ export class ApiStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_22_X,
         entry: path.join(
           __dirname,
-          "../lambda/getBookmarkArticlesList/index.ts"
+          "../lambda/getBookmarkArticlesList/index.ts",
         ),
         functionName: "animeguri-get-bookmark-articles-list",
         environment: {
-          SUPABASE_URL: supabaseUrlParam.parameterName,
-          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-          CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
         },
         timeout: Duration.seconds(10),
         memorySize: 256,
-      }
+      },
     );
 
     const getBookmarkCheckSingle = new NodejsFunction(
@@ -264,17 +258,17 @@ export class ApiStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_22_X,
         entry: path.join(
           __dirname,
-          "../lambda/getBookmarkCheckSingle/index.ts"
+          "../lambda/getBookmarkCheckSingle/index.ts",
         ),
         functionName: "animeguri-get-bookmark-check-single",
         environment: {
-          SUPABASE_URL: supabaseUrlParam.parameterName,
-          SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-          CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
         },
         timeout: Duration.seconds(10),
         memorySize: 256,
-      }
+      },
     );
 
     // cognito authorizer
@@ -283,83 +277,83 @@ export class ApiStack extends cdk.Stack {
       userPool,
       {
         userPoolClients: [userPoolClient],
-      }
+      },
     );
 
     // Lambda 統合
     const getUserIntegration = new HttpLambdaIntegration(
       "GetUserIntegration",
-      getPublicUserFn
+      getPublicUserFn,
     );
 
     const getMeIntegration = new HttpLambdaIntegration(
       "GetMeIntegration",
-      getMeFn
+      getMeFn,
     );
 
     const createUserIntegration = new HttpLambdaIntegration(
       "CreateUserIntegration",
-      createUserFn
+      createUserFn,
     );
 
     const patchUserProfileIntegration = new HttpLambdaIntegration(
       "PatchUserProfileIntegration",
-      patchUserProfile
+      patchUserProfile,
     );
 
     const getListMyArticlesIntegration = new HttpLambdaIntegration(
       "GetListMyArticlesIntegration",
-      getListMyArticles
+      getListMyArticles,
     );
 
     const getListArticlesIntegration = new HttpLambdaIntegration(
       "GetListArticlesIntegration",
-      getListArticles
+      getListArticles,
     );
 
     const getListUserArticlesIntegration = new HttpLambdaIntegration(
       "GetListUserArticlesIntegration",
-      getListUserArticles
+      getListUserArticles,
     );
 
     const getArticleIntegration = new HttpLambdaIntegration(
       "GetArticleIntegration",
-      getArticle
+      getArticle,
     );
 
     const createArticleIntegration = new HttpLambdaIntegration(
       "CreateArticleIntegration",
-      createArticle
+      createArticle,
     );
 
     const deleteArticleIntegration = new HttpLambdaIntegration(
       "DeleteArticleIntegration",
-      deleteArticle
+      deleteArticle,
     );
 
     const generatePresignedUrlIntegration = new HttpLambdaIntegration(
       "GeneratePresignedUrlIntegration",
-      generatePresignedUrl
+      generatePresignedUrl,
     );
 
     const createBookmarkIntegration = new HttpLambdaIntegration(
       "CreateBookmarkIntegration",
-      createBookmark
+      createBookmark,
     );
 
     const deleteBookmarkIntegration = new HttpLambdaIntegration(
       "DeleteBookmarkIntegration",
-      deleteBookmark
+      deleteBookmark,
     );
 
     const getBookmarkArticlesListIntegration = new HttpLambdaIntegration(
       "GetBookmarkArticlesListIntegration",
-      getBookmarkArticlesList
+      getBookmarkArticlesList,
     );
 
     const getBookmarkCheckSingleIntegration = new HttpLambdaIntegration(
       "GetBookmarkCheckSingleIntegration",
-      getBookmarkCheckSingle
+      getBookmarkCheckSingle,
     );
 
     // API Gateway
@@ -496,11 +490,6 @@ export class ApiStack extends cdk.Stack {
       getBookmarkArticlesList,
       getBookmarkCheckSingle,
     ];
-
-    fnList.map((fn) => {
-      supabaseUrlParam.grantRead(fn);
-      supabaseAnonKeyParam.grantRead(fn);
-    });
 
     // s3読み許可
     imagesBucket.grantReadWrite(getMeFn);

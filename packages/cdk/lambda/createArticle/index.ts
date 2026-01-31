@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 import { randomUUID } from "crypto";
 import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
@@ -69,8 +69,6 @@ export const handler = async (
     //     }),
     //   };
     // }
-
-    const supabase = await initSupabase();
 
     // Step 1: 記事を作成
     const articleId = randomUUID();

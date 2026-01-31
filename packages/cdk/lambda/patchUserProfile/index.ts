@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 import { getUserImageUrl } from "../common/imageHelper";
 
 export interface ProfileFormValues {
@@ -16,7 +16,6 @@ export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   try {
-    const supabase = await initSupabase();
     const userId = event.requestContext.authorizer.jwt.claims.sub as string;
 
     console.log("Event:", JSON.stringify(event, null, 2));

@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 import { getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
@@ -8,7 +8,6 @@ export const handler = async (
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
 
   try {
-    const supabase = await initSupabase();
     const { data, error } = await supabase
       .from("users")
       .select("*")

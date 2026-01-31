@@ -1,12 +1,11 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   try {
-    const supabase = await initSupabase();
 
     // クエリパラメータから limit, offset を取得（例: /articles?limit=20&offset=40）
     const qs = event.queryStringParameters || {};

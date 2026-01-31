@@ -2,7 +2,6 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
 
@@ -10,8 +9,6 @@ export class InfraStack extends cdk.Stack {
   // 他スタックから使うために public に出す
   public readonly userPool: cognito.UserPool;
   public readonly userPoolClient: cognito.UserPoolClient;
-  public readonly supabaseUrlParam: ssm.IStringParameter;
-  public readonly supabaseAnonKeyParam: ssm.IStringParameter;
   public readonly imagesBucket: s3.Bucket;
   public readonly imagesDistribution: cloudfront.Distribution;
 
@@ -77,21 +74,6 @@ export class InfraStack extends cdk.Stack {
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
-      }
-    );
-
-    // Supabase URL / anon-key を ParameterStore に作成
-    this.supabaseUrlParam = new ssm.StringParameter(this, "SupabaseUrl", {
-      parameterName: "/animeguri/supabase/url",
-      stringValue: "CHANGE_AFTER_DEPLOY", // デプロイ後に手動で変更する
-    });
-
-    this.supabaseAnonKeyParam = new ssm.StringParameter(
-      this,
-      "SupabaseAnonKey",
-      {
-        parameterName: "/animeguri/supabase/anon-key",
-        stringValue: "CHANGE_AFTER_DEPLOY", // デプロイ後に手動で変更する
       }
     );
   }

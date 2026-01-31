@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 import { getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
@@ -21,8 +21,6 @@ export const handler = async (
         }),
       };
     }
-
-    const supabase = await initSupabase();
 
     // 既存ユーザー確認
     const { data: existing, error: existingError } = await supabase

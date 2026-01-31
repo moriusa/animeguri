@@ -1,8 +1,9 @@
 "use cache";
 import { UserResponse } from "@/types/api/user";
+import dotenv from "dotenv";
 
-const API_ENDPOINT =
-  "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
+dotenv.config();
+const API_ENDPOINT = process.env.API_ENDPOINT;
 
 export const createUserProfile = async (
   idToken: string,

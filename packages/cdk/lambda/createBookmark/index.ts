@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer,
@@ -8,7 +8,6 @@ export const handler = async (
 
   try {
     console.log("Event:", JSON.stringify(event, null, 2));
-    const supabase = await initSupabase();
 
     if (!event.body) {
       return {

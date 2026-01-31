@@ -1,9 +1,10 @@
 "use cache";
 import { getCurrentUser } from "./auth";
 import { ArticleCardResponse, ArticleResponse } from "@/types/api/article";
+import dotenv from "dotenv";
 
-const API_ENDPOINT =
-  "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
+dotenv.config();
+const API_ENDPOINT = process.env.API_ENDPOINT;
 
 export const getArticle = async (id: string) => {
   const response = await fetch(`${API_ENDPOINT}/articles/${id}`, {

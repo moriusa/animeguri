@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
@@ -9,7 +9,6 @@ export const handler = async (
 
   try {
     console.log("Event:", JSON.stringify(event, null, 2));
-    const supabase = await initSupabase();
 
     // クエリパラメータから limit, offset を取得
     const qs = event.queryStringParameters || {};

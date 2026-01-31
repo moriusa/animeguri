@@ -1,11 +1,10 @@
 import { APIGatewayProxyEventV2 } from "aws-lambda";
-import { initSupabase } from "../common/supabaseClient";
+import { supabase } from "../common/supabaseClient";
 import { getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (event: APIGatewayProxyEventV2) => {
   console.log("Event:", JSON.stringify(event, null, 2));
   try {
-    const supabase = await initSupabase();
     const userId = event.pathParameters?.userId;
 
     const { data, error } = await supabase
