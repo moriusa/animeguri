@@ -1,13 +1,14 @@
 "use client";
 import { Input } from "@/components/common";
 import { ProfileImageUpload } from "@/components/settings/ProfileImageUpload";
+import { setUserProfile } from "@/features";
 import { useAuthCheck } from "@/features/auth/useAuthCheck";
 import { updateUserProfileWithImages } from "@/features/settings/updateUserProfileWithImages";
 import { useGetUserProfile } from "@/features/settings/useGetUserProfile";
 import { RootState } from "@/store";
 import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export interface ProfileFormValues {
   userName: string;
@@ -20,6 +21,7 @@ export interface ProfileFormValues {
 }
 
 const Page = () => {
+  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   useAuthCheck();
   const { profile, error, loading } = useGetUserProfile(user?.idToken || "");
@@ -61,8 +63,8 @@ const Page = () => {
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     try {
-      await updateUserProfileWithImages(data, user!.idToken);
-      // dispatch(setUserProfile(newUserProfile)); // Todo
+      const res = await updateUserProfileWithImages(data, user!.idToken);
+      dispatch(setUserProfile(res.data));
       // フォームの状態をリセット（これで isDirty が false になる）
       reset(data);
     } catch (error) {

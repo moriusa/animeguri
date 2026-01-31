@@ -2,12 +2,13 @@
 import { ProfileFormValues } from "@/app/settings/profile/page";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { updateUserProfile } from "@/lib/userProfile";
+import { UserResponse } from "@/types/api/user";
 import { extractS3Key } from "@/utils/extractS3Key";
 import { revalidatePath } from "next/cache";
 
 export const updateUserProfileWithImages = async (
   formValues: ProfileFormValues,
-  idToken: string
+  idToken: string,
 ) => {
   let profileImageS3Key: string | undefined;
 
@@ -34,8 +35,8 @@ export const updateUserProfileWithImages = async (
     profileImageS3Key = undefined;
   }
 
-  if(!profileImageS3Key){
-    return console.log("プロフィール画像がありません")
+  if (!profileImageS3Key) {
+    throw new Error("プロフィール画像がありません");
   }
 
   // 3. フォーム + s3_key を DB スキーマに変換
@@ -49,14 +50,14 @@ export const updateUserProfileWithImages = async (
     websiteUrl: formValues.websiteUrl,
   };
 
-  console.log("form変換", reqBody)
+  console.log("form変換", reqBody);
 
   // 4. DB保存
-  const profile = await updateUserProfile(reqBody, idToken);
+  const profile: UserResponse = await updateUserProfile(reqBody, idToken);
   console.log("更新完了");
   revalidatePath("/", "layout");
   // revalidatePath("/user");
   // revalidatePath("/dashboard");
   // revalidatePath("/settings");
-  return profile
+  return profile;
 };
