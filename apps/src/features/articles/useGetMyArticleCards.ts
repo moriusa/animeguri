@@ -2,11 +2,11 @@ import { getMyArticleCards } from "@/lib/articles";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { ArticleCard as ArticleCardType } from "@/types";
+import { ArticleCardResponse } from "@/types/api/article";
 
 export const useGetMyArticleCards = () => {
   const user = useSelector((state: RootState) => state.auth.user);
-  const [articles, setArticles] = useState<ArticleCardType[]>([]);
+  const [articles, setArticles] = useState<ArticleCardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

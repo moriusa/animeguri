@@ -1,5 +1,5 @@
 import { getUserArticleCards } from "@/lib/articles";
-import { ArticleCard } from "@/types";
+import { ArticleCardResponse } from "@/types/api/article";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -7,8 +7,8 @@ export const useGetUserArticleCards = () => {
   const params = useParams();
   const id = params.id as string;
 
-  const [articles, setArticles] = useState<ArticleCard[] | null>(null);
-  const [loading, setLoading] = useState(true); // ✅ 初期値を true に
+  const [articles, setArticles] = useState<ArticleCardResponse | null>(null);
+  const [loading, setLoading] = useState(true); // 初期値を true に
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

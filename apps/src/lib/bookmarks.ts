@@ -1,6 +1,8 @@
 "use server";
-
-import { BookmarkCheckResponse } from "@/types/api/bookmark";
+import {
+  BookmarkArticleCardResponse,
+  BookmarkCheckResponse,
+} from "@/types/api/bookmark";
 
 const API_ENDPOINT =
   "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
@@ -48,7 +50,10 @@ export const deleteBookmark = async (articleId: string, idToken: string) => {
   }
 };
 
-export const getBookmarkArticles = async (limit: number, idToken: string) => {
+export const getBookmarkArticles = async (
+  limit: number,
+  idToken: string,
+): Promise<BookmarkArticleCardResponse> => {
   "use cache";
   const response = await fetch(
     `${API_ENDPOINT}/users/bookmarks?limit=${limit}`,

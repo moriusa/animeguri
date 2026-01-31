@@ -1,8 +1,9 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
+import { getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
   const email = event.requestContext.authorizer.jwt.claims.email as string;
@@ -70,12 +71,26 @@ export const handler = async (
       };
     }
 
+    const transData = {
+      email: data.email,
+      userName: data.user_name,
+      profileImageUrl: getUserImageUrl(data.profile_image_s3_key),
+      bio: data.bio,
+      articleCount: data.article_count,
+      xUrl: data.x_url,
+      facebookUrl: data.facebook_url,
+      youtubeUrl: data.youtube_url,
+      websiteUrl: data.website_url,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+
     return {
       statusCode: 201,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: "User created successfully",
-        data: data,
+        data: transData,
       }),
     };
   } catch (e: any) {

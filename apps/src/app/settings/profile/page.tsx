@@ -21,8 +21,8 @@ export interface ProfileFormValues {
 
 const Page = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+  useAuthCheck();
   const { profile, error, loading } = useGetUserProfile(user?.idToken || "");
-  useAuthCheck()
 
   const {
     control,
@@ -48,13 +48,13 @@ const Page = () => {
     console.log(profile);
     if (profile) {
       reset({
-        userName: profile.user_name || "",
+        userName: profile.userName || "",
         bio: profile.bio || "",
-        profileImage: profile.profile_image_s3_key || null, // 既存画像はURLで表示
-        xUrl: profile.x_url || "",
-        facebookUrl: profile.facebook_url || "",
-        youtubeUrl: profile.youtube_url || "",
-        websiteUrl: profile.website_url || "",
+        profileImage: profile.profileImageUrl,
+        xUrl: profile.xUrl || "",
+        facebookUrl: profile.facebookUrl || "",
+        youtubeUrl: profile.youtubeUrl || "",
+        websiteUrl: profile.websiteUrl || "",
       });
     }
   }, [profile, reset]);
@@ -73,7 +73,7 @@ const Page = () => {
   const handleCancel = () => {
     if (isDirty) {
       const confirm = window.confirm(
-        "変更内容が保存されていません。破棄しますか？"
+        "変更内容が保存されていません。破棄しますか？",
       );
       if (!confirm) return;
     }
@@ -81,13 +81,13 @@ const Page = () => {
     // プロフィール値にリセット
     if (profile) {
       reset({
-        userName: profile.user_name || "",
+        userName: profile.userName || "",
         bio: profile.bio || "",
-        profileImage: profile.profile_image_s3_key || null,
-        xUrl: profile.x_url || "",
-        facebookUrl: profile.facebook_url || "",
-        youtubeUrl: profile.youtube_url || "",
-        websiteUrl: profile.website_url || "",
+        profileImage: profile.profileImageUrl || null,
+        xUrl: profile.xUrl || "",
+        facebookUrl: profile.facebookUrl || "",
+        youtubeUrl: profile.youtubeUrl || "",
+        websiteUrl: profile.websiteUrl || "",
       });
     }
   };
@@ -149,10 +149,7 @@ const Page = () => {
           </h3>
           <ProfileImageUpload
             control={control}
-            defaultImage={
-              profile?.profile_image_s3_key ||
-              "https://placehold.jp/150x150.png"
-            }
+            defaultImage={profile?.profileImageUrl}
             errors={errors}
           />
         </div>

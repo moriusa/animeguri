@@ -18,10 +18,10 @@ const ALLOWED_CONTENT_TYPES = [
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 interface PresignedUrlRequest {
-  file_name: string;
-  content_type: string;
-  file_size: number;
-  image_type: "thumbnail" | "report";
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  imageType: "thumbnail" | "report";
 }
 
 interface PresignedUrlBatchRequest {
@@ -58,17 +58,17 @@ export const handler = async (
         // =============================
         // バリデーション
         // =============================
-        if (!ALLOWED_CONTENT_TYPES.includes(file.content_type)) {
-          throw new Error(`Invalid content type: ${file.content_type}`);
+        if (!ALLOWED_CONTENT_TYPES.includes(file.contentType)) {
+          throw new Error(`Invalid content type: ${file.contentType}`);
         }
 
-        if (file.file_size > MAX_FILE_SIZE) {
+        if (file.fileSize > MAX_FILE_SIZE) {
           throw new Error(
             `File size exceeds limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
           );
         }
 
-        if (!file.file_name || file.file_name.length > 255) {
+        if (!file.fileSize || file.fileName.length > 255) {
           throw new Error("Invalid file name");
         }
 
@@ -76,21 +76,21 @@ export const handler = async (
         // S3キーの生成
         // =============================
         const imageId = randomUUID();
-        const extension = file.content_type.split("/")[1];
+        const extension = file.contentType.split("/")[1];
         const timestamp = new Date().toISOString().split("T")[0];
 
-        const s3Key = `uploads/${sub}/${file.image_type}/${timestamp}/${imageId}.${extension}`;
+        const s3Key = `uploads/${sub}/${file.imageType}/${timestamp}/${imageId}.${extension}`;
 
         const command = new PutObjectCommand({
           Bucket: BUCKET_NAME,
           Key: s3Key,
-          ContentType: file.content_type,
-          ContentLength: file.file_size,
+          ContentType: file.contentType,
+          ContentLength: file.fileSize,
           Metadata: {
             "uploaded-by": sub,
-            "original-filename": file.file_name,
+            "original-filename": file.fileName,
             "upload-timestamp": new Date().toISOString(),
-            "image-type": file.image_type,
+            "image-type": file.imageType,
           },
         });
 
@@ -99,8 +99,8 @@ export const handler = async (
         });
 
         return {
-          fileName: file.file_name,
-          imageType: file.image_type,
+          fileName: file.fileName,
+          imageType: file.imageType,
           presignedUrl: presignedUrl,
           imageId: imageId,
           s3Key: s3Key,

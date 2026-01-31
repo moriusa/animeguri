@@ -1,10 +1,9 @@
 import { FaPen } from "react-icons/fa6";
 import { FaTrashAlt } from "react-icons/fa";
 import Image from "next/image";
-import { ArticleCard as ArticleCardType } from "@/types";
+import { ArticleCard as ArticleCardType } from "@/types/api/article";
 import Link from "next/link";
 import { JapaneseDateTime } from "@/utils/formatDate";
-import { s3KeyToImageUrl } from "@/utils/s3KeyToImageUrl";
 import { fetchDeleteArticle } from "@/features/articles/deleteArticle";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -57,7 +56,7 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
         {/* 画像エリア */}
         <div className="flex-shrink-0">
           <Image
-            src={s3KeyToImageUrl(data.thumbnail_s3_key)}
+            src={data.thumbnailUrl}
             alt={""}
             width={100}
             height={100}
@@ -67,12 +66,12 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
 
         {/* テキストエリア（左寄せ） */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-500 mb-1">{data.anime_name}</p>
+          <p className="text-xs text-gray-500 mb-1">{data.animeName}</p>
           <h3 className="font-bold text-lg mb-2 line-clamp-2">{data.title}</h3>
           <p className="text-gray-400 text-xs">
-            {new JapaneseDateTime(data.published_at).toJapanese()}
+            {new JapaneseDateTime(data.publishedAt).toJapanese()}
           </p>
-          <p className="text-gray-500 text-sm mb-1">{data.article_status}</p>
+          <p className="text-gray-500 text-sm mb-1">{data.articleStatus}</p>
         </div>
 
         {/* ボタンエリア */}

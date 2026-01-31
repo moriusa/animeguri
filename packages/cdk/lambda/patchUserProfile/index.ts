@@ -13,7 +13,7 @@ export interface ProfileFormValues {
 }
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   try {
     const supabase = await initSupabase();
@@ -33,10 +33,19 @@ export const handler = async (
     }
 
     const body: ProfileFormValues = JSON.parse(event.body);
+    const bodyTrans = {
+      user_name: body.userName,
+      bio: body.bio,
+      profile_image_s3_key: body.profileImageS3Key,
+      x_url: body.xUrl,
+      facebook_url: body.facebookUrl,
+      youtube_url: body.youtubeUrl,
+      website_url: body.websiteUrl,
+    };
 
     // 更新日時を追加
     const updateData = {
-      ...body,
+      ...bodyTrans,
       updated_at: new Date().toISOString(),
     };
 

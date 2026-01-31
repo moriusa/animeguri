@@ -1,19 +1,6 @@
 "use cache";
-import { Article, ArticleCard } from "@/types";
 import { getCurrentUser } from "./auth";
 import { ArticleCardResponse, ArticleResponse } from "@/types/api/article";
-
-interface ArticleListResponse {
-  success: boolean;
-  data: ArticleCard[];
-  count?: number;
-  error?: string;
-  message?: string;
-  meta?: {
-    requestedLimit: number;
-    hasMissingAuthors: boolean;
-  };
-}
 
 const API_ENDPOINT =
   "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
@@ -67,7 +54,7 @@ export const getArticleCards = async (
 export const getUserArticleCards = async (
   id: string,
   limit: number,
-): Promise<ArticleCard[]> => {
+): Promise<ArticleCardResponse> => {
   const response = await fetch(
     `${API_ENDPOINT}/user/${id}/articles?limit=${limit}`,
     {
@@ -89,17 +76,17 @@ export const getUserArticleCards = async (
     );
   }
 
-  const resData: ArticleListResponse = await response.json();
-  return resData.data;
+  const resData: ArticleCardResponse = await response.json();
+  return resData;
 };
 
 export const getMyArticleCards = async (
   idToken: string,
   limit: number,
-): Promise<ArticleCard[]> => {
+): Promise<ArticleCardResponse> => {
   await getCurrentUser();
   const response = await fetch(
-    `${API_ENDPOINT}/user/me/articles?limit=${limit}`,
+    `${API_ENDPOINT}/user/me/articles?limit=${limit}&status=all`,
     {
       method: "GET",
       headers: {
@@ -120,8 +107,8 @@ export const getMyArticleCards = async (
     );
   }
 
-  const resData: ArticleListResponse = await response.json();
-  return resData.data;
+  const resData: ArticleCardResponse = await response.json();
+  return resData;
 };
 
 export interface CreateArticleBody {

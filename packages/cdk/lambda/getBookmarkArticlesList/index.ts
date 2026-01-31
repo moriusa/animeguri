@@ -38,7 +38,7 @@ export const handler = async (
           id,
           user_name,
           profile_image_s3_key
-        ),
+        )
       )
     `,
         { count: "exact" },
@@ -47,16 +47,17 @@ export const handler = async (
       .order("created_at", { ascending: false })
       .range(from, to);
 
-    if (error || !data || !count) {
+    if (error) {
       console.log(error);
       return {
-        statusCode: 404,
+        statusCode: 500,
         body: JSON.stringify({ error: "Bookmark not found" }),
       };
     }
 
-    // TODO: ちゃんとしたレスポンスの型に
-    const bookmarksData = data as any;
+    // データが空でも正常(200を返す)
+    const bookmarksData = data || [];
+    const totalCount = count ?? 0;
 
     const transData = bookmarksData.map((bookmark: any) => ({
       id: bookmark.id,
@@ -64,8 +65,8 @@ export const handler = async (
       article: {
         id: bookmark.article.id,
         userId: bookmark.article.user_id,
-        title: bookmark.title,
-        animeName: bookmark.anime_name,
+        title: bookmark.article.title,
+        animeName: bookmark.article.anime_name,
         thumbnailUrl: getArticleImageUrl(bookmark.article.thumbnail_s3_key),
         likesCount: bookmark.article.likes_count,
         bookmarkCount: bookmark.article.bookmark_count,
@@ -93,7 +94,7 @@ export const handler = async (
           from,
           to,
           total: count,
-          totalPages: Math.ceil(count / limit),
+          totalPages: Math.ceil(totalCount / limit),
         },
       }),
     };

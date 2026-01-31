@@ -23,7 +23,7 @@ export const useLogin = () => {
       const userProfile = await getUserProfile(cognitoUser.idToken);
       console.log(userProfile)
       // Reduxにユーザー情報を保存
-      dispatch(setUserProfile(userProfile));
+      dispatch(setUserProfile(userProfile.data));
       router.push("/");
     } catch (err) {
       console.log(err);

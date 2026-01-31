@@ -231,26 +231,12 @@ paths:
   /users/me:
     post:
       summary: ユーザー作成
-      description: 新規ユーザーをusersテーブルに作成
+      description: 新規ユーザーをusersテーブルに作成(idとemailは認証情報から取得)
       operationId: createUser
       tags:
         - Users
       security:
         - BearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - username
-                - email
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: "text@example.com"
       responses:
         "201":
           description: ユーザー作成成功
@@ -346,6 +332,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedError"
+        "404":
+          description: ユーザーが見つからない
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
         "500":
           description: DBエラー
           content:
@@ -1133,15 +1128,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UnauthorizedError"
-        "404":
-          description: ブックマークが見つからない
-          content:
-            application/json:
-              schema:
-                properties:
-                  message:
-                    type: string
-                    example: "Bookmark not found"
         "500":
           description: DBエラー
           content:
@@ -1202,7 +1188,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DBError"
   /presigned-url:
-    get:
+    post:
       summary: S3署名付きURL生成
       description: フロントから直接S3に保存するための署名付きURLを生成
       operationId: generatePresignedUrl
@@ -1210,6 +1196,34 @@ paths:
         - Presigned-url
       security:
         - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - fileName
+                      - contentType
+                      - fileSize
+                      - imageType
+                    properties:
+                      fileName:
+                        type: string
+                      contentType:
+                        type: string
+                      fileSize:
+                        type: integer
+                      imageType:
+                        type: string
+                        enum: [report, profile, article]
       responses:
         "200":
           description: 確認成功
@@ -1219,22 +1233,23 @@ paths:
                 type: object
                 properties:
                   data:
-                    type: object
-                    properties:
-                      fileName:
-                        type: string
-                      imageType:
-                        type: string
-                      presignedUrl:
-                        type: string
-                      imageId:
-                        type: string
-                      s3Key:
-                        type: string
-                      publicUrl:
-                        type: string
-                      expireAT:
-                        type: string
+                    type: array
+                    items:
+                      properties:
+                        fileName:
+                          type: string
+                        imageType:
+                          type: string
+                        presignedUrl:
+                          type: string
+                        imageId:
+                          type: string
+                        s3Key:
+                          type: string
+                        publicUrl:
+                          type: string
+                        expireAT:
+                          type: string
         "400":
           description: ボディエラー
           content:

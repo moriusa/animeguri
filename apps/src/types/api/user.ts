@@ -1,3 +1,5 @@
+import { ApiResponse } from "../common";
+
 export interface User {
   id: string;
   email: string;
@@ -10,5 +12,7 @@ export interface User {
   facebookUrl: string;
   youtubeUrl: string;
   websiteUrl: string;
-  createAt: string;
+  createdAt: string;
 }
+
+export type UserResponse = ApiResponse<User>;

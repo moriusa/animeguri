@@ -42,9 +42,9 @@ export const handler = async (
 
     // ステータスフィルタ
     if (statusFilter === "draft") {
-      query = query.eq("status", "draft");
+      query = query.eq("article_status", "draft");
     } else if (statusFilter === "public") {
-      query = query.eq("status", "public");
+      query = query.eq("article_status", "public");
     }
 
     const { data, error } = await query;
