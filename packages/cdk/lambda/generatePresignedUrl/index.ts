@@ -18,10 +18,10 @@ const ALLOWED_CONTENT_TYPES = [
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 interface PresignedUrlRequest {
-  file_name: string;
-  content_type: string;
-  file_size: number;
-  image_type: "thumbnail" | "report";
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  imageType: "thumbnail" | "report";
 }
 
 interface PresignedUrlBatchRequest {
@@ -29,7 +29,7 @@ interface PresignedUrlBatchRequest {
 }
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
 
@@ -58,17 +58,17 @@ export const handler = async (
         // =============================
         // バリデーション
         // =============================
-        if (!ALLOWED_CONTENT_TYPES.includes(file.content_type)) {
-          throw new Error(`Invalid content type: ${file.content_type}`);
+        if (!ALLOWED_CONTENT_TYPES.includes(file.contentType)) {
+          throw new Error(`Invalid content type: ${file.contentType}`);
         }
 
-        if (file.file_size > MAX_FILE_SIZE) {
+        if (file.fileSize > MAX_FILE_SIZE) {
           throw new Error(
-            `File size exceeds limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`
+            `File size exceeds limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
           );
         }
 
-        if (!file.file_name || file.file_name.length > 255) {
+        if (!file.fileSize || file.fileName.length > 255) {
           throw new Error("Invalid file name");
         }
 
@@ -76,21 +76,21 @@ export const handler = async (
         // S3キーの生成
         // =============================
         const imageId = randomUUID();
-        const extension = file.content_type.split("/")[1];
+        const extension = file.contentType.split("/")[1];
         const timestamp = new Date().toISOString().split("T")[0];
 
-        const s3Key = `uploads/${sub}/${file.image_type}/${timestamp}/${imageId}.${extension}`;
+        const s3Key = `uploads/${sub}/${file.imageType}/${timestamp}/${imageId}.${extension}`;
 
         const command = new PutObjectCommand({
           Bucket: BUCKET_NAME,
           Key: s3Key,
-          ContentType: file.content_type,
-          ContentLength: file.file_size,
+          ContentType: file.contentType,
+          ContentLength: file.fileSize,
           Metadata: {
             "uploaded-by": sub,
-            "original-filename": file.file_name,
+            "original-filename": file.fileName,
             "upload-timestamp": new Date().toISOString(),
-            "image-type": file.image_type,
+            "image-type": file.imageType,
           },
         });
 
@@ -99,15 +99,15 @@ export const handler = async (
         });
 
         return {
-          file_name: file.file_name,
-          image_type: file.image_type,
-          presigned_url: presignedUrl,
-          image_id: imageId,
-          s3_key: s3Key,
-          public_url: `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${s3Key}`,
-          expires_at: new Date(Date.now() + 3600000).toISOString(),
+          fileName: file.fileName,
+          imageType: file.imageType,
+          presignedUrl: presignedUrl,
+          imageId: imageId,
+          s3Key: s3Key,
+          publicUrl: `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${s3Key}`,
+          expiresAt: new Date(Date.now() + 3600000).toISOString(),
         };
-      })
+      }),
     );
 
     return {
@@ -116,7 +116,7 @@ export const handler = async (
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify({ urls: results }),
+      body: JSON.stringify({ data: results }),
     };
   } catch (e: any) {
     console.error("Generate Presigned URL error:", e);
@@ -124,8 +124,7 @@ export const handler = async (
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: "Failed to generate presigned URLs",
-        error: e.message,
+        message: "Internal server error",
       }),
     };
   }

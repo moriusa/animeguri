@@ -47,7 +47,7 @@ export class ApiStack extends cdk.Stack {
       environment: {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -137,7 +137,7 @@ export class ApiStack extends cdk.Stack {
         environment: {
           SUPABASE_URL: supabaseUrlParam.parameterName,
           SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
-          S3_BUCKET_NAME: imagesBucket.bucketName,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
         },
         timeout: Duration.seconds(10),
         memorySize: 256,
@@ -153,6 +153,7 @@ export class ApiStack extends cdk.Stack {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
         S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -167,6 +168,19 @@ export class ApiStack extends cdk.Stack {
         SUPABASE_URL: supabaseUrlParam.parameterName,
         SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
         S3_BUCKET_NAME: imagesBucket.bucketName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const deleteArticle = new NodejsFunction(this, "DeleteArticle", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/deleteArticle/index.ts"),
+      functionName: "animeguri-delete-article",
+      environment: {
+        SUPABASE_URL: supabaseUrlParam.parameterName,
+        SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
@@ -230,6 +244,7 @@ export class ApiStack extends cdk.Stack {
         environment: {
           SUPABASE_URL: supabaseUrlParam.parameterName,
           SUPABASE_ANON_KEY: supabaseAnonKeyParam.parameterName,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.domainName,
         },
         timeout: Duration.seconds(10),
         memorySize: 256,
@@ -309,6 +324,11 @@ export class ApiStack extends cdk.Stack {
     const createArticleIntegration = new HttpLambdaIntegration(
       "CreateArticleIntegration",
       createArticle
+    );
+
+    const deleteArticleIntegration = new HttpLambdaIntegration(
+      "DeleteArticleIntegration",
+      deleteArticle
     );
 
     const generatePresignedUrlIntegration = new HttpLambdaIntegration(
@@ -412,6 +432,13 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
+      path: "/articles/{id}",
+      methods: [HttpMethod.DELETE],
+      integration: deleteArticleIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
       path: "/presigned-url",
       methods: [HttpMethod.POST],
       integration: generatePresignedUrlIntegration,
@@ -426,7 +453,7 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
-      path: "/bookmarks",
+      path: "/bookmarks/{id}",
       methods: [HttpMethod.DELETE],
       integration: deleteBookmarkIntegration,
       authorizer,
@@ -457,6 +484,7 @@ export class ApiStack extends cdk.Stack {
       getListUserArticles,
       getArticle,
       createArticle,
+      deleteArticle,
       createBookmark,
       deleteBookmark,
       getBookmarkArticlesList,

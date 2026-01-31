@@ -4,12 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLogout } from "@/features/auth/useLogout";
+import { User } from "@/types/api/user";
 
 type Props = {
-  userProfile: {
-    user_name: string;
-    profile_image_s3_key: string;
-  };
+  userProfile: User;
 };
 
 export const UserMenu = ({ userProfile }: Props) => {
@@ -44,8 +42,8 @@ export const UserMenu = ({ userProfile }: Props) => {
         className="w-10 h-10 relative rounded-full overflow-hidden border border-gray-200 cursor-pointer"
       >
         <Image
-          src={userProfile.profile_image_s3_key}
-          alt={userProfile.user_name}
+          src={userProfile.profileImageUrl}
+          alt={userProfile.userName}
           fill
           className="object-cover"
         />
@@ -57,7 +55,7 @@ export const UserMenu = ({ userProfile }: Props) => {
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm text-gray-500">ログイン中</p>
             <p className="text-sm font-semibold truncate">
-              {userProfile.user_name}
+              {userProfile.userName}
             </p>
           </div>
           <nav className="py-1 text-sm">

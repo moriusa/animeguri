@@ -38,4 +38,5 @@ export interface ArticleCard {
   comment_count: string;
   published_at: string;
   author: Pick<User, "id" | "user_name" | "profile_image_s3_key">;
+  article_status: "draft" | "published" | "archived";
 }

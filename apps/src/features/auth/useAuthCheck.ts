@@ -23,7 +23,7 @@ export const useAuthCheck = () => {
           if (!userProfile) {
             // DynamoDBのユーザー情報も
             const dbUserProfile = await getUserProfile(userInfo.idToken);
-            dispatch(setUserProfile(dbUserProfile));
+            dispatch(setUserProfile(dbUserProfile.data));
           }
         } else {
           dispatch(logout());

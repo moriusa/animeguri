@@ -5,35 +5,30 @@ export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
-  const { articleId } = event.queryStringParameters || {};
-
-  if (!articleId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ message: "articleId is required" }),
-    };
-  }
 
   try {
     console.log("Event:", JSON.stringify(event, null, 2));
     const supabase = await initSupabase();
 
+    const articleId = event.pathParameters?.id;
+
     const { data, error } = await supabase
-      .from("bookmarks")
-      .select("id")
+      .from("articles")
+      .delete()
+      .eq("id", articleId)
       .eq("user_id", sub)
-      .eq("article_id", articleId)
-      .maybeSingle(); // エラーを出さずにnullを返す
+      .select()
+      .single();
 
-    if (error) throw error;
-
+    if (error || !data) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Article not found" }),
+      };
+    }
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        data: {
-          isBookmarked: !!data,
-        },
-      }),
+      body: JSON.stringify({ message: "Deleted article" }),
     };
   } catch (e: any) {
     console.error("Handler error:", e);

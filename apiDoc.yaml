@@ -1,0 +1,1299 @@
+# docs/openapi.yaml
+openapi: 3.0.0
+info:
+  title: animeguri API
+  description: アニメ聖地巡礼記事投稿プラットフォームのAPI仕様書
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: shirousagi.morikan@gmail.com
+
+servers:
+  - url: https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com
+    description: v1
+
+# 認証設定
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito id token
+
+  # 共通スキーマ定義
+  schemas:
+    # ユーザー関連
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ユーザーID
+          example: "user_abc123"
+        email:
+          type: string
+          format: email
+          example: "tanaka@example.com"
+        username:
+          type: string
+          description: ユーザー名
+          example: "tanaka_taro"
+        profileImageUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://example.com/image.jpg"
+        bio:
+          type: string
+          nullable: true
+          example: "アニメ好きです"
+        articleCount:
+          type: number
+          example: 0
+        bookmarkCount:
+          type: number
+          example: 0
+        xUrl:
+          type: string
+          example: "x.com"
+        facebookUrl:
+          type: string
+          example: "facebook.com"
+        youtubeUrl:
+          type: string
+          example: "youtube.com"
+        websiteUrl:
+          type: string
+          example: "website.com"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+
+    # 記事関連
+    ArticleCardWithAuthor:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "article_xyz789"
+        userId:
+          type: string
+          example: "user_abc123"
+        title:
+          type: string
+          example: "鬼滅の刃の考察"
+        animeName:
+          type: string
+        thumbnailUrl:
+          type: string
+        likesCount:
+          type: number
+        BookmarkCount:
+          type: number
+        commentCount:
+          type: number
+        reportCount:
+          type: number
+        articleStatus:
+          type: string
+          enum: [draft, public]
+          example: "public"
+        publishedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        author:
+          type: object
+          properties:
+            id:
+              type: string
+            userName:
+              type: string
+            profileImageUrl:
+              type: string
+
+    ArticleWithAuthor:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "article_xyz789"
+        userId:
+          type: string
+          example: "user_abc123"
+        title:
+          type: string
+          example: "鬼滅の刃の考察"
+        animeName:
+          type: string
+        thumbnailUrl:
+          type: string
+        likesCount:
+          type: number
+        commentCount:
+          type: number
+        reportCount:
+          type: number
+        articleStatus:
+          type: string
+          enum: [draft, published]
+          example: "published"
+        publishedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        reports:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              location:
+                type: string
+              articleId:
+                type: string
+              createdAt:
+                type: string
+              updatedAt:
+                type: string
+              description:
+                type: string
+              displayOrder:
+                type: string
+              reportImages:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    imageUrl:
+                      type: string
+                    caption:
+                      type: string
+                    reportId:
+                      type: string
+                    createdAt:
+                      type: string
+                    updatedAt:
+                      type: string
+                    displayOrder:
+                      type: string
+        author:
+          type: object
+          properties:
+            id:
+              type: string
+            userName:
+              type: string
+            profileImageUrl:
+              type: string
+
+    # エラーレスポンス
+    DBError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Internal server error"
+
+    UnauthorizedError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Unauthorized
+
+# エンドポイント定義
+paths:
+  # ============================================
+  # ユーザー関連API
+  # ============================================
+  /users/me:
+    post:
+      summary: ユーザー作成
+      description: 新規ユーザーをusersテーブルに作成(idとemailは認証情報から取得)
+      operationId: createUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        "201":
+          description: ユーザー作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User created successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: ユーザーID
+                        example: "user_abc123"
+                      userName:
+                        type: string
+                        description: ユーザー名
+                        example: "user_abc123"
+                      email:
+                        type: string
+                        format: email
+                        example: "tanaka@example.com"
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-01T00:00:00Z"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-01T00:00:00Z"
+
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: id, email are required
+        "401":
+          description: 認証エラー(APIGatewayから返却)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "409":
+          description: ユーザーが既に存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User already exists"
+                  email:
+                    type: string
+                    example: "test@example.com"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    get:
+      summary: ユーザー情報取得（自分）
+      description: 認証済みユーザー自身の情報を取得
+      operationId: getMyUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "404":
+          description: ユーザーが見つからない
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    patch:
+      summary: ユーザー情報更新
+      description: 認証済みユーザー自身の情報を更新
+      operationId: updateUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userName:
+                  type: string
+                  minLength: 3
+                  maxLength: 30
+                bio:
+                  type: string
+                  maxLength: 200
+                profileImageS3Key:
+                  type: string
+                xUrl:
+                  type: string
+                facebookUrl:
+                  type: string
+                youtubeUrl:
+                  type: string
+                websiteUrl:
+                  type: string
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Profile updated successfully"
+                  data:
+                    $ref: "#/components/schemas/User"
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Request body is required
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    delete:
+      summary: ユーザー削除
+      description: 認証済みユーザー自身のアカウントを削除
+      operationId: deleteUser
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        "204":
+          description: 削除成功（レスポンスボディなし）
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /users/{id}:
+    get:
+      summary: ユーザー情報取得（他ユーザー）
+      description: 指定したユーザーの公開プロフィール情報を取得
+      operationId: getPublicUser
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ユーザーID
+          schema:
+            type: string
+          example: "user_abc123"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/User"
+        "404":
+          description: ユーザーが見つからない
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  # ============================================
+  # 記事関連API
+  # ============================================
+  /articles:
+    get:
+      summary: 複数記事取得
+      description: 公開されている記事一覧を取得（ページネーション対応）
+      operationId: getArticles
+      tags:
+        - Articles
+      parameters:
+        - name: limit
+          in: query
+          description: 取得件数
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+        - name: offset
+          in: query
+          description: オフセット
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        # - name: anime_name
+        #   in: query
+        #   description: アニメ名でフィルタ
+        #   schema:
+        #     type: string
+        #   example: "鬼滅の刃"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ArticleCardWithAuthor"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      limit:
+                        type: integer
+                        example: 20
+                      offset:
+                        type: integer
+                        example: 0
+        "400":
+          description: パラメータエラー
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "limit and offset must be numbers"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    post:
+      summary: 記事投稿
+      description: 新規記事を作成
+      operationId: createArticle
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - content
+                - anime_name
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                animeName:
+                  type: string
+                thumbnailS3Key:
+                  type: string
+                articleStatus:
+                  type: string
+                  enum: [draft, published]
+                  example: "published"
+                reports:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                      location:
+                        type: string
+                      description:
+                        type: string
+                      displayOrder:
+                        type: string
+                      images:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            s3Key:
+                              type: string
+                            caption:
+                              type: string
+                            displayOrder:
+                              type: string
+      responses:
+        "201":
+          description: 記事作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ArticleWithAuthor"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /articles/{id}:
+    get:
+      summary: 単体記事取得
+      description: 指定したIDの記事を取得
+      operationId: getArticle
+      tags:
+        - Articles
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+          example: "article_xyz789"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/ArticleWithAuthor"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    patch:
+      summary: 記事更新
+      description: 指定した記事を更新
+      operationId: updateArticle
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                anime_name:
+                  type: string
+                article_status:
+                  type: string
+                  enum: [draft, public]
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Article"
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "403":
+          description: 権限なし（他人の記事）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "404":
+          description: 記事が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+    delete:
+      summary: 記事削除
+      description: 指定した記事を削除
+      operationId: deleteArticle
+      tags:
+        - Articles
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Deleted article"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "404":
+          description: 記事が見つからない
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Article not found"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+  /users/me/articles:
+    get:
+      summary: 投稿記事一覧取得
+      description: 自身が投稿投稿した記事一覧を取得（ページネーション対応）
+      operationId: getListMyrArticles
+      tags:
+        - Articles
+      parameters:
+        - name: limit
+          in: query
+          description: 取得件数
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+        - name: offset
+          in: query
+          description: オフセット
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+        - name: status
+          in: query
+          description: 記事ステータスフィルター
+          schema:
+            type: string
+            enum: [draft, published, all]
+            example: "published"
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        createdAt:
+                          type: string
+                        article:
+                          $ref: "#/components/schemas/ArticleCardWithAuthor"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      limit:
+                        type: integer
+                        example: 20
+                      offset:
+                        type: integer
+                        example: 0
+                  status:
+                    type: string
+                    enum: [draft, published]
+                    example: "published"
+        "400":
+          description: パラメータエラー
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "limit and offset must be numbers"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /users/{id}/articles:
+    get:
+      summary: 複数記事取得(単一ユーザー)
+      description: 指定したユーザーが投稿投稿した記事一覧を取得（ページネーション対応）
+      operationId: getListUserArticles
+      tags:
+        - Articles
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+          example: "article_xyz789"
+        - name: limit
+          in: query
+          description: 取得件数
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+        - name: offset
+          in: query
+          description: オフセット
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        createdAt:
+                          type: string
+                        article:
+                          $ref: "#/components/schemas/ArticleCardWithAuthor"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      limit:
+                        type: integer
+                        example: 20
+                      offset:
+                        type: integer
+                        example: 0
+        "400":
+          description: パラメータエラー
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "limit and offset must be numbers"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+  # ============================================
+  # ブックマーク関連API
+  # ============================================
+  /bookmarks:
+    post:
+      summary: ブックマーク追加
+      description: 記事をブックマークに追加
+      operationId: createBookmark
+      tags:
+        - Bookmarks
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - article_id
+              properties:
+                article_id:
+                  type: string
+                  example: "article_xyz789"
+      responses:
+        "201":
+          description: ブックマーク追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      userId:
+                        type: string
+                      articleId:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Request body is required"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "409":
+          description: 既にブックマーク済み
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Already bookmarked"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /bookmarks/{id}:
+    delete:
+      summary: ブックマーク削除
+      description: ブックマークを削除
+      operationId: deleteBookmark
+      tags:
+        - Bookmarks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Removed bookmark"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "404":
+          description: ブックマークが見つからない
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Bookmark not found"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /users/bookmarks:
+    get:
+      summary: ブックマーク記事一覧取得
+      description: ブックマークされている記事一覧を取得（ページネーション対応）
+      operationId: getBookmarkArticlesList
+      tags:
+        - Bookmarks
+      parameters:
+        - name: limit
+          in: query
+          description: 取得件数
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          example: 20
+        - name: offset
+          in: query
+          description: オフセット
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        createdAt:
+                          type: string
+                        article:
+                          $ref: "#/components/schemas/ArticleCardWithAuthor"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      limit:
+                        type: integer
+                        example: 20
+                      offset:
+                        type: integer
+                        example: 0
+        "400":
+          description: パラメータエラー
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "limit and offset must be numbers"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+  /bookmarks/check:
+    get:
+      summary: ブックマーク状態確認（単一記事）
+      description: 指定した記事がブックマークされているか確認
+      operationId: checkBookmark
+      tags:
+        - Bookmarks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: articleId
+          in: query
+          required: true
+          description: 記事ID
+          schema:
+            type: string
+          example: "article_xyz789"
+      responses:
+        "200":
+          description: 確認成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      isBookmarked:
+                        type: boolean
+                        example: true
+        "400":
+          description: パラメータエラー
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "articleId is required"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+  /presigned-url:
+    post:
+      summary: S3署名付きURL生成
+      description: フロントから直接S3に保存するための署名付きURLを生成
+      operationId: generatePresignedUrl
+      tags:
+        - Presigned-url
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - fileName
+                      - contentType
+                      - fileSize
+                      - imageType
+                    properties:
+                      fileName:
+                        type: string
+                      contentType:
+                        type: string
+                      fileSize:
+                        type: integer
+                      imageType:
+                        type: string
+                        enum: [report, profile, article]
+      responses:
+        "200":
+          description: 確認成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      properties:
+                        fileName:
+                          type: string
+                        imageType:
+                          type: string
+                        presignedUrl:
+                          type: string
+                        imageId:
+                          type: string
+                        s3Key:
+                          type: string
+                        publicUrl:
+                          type: string
+                        expireAT:
+                          type: string
+        "400":
+          description: ボディエラー
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: "files is required"
+        "401":
+          description: 認証エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+        "500":
+          description: DBエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DBError"
+
+# タグの説明
+tags:
+  - name: Users
+    description: ユーザー関連API
+  - name: Articles
+    description: 記事関連API
+  - name: Bookmarks
+    description: ブックマーク関連API

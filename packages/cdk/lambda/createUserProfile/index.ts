@@ -1,8 +1,9 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
+import { getUserImageUrl } from "../common/imageHelper";
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
   const email = event.requestContext.authorizer.jwt.claims.email as string;
@@ -16,14 +17,14 @@ export const handler = async (
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: "id, email, user_name are required",
+          message: "id, email are required",
         }),
       };
     }
 
     const supabase = await initSupabase();
 
-    // 既存ユーザー確認（必要なら）
+    // 既存ユーザー確認
     const { data: existing, error: existingError } = await supabase
       .from("users")
       .select("id")
@@ -35,16 +36,18 @@ export const handler = async (
       return {
         statusCode: 500,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "DB error" }),
+        body: JSON.stringify({ message: "Internal server error" }),
       };
     }
 
     if (existing) {
-      // 既に存在するなら 409 など
       return {
         statusCode: 409,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "User already exists" }),
+        body: JSON.stringify({
+          message: "User already exists",
+          email: email,
+        }),
       };
     }
 
@@ -64,14 +67,31 @@ export const handler = async (
       return {
         statusCode: 500,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "Failed to create user" }),
+        body: JSON.stringify({ message: "Internal server error" }),
       };
     }
+
+    const transData = {
+      email: data.email,
+      userName: data.user_name,
+      profileImageUrl: getUserImageUrl(data.profile_image_s3_key),
+      bio: data.bio,
+      articleCount: data.article_count,
+      xUrl: data.x_url,
+      facebookUrl: data.facebook_url,
+      youtubeUrl: data.youtube_url,
+      websiteUrl: data.website_url,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
 
     return {
       statusCode: 201,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        message: "User created successfully",
+        data: transData,
+      }),
     };
   } catch (e: any) {
     console.error("Handler error:", e);
@@ -80,8 +100,6 @@ export const handler = async (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: "Internal server error",
-        error: e.message,
-        errorType: e.name,
       }),
     };
   }

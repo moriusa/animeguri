@@ -1,28 +1,18 @@
-interface PresignedUrlRes {
-  urls: {
-    file_name: string;
-    image_type: string;
-    presigned_url: string;
-    image_id: string;
-    s3_key: string;
-    public_url: string;
-    expires_at: string;
-  }[];
-}
+import { PresignedUrlResponse } from "@/types/api/presignedUrl";
 
 const API_ENDPOINT =
   "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
 
 export const genPresignedUrl = async (
   files: File[],
-  idToken: string
-): Promise<PresignedUrlRes> => {
+  idToken: string,
+): Promise<PresignedUrlResponse> => {
   const payload = {
     files: files.map((file) => ({
-      file_name: file.name,
-      content_type: file.type,
-      file_size: file.size,
-      image_type: "report" as const,
+      fileName: file.name,
+      contentType: file.type,
+      fileSize: file.size,
+      imageType: "report" as const,
     })),
   };
   const response = await fetch(`${API_ENDPOINT}/presigned-url`, {
@@ -42,18 +32,18 @@ export const genPresignedUrl = async (
 };
 
 export const uploadImageToS3 = async (
-  presigned: PresignedUrlRes,
-  files: File[]
+  presigned: PresignedUrlResponse,
+  files: File[],
 ) => {
-  if (presigned.urls.length !== files.length) {
+  if (presigned.data.length !== files.length) {
     throw new Error("presigned urls と files の数が一致していません");
   }
 
   // presigned.urls[i] と files[i] を対応させてアップロード
-  const uploadPromises = presigned.urls.map((urlInfo, index) => {
+  const uploadPromises = presigned.data.map((urlInfo, index) => {
     const file = files[index];
 
-    return fetch(urlInfo.presigned_url, {
+    return fetch(urlInfo.presignedUrl, {
       method: "PUT",
       body: file,
       headers: {
@@ -62,9 +52,7 @@ export const uploadImageToS3 = async (
       },
     }).then((res) => {
       if (!res.ok) {
-        throw new Error(
-          `Upload failed for ${urlInfo.file_name}: ${res.status}`
-        );
+        throw new Error(`Upload failed for ${urlInfo.fileName}: ${res.status}`);
       }
 
       return {

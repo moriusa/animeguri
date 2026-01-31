@@ -1,16 +1,13 @@
 "use cache";
-import { User } from "@/types";
+import { UserResponse } from "@/types/api/user";
 
 const API_ENDPOINT =
   "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
 
-export const createUserProfile = async (idToken: string) => {
+export const createUserProfile = async (
+  idToken: string,
+): Promise<UserResponse> => {
   try {
-    console.log("Creating user profile:", {
-      // 🔍 デバッグログ追加
-      endpoint: `${API_ENDPOINT}/user/me`,
-    });
-
     const request = await fetch(`${API_ENDPOINT}/user/me`, {
       method: "POST",
       headers: {
@@ -19,21 +16,16 @@ export const createUserProfile = async (idToken: string) => {
       },
     });
 
-    console.log("Response status:", request.status); // 🔍 レスポンスステータス確認
-    console.log("Response headers:", Object.fromEntries(request.headers)); // 🔍 ヘッダー確認
-
     // レスポンステキストを先に取得してログ出力
     const responseText = await request.text(); // ✅ text()を先に実行
     console.log("Response text:", responseText); // 🔍 レスポンス内容確認
 
     if (!request.ok) {
       throw new Error(
-        `HTTP error! status: ${request.status}, response: ${responseText}`
+        `HTTP error! status: ${request.status}, response: ${responseText}`,
       ); // ✅ レスポンス内容も含める
     }
-
-    // レスポンステキストをJSONとしてパース
-    return JSON.parse(responseText); // ✅ 既に取得したテキストをパース
+    return JSON.parse(responseText);
   } catch (err) {
     console.error("ユーザープロフィール作成エラー:", err);
     // console.error("Error details:", {
@@ -46,7 +38,9 @@ export const createUserProfile = async (idToken: string) => {
   }
 };
 
-export const getUserProfile = async (idToken: string): Promise<User> => {
+export const getUserProfile = async (
+  idToken: string,
+): Promise<UserResponse> => {
   const response = await fetch(`${API_ENDPOINT}/user/me`, {
     method: "GET",
     headers: {
@@ -62,14 +56,16 @@ export const getUserProfile = async (idToken: string): Promise<User> => {
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch user profile"
-      }`
+      }`,
     );
   }
 
   return response.json();
 };
 
-export const getPublicUserProfile = async (id: string): Promise<User> => {
+export const getPublicUserProfile = async (
+  id: string,
+): Promise<UserResponse> => {
   const response = await fetch(`${API_ENDPOINT}/user/${id}`, {
     method: "GET",
     headers: {
@@ -84,25 +80,25 @@ export const getPublicUserProfile = async (id: string): Promise<User> => {
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch user profile"
-      }`
+      }`,
     );
   }
 
   return response.json();
 };
 
-interface UserProfileUpdateDbType {
-  user_name: string;
+interface UserProfileReq {
+  userName: string;
   bio: string;
-  profile_image_s3_key: string;
-  x_url: string;
-  facebook_url: string;
-  youtube_url: string;
-  website_url: string;
+  profileImageS3Key: string;
+  xUrl: string;
+  facebookUrl: string;
+  youtubeUrl: string;
+  websiteUrl: string;
 }
 export const updateUserProfile = async (
-  payload: UserProfileUpdateDbType,
-  idToken: string
+  payload: UserProfileReq,
+  idToken: string,
 ) => {
   const response = await fetch(`${API_ENDPOINT}/user/me`, {
     method: "PATCH",
@@ -120,7 +116,7 @@ export const updateUserProfile = async (
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to fetch user profile"
-      }`
+      }`,
     );
   }
 

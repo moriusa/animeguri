@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { getBookmarkArticles } from "@/lib/bookmarks";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { ArticleCard } from "@/types";
+import { BookmarkArticleCardResponse } from "@/types/api/bookmark";
 
 export const useGetBookmarkArticles = (limit: number) => {
   const idToken = useSelector((state: RootState) => state.auth.user?.idToken);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [articles, setArticles] = useState<ArticleCard[] | null>(null);
+  const [articles, setArticles] = useState<BookmarkArticleCardResponse | null>(null);
 
   useEffect(() => {
     if (!limit || !idToken) {
@@ -24,10 +24,7 @@ export const useGetBookmarkArticles = (limit: number) => {
         setError(null);
 
         const res = await getBookmarkArticles(limit, idToken);
-        const bookmarks = res.data.map((bookmark) => {
-          return bookmark.article
-        })
-        setArticles(bookmarks);
+        setArticles(res);
       } catch (err) {
         console.error(err);
         setError(

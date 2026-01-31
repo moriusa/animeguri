@@ -23,7 +23,7 @@ export const updateUserProfileWithImages = async (
       formValues.profileImage,
     ]);
 
-    profileImageS3Key = uploaded[0].urlInfo.s3_key;
+    profileImageS3Key = uploaded[0].urlInfo.s3Key;
   } else if (typeof formValues.profileImage === "string") {
     // 既存の画像URL（変更なし）
     console.log("既存の画像を使用");
@@ -40,13 +40,13 @@ export const updateUserProfileWithImages = async (
 
   // 3. フォーム + s3_key を DB スキーマに変換
   const reqBody = {
-    user_name: formValues.userName,
+    userName: formValues.userName,
     bio: formValues.bio,
-    profile_image_s3_key: extractS3Key(profileImageS3Key),
-    x_url: formValues.xUrl,
-    facebook_url: formValues.facebookUrl,
-    youtube_url: formValues.youtubeUrl,
-    website_url: formValues.websiteUrl,
+    profileImageS3Key: extractS3Key(profileImageS3Key),
+    xUrl: formValues.xUrl,
+    facebookUrl: formValues.facebookUrl,
+    youtubeUrl: formValues.youtubeUrl,
+    websiteUrl: formValues.websiteUrl,
   };
 
   console.log("form変換", reqBody)

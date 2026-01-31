@@ -1,22 +1,22 @@
-"use server"
+"use server";
 import { PostFormValues } from "@/app/post/page";
 import { createArticle, CreateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
 
-type ArticleStatus = "draft" | "published" | "archived";
+type ArticleStatus = "draft" | "published";
 
 interface ReqArticleImage {
-  s3_key: string;
+  s3Key: string;
   caption?: string;
-  display_order: number;
+  displayOrder: number;
 }
 
 interface ReqArticleReport {
   title: string;
   description?: string;
   location: string;
-  display_order: number;
+  displayOrder: number;
   images: ReqArticleImage[];
 }
 
@@ -27,33 +27,33 @@ const toReqArticle = (
     articleStatus: ArticleStatus;
     thumbnailS3Key: string | null;
     reportImageS3Keys: string[][]; // [reportIndex][imageIndex]
-  }
+  },
 ): CreateArticleBody => {
   const { articleStatus, thumbnailS3Key, reportImageS3Keys } = params;
   const reports: ReqArticleReport[] = form.reports.map(
     (report, reportIndex) => {
       const s3Keys = reportImageS3Keys[reportIndex] ?? [];
       const images: ReqArticleImage[] = s3Keys.map((s3Key, imageIndex) => ({
-        s3_key: s3Key,
+        s3Key: s3Key,
         caption: report.captions?.[imageIndex] || undefined,
-        display_order: imageIndex + 1,
+        displayOrder: imageIndex + 1,
       }));
 
       return {
         title: report.title,
         description: report.description, // フォームに description があればここでマッピング
         location: report.location,
-        display_order: reportIndex + 1,
+        displayOrder: reportIndex + 1,
         images,
       };
-    }
+    },
   );
 
   return {
     title: form.title,
-    thumbnail_s3_key: thumbnailS3Key,
-    anime_name: form.animeName,
-    article_status: articleStatus,
+    thumbnailS3Key: thumbnailS3Key,
+    animeName: form.animeName,
+    articleStatus: articleStatus,
     reports,
   };
 };
@@ -61,7 +61,7 @@ const toReqArticle = (
 export const createArticleWithImages = async (
   formValues: PostFormValues,
   status: ArticleStatus = "draft",
-  idToken: string
+  idToken: string,
 ) => {
   // 1. アップロード対象ファイルを 1 本の配列にまとめる
   const files: File[] = [];
@@ -100,7 +100,7 @@ export const createArticleWithImages = async (
   const reportImageS3Keys: string[][] = formValues.reports.map(() => []);
 
   uploaded.forEach((item, index) => {
-    const s3Key = item.urlInfo.s3_key;
+    const s3Key = item.urlInfo.s3Key;
 
     if (hasThumbnail && index === 0) {
       thumbnailS3Key = s3Key;

@@ -1,4 +1,9 @@
 "use server";
+import {
+  BookmarkArticleCardResponse,
+  BookmarkCheckResponse,
+} from "@/types/api/bookmark";
+
 const API_ENDPOINT =
   "https://13ququ06v4.execute-api.ap-northeast-1.amazonaws.com";
 
@@ -19,15 +24,14 @@ export const addBookmark = async (articleId: string, idToken: string) => {
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to add bookmark"
-      }`
+      }`,
     );
   }
 };
 
 export const deleteBookmark = async (articleId: string, idToken: string) => {
-  const response = await fetch(`${API_ENDPOINT}/bookmarks`, {
+  const response = await fetch(`${API_ENDPOINT}/bookmarks/${articleId}`, {
     method: "DELETE",
-    body: JSON.stringify({ articleId: articleId }),
     headers: {
       Authorization: `Bearer ${idToken}`,
       "Content-Type": "application/json",
@@ -41,12 +45,15 @@ export const deleteBookmark = async (articleId: string, idToken: string) => {
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to delete bookmark"
-      }`
+      }`,
     );
   }
 };
 
-export const getBookmarkArticles = async (limit: number, idToken: string) => {
+export const getBookmarkArticles = async (
+  limit: number,
+  idToken: string,
+): Promise<BookmarkArticleCardResponse> => {
   "use cache";
   const response = await fetch(
     `${API_ENDPOINT}/users/bookmarks?limit=${limit}`,
@@ -56,7 +63,7 @@ export const getBookmarkArticles = async (limit: number, idToken: string) => {
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
       },
-    }
+    },
   );
   // レスポンスの状態チェック
   if (!response.ok) {
@@ -66,7 +73,7 @@ export const getBookmarkArticles = async (limit: number, idToken: string) => {
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to get bookmark articles"
-      }`
+      }`,
     );
   }
 
@@ -75,7 +82,7 @@ export const getBookmarkArticles = async (limit: number, idToken: string) => {
 
 export const getBookmarkCheckSingle = async (
   articleId: string,
-  idToken: string
+  idToken: string,
 ) => {
   const response = await fetch(
     `${API_ENDPOINT}/bookmarks/check?articleId=${articleId}`,
@@ -85,7 +92,7 @@ export const getBookmarkCheckSingle = async (
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
       },
-    }
+    },
   );
   // レスポンスの状態チェック
   if (!response.ok) {
@@ -95,9 +102,9 @@ export const getBookmarkCheckSingle = async (
     throw new Error(
       `HTTP ${response.status}: ${
         errorData.message || "Failed to get bookmark check (single)"
-      }`
+      }`,
     );
   }
-
-  return response.json();
+  const resData: BookmarkCheckResponse = await response.json();
+  return resData;
 };

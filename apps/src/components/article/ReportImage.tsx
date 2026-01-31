@@ -1,7 +1,6 @@
 "use client";
 
-import { ReportsImages } from "@/types";
-import { s3KeyToImageUrl } from "@/utils/s3KeyToImageUrl";
+import { ReportImage as ReportImageType } from "@/types/api/article";
 import Image from "next/image";
 import { useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
@@ -10,7 +9,7 @@ import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 
 interface ReportImageProps {
-  reportImages: ReportsImages[];
+  reportImages: ReportImageType[];
 }
 
 export const ReportImage = ({ reportImages }: ReportImageProps) => {
@@ -22,7 +21,7 @@ export const ReportImage = ({ reportImages }: ReportImageProps) => {
   }
 
   const slides = reportImages.map((image) => ({
-    src: s3KeyToImageUrl(image.s3_key),
+    src: image.imageUrl,
     title: image.caption,
   }));
 
@@ -41,12 +40,13 @@ export const ReportImage = ({ reportImages }: ReportImageProps) => {
           onClick={() => handleImageClick(index)}
           className="cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <div className="relative w-full aspect-[4/3] overflow-hidden rounded-md">
+          <div className="aspect-[4/3] overflow-hidden rounded-md">
             <Image
-              src={s3KeyToImageUrl(image.s3_key)}
+              src={image.imageUrl}
               alt={image.caption || `Image ${index + 1}`}
-              fill
-              className="object-cover"
+              width={800}
+              height={600}
+              className="w-full h-full object-cover"
             />
           </div>
           {image.caption && (

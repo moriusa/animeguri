@@ -31,7 +31,7 @@ export const useBookmark = () => {
       try {
         setCheckLoading(true);
         const res = await getBookmarkCheckSingle(articleId, idToken);
-        setIsBookmarked(res.isBookmarked);
+        setIsBookmarked(res.data.isBookmarked);
       } catch (err) {
         console.error("Failed to check bookmark status:", err);
         // エラーでも続行（デフォルトはfalse）

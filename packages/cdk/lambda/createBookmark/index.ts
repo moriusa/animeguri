@@ -2,7 +2,7 @@ import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
 
@@ -34,8 +34,15 @@ export const handler = async (
       }
       throw error;
     }
-    return { statusCode: 201, body: JSON.stringify(data) };
 
+    const transData = {
+      id: data.id,
+      userId: data.user_id,
+      articleId: data.article_id,
+      createdAt: data.created_at,
+    };
+
+    return { statusCode: 201, body: JSON.stringify({ data: transData }) };
   } catch (e: any) {
     console.error("Handler error:", e);
     return {
@@ -43,7 +50,6 @@ export const handler = async (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: "Internal server error",
-        error: e.message,
       }),
     };
   }

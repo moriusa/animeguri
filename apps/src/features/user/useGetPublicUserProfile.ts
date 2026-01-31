@@ -3,7 +3,7 @@
 import { getPublicUserProfile } from "@/lib/userProfile";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { User } from "@/types";
+import { User } from "@/types/api/user";
 
 export const useGetPublicUserProfile = () => {
   const params = useParams();
@@ -24,7 +24,7 @@ export const useGetPublicUserProfile = () => {
         setError(null);
 
         const res = await getPublicUserProfile(id);
-        setProfile(res);
+        setProfile(res.data);
       } catch (err) {
         console.error("Failed to fetch profile:", err);
         setError(

@@ -1,25 +1,14 @@
+"use client";
 import { getUserProfile } from "@/lib/userProfile";
+import { User } from "@/types/api/user";
 import { useEffect, useState } from "react";
 
-// res型
-export interface UserProfile {
-  id: string;
-  user_name: string;
-  bio?: string;
-  profile_image_s3_key: string;
-  x_url?: string;
-  facebook_url?: string;
-  youtube_url?: string;
-  website_url?: string;
-}
-
 export const useGetUserProfile = (idToken: string) => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // idTokenがない場合は何もしない
     if (!idToken) {
       setLoading(false);
       return;
@@ -31,11 +20,11 @@ export const useGetUserProfile = (idToken: string) => {
         setError(null);
 
         const res = await getUserProfile(idToken);
-        setProfile(res);
+        setProfile(res.data);
       } catch (err) {
         console.error("Failed to fetch profile:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch profile"
+          err instanceof Error ? err.message : "Failed to fetch profile",
         );
         setProfile(null);
       } finally {
