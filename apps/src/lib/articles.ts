@@ -113,18 +113,18 @@ export const getMyArticleCards = async (
 
 export interface CreateArticleBody {
   title: string;
-  thumbnail_s3_key: string | null;
-  anime_name: string;
-  article_status?: "draft" | "published" | "archived";
+  thumbnailS3Key: string | null;
+  animeName: string;
+  articleStatus: "draft" | "published";
   reports: {
     title: string;
     description?: string;
     location: string;
-    display_order: number; // 1~10
+    displayOrder: number;
     images: {
-      s3_key: string;
+      s3Key: string;
       caption?: string;
-      display_order: number; // 1~10
+      displayOrder: number;
     }[];
   }[];
 }
@@ -132,7 +132,7 @@ export interface CreateArticleBody {
 export const createArticle = async (
   article: CreateArticleBody,
   idToken: string,
-) => {
+): Promise<ArticleResponse> => {
   const response = await fetch(`${API_ENDPOINT}/articles`, {
     method: "POST",
     body: JSON.stringify(article),
@@ -152,12 +152,12 @@ export const createArticle = async (
       }`,
     );
   }
+  return response.json();
 };
 
 export const deleteArticle = async (articleId: string, idToken: string) => {
-  const response = await fetch(`${API_ENDPOINT}/articles`, {
+  const response = await fetch(`${API_ENDPOINT}/articles/${articleId}`, {
     method: "DELETE",
-    body: JSON.stringify({ articleId: articleId }),
     headers: {
       Authorization: `Bearer ${idToken}`,
       "Content-Type": "application/json",

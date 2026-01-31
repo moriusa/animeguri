@@ -1,27 +1,28 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { initSupabase } from "../common/supabaseClient";
 import { randomUUID } from "crypto";
+import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
 interface CreateArticleBody {
   title: string;
-  thumbnail_s3_key?: string;
-  anime_name: string;
-  article_status?: "draft" | "published" | "archived";
+  thumbnailS3Key: string;
+  animeName: string;
+  articleStatus: "draft" | "published";
   reports: {
     title: string;
     description?: string;
     location: string;
-    display_order: number; // 1~10
+    displayOrder: number;
     images: {
-      s3_key: string;
+      s3Key: string;
       caption?: string;
-      display_order: number; // 1~10
+      displayOrder: number;
     }[];
   }[];
 }
 
 export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
 ) => {
   const sub = event.requestContext.authorizer.jwt.claims.sub as string;
 
@@ -81,10 +82,10 @@ export const handler = async (
         id: articleId,
         user_id: sub,
         title: body.title,
-        thumbnail_s3_key: body.thumbnail_s3_key || null,
-        anime_name: body.anime_name,
-        article_status: body.article_status || "draft",
-        published_at: body.article_status === "published" ? now : null,
+        thumbnail_s3_key: body.thumbnailS3Key || null,
+        anime_name: body.animeName,
+        article_status: body.articleStatus,
+        published_at: body.articleStatus === "published" ? now : null,
       })
       .select("*")
       .single();
@@ -110,7 +111,7 @@ export const handler = async (
         title: report.title,
         description: report.description || null,
         location: report.location,
-        display_order: report.display_order,
+        display_order: report.displayOrder,
       }));
 
       const { data: insertedReports, error: reportsError } = await supabase
@@ -142,9 +143,9 @@ export const handler = async (
           const imagesToInsert = reportImages.map((img) => ({
             id: randomUUID(),
             report_id: reports[i].id,
-            s3_key: img.s3_key,
+            s3_key: img.s3Key,
             caption: img.caption || null,
-            display_order: img.display_order,
+            display_order: img.displayOrder,
           }));
 
           const { error: imagesError } = await supabase
@@ -178,8 +179,13 @@ export const handler = async (
         reports (
           *,
           report_images (*)
+        ),
+        author:users (
+          id,
+          user_name,
+          profile_image_s3_key
         )
-      `
+      `,
       )
       .eq("id", articleId)
       .single();
@@ -196,13 +202,59 @@ export const handler = async (
       };
     }
 
+    const transReportsData = fullArticle.reports.map((report: any) => {
+      return {
+        id: report.id,
+        title: report.title,
+        location: report.location,
+        articleId: report.article_id,
+        createdAt: report.created_at,
+        updatedAt: report.updated_at,
+        description: report.description,
+        displayOrder: report.display_order,
+        reportImages: report.report_images.map((image: any) => ({
+          id: image.id,
+          imageUrl: getArticleImageUrl(image.s3_key),
+          caption: image.caption,
+          reportId: image.report_id,
+          createdAt: image.created_at,
+          updatedAt: image.updated_at,
+          displayOrder: image.display_order,
+        })),
+      };
+    });
+
+    const transData = {
+      id: fullArticle.id,
+      userId: fullArticle.user_id,
+      title: fullArticle.title,
+      animeName: fullArticle.anime_name,
+      thumbnailUrl: getArticleImageUrl(fullArticle.thumbnail_s3_key),
+      likesCount: fullArticle.likes_count,
+      bookmarkCount: fullArticle.bookmark_count,
+      commentCount: fullArticle.comment_count,
+      reportCount: fullArticle.report_count,
+      articleStatus: fullArticle.article_status,
+      publishedAt: fullArticle.published_at,
+      createdAt: fullArticle.created_at,
+      updatedAt: fullArticle.updated_at,
+      reports: transReportsData,
+      author: {
+        id: fullArticle.author.id,
+        userName: fullArticle.author.user_name,
+        profileImageUrl: getUserImageUrl(
+          fullArticle.author.profile_image_s3_key,
+        ),
+      },
+    };
+
     return {
       statusCode: 201,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(fullArticle),
+      body: JSON.stringify({ data: transData }),
     };
   } catch (e: any) {
     console.error("Handler error:", e);

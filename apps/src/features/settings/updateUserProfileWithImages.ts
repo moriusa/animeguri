@@ -23,7 +23,7 @@ export const updateUserProfileWithImages = async (
       formValues.profileImage,
     ]);
 
-    profileImageS3Key = uploaded[0].urlInfo.s3_key;
+    profileImageS3Key = uploaded[0].urlInfo.s3Key;
   } else if (typeof formValues.profileImage === "string") {
     // 既存の画像URL（変更なし）
     console.log("既存の画像を使用");

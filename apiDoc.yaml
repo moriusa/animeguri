@@ -147,8 +147,8 @@ components:
           type: number
         articleStatus:
           type: string
-          enum: [draft, public]
-          example: "public"
+          enum: [draft, published]
+          example: "published"
         publishedAt:
           type: string
           format: date-time
@@ -569,26 +569,42 @@ paths:
                 - content
                 - anime_name
               properties:
+                id:
+                  type: string
                 title:
                   type: string
-                  minLength: 1
-                  maxLength: 100
-                  example: "鬼滅の刃の考察"
-                content:
+                animeName:
                   type: string
-                  minLength: 1
-                  example: "この作品について..."
-                anime_name:
+                thumbnailS3Key:
                   type: string
-                  example: "鬼滅の刃"
-                thumbnail_s3_key:
+                articleStatus:
                   type: string
-                  example: "thumbnails/xxx.jpg"
-                article_status:
-                  type: string
-                  enum: [draft, public]
-                  default: draft
-                  example: "draft"
+                  enum: [draft, published]
+                  example: "published"
+                reports:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      title:
+                        type: string
+                      location:
+                        type: string
+                      description:
+                        type: string
+                      displayOrder:
+                        type: string
+                      images:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            s3Key:
+                              type: string
+                            caption:
+                              type: string
+                            displayOrder:
+                              type: string
       responses:
         "201":
           description: 記事作成成功
@@ -599,14 +615,14 @@ paths:
                 properties:
                   data:
                     $ref: "#/components/schemas/ArticleWithAuthor"
-        "400":
-          description: バリデーションエラー
+        "401":
+          description: 認証エラー
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DBError"
-        "401":
-          description: 認証エラー
+                $ref: "#/components/schemas/UnauthorizedError"
+        "500":
+          description: DBエラー
           content:
             application/json:
               schema:
@@ -788,8 +804,8 @@ paths:
           description: 記事ステータスフィルター
           schema:
             type: string
-            enum: [draft, public, all]
-            example: "public"
+            enum: [draft, published, all]
+            example: "published"
       responses:
         "200":
           description: 取得成功
@@ -823,7 +839,8 @@ paths:
                         example: 0
                   status:
                     type: string
-                    example: "public"
+                    enum: [draft, published]
+                    example: "published"
         "400":
           description: パラメータエラー
           content:
