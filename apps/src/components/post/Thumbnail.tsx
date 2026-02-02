@@ -1,8 +1,8 @@
 "use client";
 import { Control, Controller, FieldErrors } from "react-hook-form";
-import { PostFormValues } from "@/app/post/page";
 import { ImageUploadWithCrop } from "../common/ImageUploadWithCrop";
 import { useState } from "react";
+import { PostFormValues, ThumbnailItem } from "./PostFrom";
 
 interface Props {
   control: Control<PostFormValues>; // register の代わりに control
@@ -10,7 +10,8 @@ interface Props {
 }
 
 export const Thumbnail = ({ control, errors }: Props) => {
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const defaultImage = control._defaultValues.thumbnail?.url
+  const [croppedImage, setCroppedImage] = useState<string | null>(defaultImage || null);
 
   return (
     <Controller
@@ -28,11 +29,16 @@ export const Thumbnail = ({ control, errors }: Props) => {
           label="サムネイル画像"
           currentImage={croppedImage}
           onImageChange={(file, croppedDataUrl) => {
-            field.onChange(file); // React Hook Form に値を渡す
+            const thumbnailItem: ThumbnailItem = {
+              file: file,
+              url: croppedDataUrl,
+              isExisting: false,
+            };
+            field.onChange(thumbnailItem); // React Hook Form に値を渡す
             setCroppedImage(croppedDataUrl);
           }}
           onImageRemove={() => {
-            field.onChange(undefined); // React Hook Form の値をクリア
+            field.onChange(null); // React Hook Form の値をクリア
             setCroppedImage(null);
           }}
           aspectRatio={16 / 9}

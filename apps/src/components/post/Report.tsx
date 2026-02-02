@@ -7,8 +7,8 @@ import {
   UseFormResetField,
 } from "react-hook-form";
 import { FaRegTrashCan } from "react-icons/fa6";
-import { PostFormValues, ReportTypes } from "@/app/post/page";
 import { Input } from "../common";
+import { ImageItem, PostFormValues, ReportTypes } from "./PostFrom";
 
 export const Report = ({
   index,
@@ -24,7 +24,7 @@ export const Report = ({
   resetField: UseFormResetField<PostFormValues>;
   clearErrors: UseFormClearErrors<PostFormValues>;
   errors: FieldErrors<PostFormValues>;
-  onImageChange: (index: number, files: File[]) => void;
+  onImageChange: (index: number, images: ImageItem[]) => void;
   reportData: ReportTypes;
 }) => {
   return (
@@ -37,9 +37,8 @@ export const Report = ({
         error={errors.reports?.[index]?.images?.message}
         register={register}
         images={reportData.images}
-        previewUrls={reportData.previewUrls}
         onChange={onImageChange}
-        index={index}
+        reportIdx={index}
         errors={errors}
       />
 

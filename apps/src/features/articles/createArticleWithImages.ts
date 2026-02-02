@@ -1,5 +1,5 @@
 "use server";
-import { PostFormValues } from "@/app/post/page";
+import { ImageItem, PostFormValues } from "@/components/post/PostFrom";
 import { createArticle, CreateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
@@ -33,11 +33,14 @@ const toReqArticle = (
   const reports: ReqArticleReport[] = form.reports.map(
     (report, reportIndex) => {
       const s3Keys = reportImageS3Keys[reportIndex] ?? [];
-      const images: ReqArticleImage[] = s3Keys.map((s3Key, imageIndex) => ({
-        s3Key: s3Key,
-        caption: report.captions?.[imageIndex] || undefined,
-        displayOrder: imageIndex + 1,
-      }));
+      const images: ReqArticleImage[] = s3Keys.map((s3Key, imageIndex) => {
+        const imageItem = report.images[imageIndex];
+        return {
+          s3Key: s3Key,
+          caption: imageItem?.caption || undefined,
+          displayOrder: imageItem?.displayOrder ?? imageIndex + 1,
+        };
+      });
 
       return {
         title: report.title,
@@ -68,15 +71,21 @@ export const createArticleWithImages = async (
 
   // thumbnail を先頭に入れる（あれば）
   const hasThumbnail = !!formValues.thumbnail;
-  if (formValues.thumbnail) {
-    files.push(formValues.thumbnail);
+  if (formValues.thumbnail?.file) {
+    files.push(formValues.thumbnail.file);
   }
 
-  // 各レポートの images を順番に詰める
-  const reportImageStartIndex: number[] = []; // 各 report の images の開始インデックスを記録
+  // 各レポートの images から File を抽出
+  const reportImageStartIndex: number[] = [];
   formValues.reports.forEach((report) => {
     reportImageStartIndex.push(files.length);
-    files.push(...report.images);
+
+    // ImageItem[] から file が存在するもののみ抽出
+    const imageFiles = report.images
+      .filter((img: ImageItem) => img.file !== undefined)
+      .map((img: ImageItem) => img.file!);
+
+    files.push(...imageFiles);
   });
 
   // ファイルがなければ画像なし記事としてそのまま DB 保存してもよい
@@ -130,7 +139,6 @@ export const createArticleWithImages = async (
   const article = await createArticle(reqBody, idToken);
   console.log("投稿完了");
   // キャッシュを無効化
-  revalidatePath("/articles");
   revalidatePath("/");
   return article;
 };

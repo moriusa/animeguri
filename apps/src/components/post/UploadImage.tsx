@@ -3,17 +3,16 @@ import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { HiOutlineXMark } from "react-icons/hi2";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { Input } from "../common";
-import { PostFormValues } from "@/app/post/page";
+import { ImageItem, PostFormValues } from "./PostFrom";
 
 interface Props {
   register: UseFormRegister<PostFormValues>;
   maxFiles?: number;
   error?: string;
   errors?: FieldErrors<PostFormValues>;
-  images: File[]; // 親から受け取る画像
-  previewUrls: string[]; // 親から受け取るプレビューURL
-  index: number; // レポート番号
-  onChange: (index: number, files: File[]) => void; // 状態変更を親に伝える
+  images: ImageItem[]; // 親から受け取る画像
+  reportIdx: number; // レポート番号
+  onChange: (index: number, images: ImageItem[]) => void; // 状態変更を親に伝える
 }
 
 // バリデーション設定
@@ -30,8 +29,7 @@ export const UploadImage = ({
   errors,
   register,
   images,
-  previewUrls,
-  index,
+  reportIdx,
   onChange,
 }: Props) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +49,7 @@ export const UploadImage = ({
         alert(
           `"${file.name}" のサイズが大きすぎます。\n最大 ${
             VALIDATION.MAX_FILE_SIZE / 1024 / 1024
-          }MB までアップロード可能です。`
+          }MB までアップロード可能です。`,
         );
         e.target.value = "";
         return;
@@ -60,24 +58,36 @@ export const UploadImage = ({
       // ファイル形式チェック
       if (!VALIDATION.ALLOWED_TYPES.includes(file.type)) {
         alert(
-          `"${file.name}" は対応していない形式です。\n対応形式: PNG, JPG, JPEG`
+          `"${file.name}" は対応していない形式です。\n対応形式: PNG, JPG, JPEG`,
         );
         e.target.value = "";
         return;
       }
     }
+    // File → ImageItem に変換
+    const newImageItems: ImageItem[] = newFiles.map((file, i) => ({
+      file,
+      url: URL.createObjectURL(file),
+      isExisting: false,
+      displayOrder: images.length + i,
+    }));
 
-    const updatedImages = [...images, ...newFiles];
+    const updatedImages = [...images, ...newImageItems];
     // 親に変更したデータを通知
-    onChange(index, updatedImages);
+    onChange(reportIdx, updatedImages);
     // inputをリセット（同じファイルを再選択可能にする）
     e.target.value = "";
   };
 
   const handleRemoveImage = (removeIndex: number) => {
+    const removedImage = images[removeIndex];
+    // 既存画像の場合はプレビューURLをrevokeしない
+    if (!removedImage.isExisting && removedImage.url.startsWith("blob:")) {
+      URL.revokeObjectURL(removedImage.url);
+    }
     const updatedImages = images.filter((_, i) => i !== removeIndex);
     // 親に変更したデータを通知
-    onChange(index, updatedImages);
+    onChange(reportIdx, updatedImages);
   };
 
   return (
@@ -92,7 +102,7 @@ export const UploadImage = ({
               multiple
               className="hidden"
               accept=".png, .jpg, .jpeg"
-              {...register(`reports.${index}.images`, {
+              {...register(`reports.${reportIdx}.images`, {
                 onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                   handleFileChange(e);
                   e.target.dispatchEvent(new Event("input", { bubbles: true }));
@@ -112,31 +122,43 @@ export const UploadImage = ({
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
       {/* 画像プレビュー */}
-      {previewUrls.length > 0 && (
+      {images.length > 0 && (
         <div className="mt-3 grid grid-cols-2 gap-4">
-          {previewUrls.map((url, i) => (
-            <div key={i} className="relative">
+          {images.map((imageItem, imageIdx) => (
+            <div key={imageItem.id || imageIdx} className="relative">
               <Image
-                src={url}
-                alt={`プレビュー ${i + 1}`}
+                src={imageItem.url}
+                alt={`プレビュー ${imageIdx + 1}`}
                 width={500}
                 height={500}
                 className="w-full mx-auto object-cover rounded-lg border aspect-video"
               />
+
+              {/* 既存画像の場合はバッジを表示 */}
+              {imageItem.isExisting && (
+                <span className="absolute left-2 top-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                  既存
+                </span>
+              )}
+
               <button
                 type="button"
-                onClick={() => handleRemoveImage(i)}
+                onClick={() => handleRemoveImage(imageIdx)}
                 className="cursor-pointer p-2 rounded-full bg-black/50 absolute right-3 top-3"
               >
                 <HiOutlineXMark size={25} color="white" />
               </button>
               <Input
-                id={`reports.${index}.captions.${i}`}
-                text={`画像 ${i + 1} のキャプション`}
-                name={`reports.${index}.captions.${i}`}
+                id={`reports.${reportIdx}.captions.${imageIdx}`}
+                text={`画像 ${imageIdx + 1} のキャプション`}
+                name={`reports.${reportIdx}.images.${imageIdx}.caption`}
                 register={register}
                 placeholder="キャプションを入力（例：駐車場から見た景色）"
-                error={errors?.reports?.[index]?.captions?.[i]?.message}
+                defaultValue={imageItem.caption}
+                error={
+                  errors?.reports?.[reportIdx]?.images?.[imageIdx]?.caption
+                    ?.message
+                }
               />
               {/* ✅ 文字数カウント */}
               <p className="text-xs text-gray-500 mt-1">

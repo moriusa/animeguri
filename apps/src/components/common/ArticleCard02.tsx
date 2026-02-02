@@ -9,6 +9,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import ConfirmDialog from "./Popup";
 import { useState } from "react";
+import { redirect } from "next/navigation";
 
 export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +18,7 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
   const handleEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsOpen(true); // ダイアログを開く
+    redirect(`/post/edit/${data.id}`);
   };
 
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {

@@ -14,6 +14,7 @@ interface Props<T extends FieldValues> {
   validation?: object;
   error?: string; // エラーメッセージ用
   mask?: boolean;
+  defaultValue?: string;
 }
 
 export const Input = <T extends FieldValues>({
@@ -26,6 +27,7 @@ export const Input = <T extends FieldValues>({
   validation,
   error,
   mask = undefined,
+  defaultValue,
 }: Props<T>) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -48,6 +50,7 @@ export const Input = <T extends FieldValues>({
             type={isVisible ? "text" : type}
             className="bg-white w-full rounded-sm border border-gray-300 p-1 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60"
             placeholder={placeholder}
+            defaultValue={defaultValue}
             {...register(name, validation)}
           />
           {mask ? (

@@ -170,6 +170,21 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const patchArticle = new NodejsFunction(this, "PatchArticle", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/patchArticle/index.ts"),
+      functionName: "animeguri-patch-article",
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
     const deleteArticle = new NodejsFunction(this, "DeleteArticle", {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -326,6 +341,11 @@ export class ApiStack extends cdk.Stack {
       createArticle,
     );
 
+    const patchArticleIntegration = new HttpLambdaIntegration(
+      "PatchArticleIntegration",
+      patchArticle,
+    );
+
     const deleteArticleIntegration = new HttpLambdaIntegration(
       "DeleteArticleIntegration",
       deleteArticle,
@@ -428,6 +448,13 @@ export class ApiStack extends cdk.Stack {
       path: "/articles",
       methods: [HttpMethod.POST],
       integration: createArticleIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/articles",
+      methods: [HttpMethod.PATCH],
+      integration: patchArticleIntegration,
       authorizer,
     });
 

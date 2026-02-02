@@ -156,6 +156,53 @@ export const createArticle = async (
   return response.json();
 };
 
+export interface UpdateArticleBody {
+  id: string;
+  title: string;
+  thumbnailS3Key: string | null;
+  animeName: string;
+  articleStatus: "draft" | "published";
+  reports: {
+    id?: string;
+    title: string;
+    description?: string;
+    location: string;
+    displayOrder: number;
+    images: {
+      id?: string;
+      s3Key?: string;
+      caption?: string;
+      displayOrder: number;
+    }[];
+  }[];
+}
+
+export const updateArticle = async (
+  article: UpdateArticleBody,
+  idToken: string,
+): Promise<ArticleResponse> => {
+  const response = await fetch(`${API_ENDPOINT}/articles`, {
+    method: "PATCH",
+    body: JSON.stringify(article),
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  // レスポンスの状態チェック
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to fetch articles"
+      }`,
+    );
+  }
+  return response.json();
+};
+
 export const deleteArticle = async (articleId: string, idToken: string) => {
   const response = await fetch(`${API_ENDPOINT}/articles/${articleId}`, {
     method: "DELETE",
