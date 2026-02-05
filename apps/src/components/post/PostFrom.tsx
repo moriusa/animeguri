@@ -74,7 +74,6 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
           title: "",
           location: "",
           description: "",
-          
         },
       ],
     },

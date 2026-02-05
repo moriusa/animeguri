@@ -1,4 +1,4 @@
-"use cache";
+"use server"
 import { getCurrentUser } from "./auth";
 import { ArticleCardResponse, ArticleResponse } from "@/types/api/article";
 import dotenv from "dotenv";
@@ -7,6 +7,7 @@ dotenv.config();
 const API_ENDPOINT = process.env.API_ENDPOINT;
 
 export const getArticle = async (id: string) => {
+  "use cache";
   const response = await fetch(`${API_ENDPOINT}/articles/${id}`, {
     method: "GET",
     headers: {
@@ -30,6 +31,7 @@ export const getArticle = async (id: string) => {
 export const getArticleCards = async (
   limit: number,
 ): Promise<ArticleCardResponse> => {
+  "use cache";
   const response = await fetch(`${API_ENDPOINT}/articles?limit=${limit}`, {
     method: "GET",
     headers: {
@@ -56,6 +58,7 @@ export const getUserArticleCards = async (
   id: string,
   limit: number,
 ): Promise<ArticleCardResponse> => {
+  "use cache";
   const response = await fetch(
     `${API_ENDPOINT}/user/${id}/articles?limit=${limit}`,
     {
@@ -85,6 +88,7 @@ export const getMyArticleCards = async (
   idToken: string,
   limit: number,
 ): Promise<ArticleCardResponse> => {
+  "use cache";
   await getCurrentUser();
   const response = await fetch(
     `${API_ENDPOINT}/user/me/articles?limit=${limit}&status=all`,

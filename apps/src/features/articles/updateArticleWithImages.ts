@@ -4,6 +4,7 @@ import { updateArticle, UpdateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
 import { geocodeAddress } from "./geocoding";
+import { extractS3Key } from "@/utils/extractS3Key";
 
 type ArticleStatus = "draft" | "published";
 
@@ -117,9 +118,9 @@ export const updateArticleWithImages = async (
     // 新規アップロード
     thumbnailS3Key = uploadedS3Keys[uploadIndex];
     uploadIndex++;
-  } else if (formValues.thumbnail?.isExisting) {
+  } else if (formValues.thumbnail?.isExisting && formValues.thumbnail?.url) {
     // 既存画像を維持
-    thumbnailS3Key = null;
+    thumbnailS3Key = extractS3Key(formValues.thumbnail.url);
   } else {
     // サムネイルなし
     thumbnailS3Key = null;

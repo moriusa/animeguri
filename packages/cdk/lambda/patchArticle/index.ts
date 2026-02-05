@@ -78,7 +78,11 @@ export const handler = async (
     const s3KeysToDelete: string[] = [];
 
     // 2-1. サムネイルの削除判定
-    if (existingArticle.thumbnail_s3_key && body.thumbnailS3Key) {
+    if (
+      existingArticle.thumbnail_s3_key &&
+      body.thumbnailS3Key &&
+      existingArticle.thumbnail_s3_key !== body.thumbnailS3Key
+    ) {
       s3KeysToDelete.push(existingArticle.thumbnail_s3_key);
     }
 
