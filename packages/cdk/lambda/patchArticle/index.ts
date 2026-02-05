@@ -15,6 +15,9 @@ export interface UpdateArticleBody {
     description?: string;
     location: string;
     displayOrder: number;
+    latitude?: number;
+    longitude?: number;
+    geocodedAddress?: string;
     images: {
       id?: string;
       s3Key?: string;
@@ -170,6 +173,9 @@ export const handler = async (
             title: report.title,
             description: report.description,
             location: report.location,
+            latitude: report.latitude,
+            longitude: report.longitude,
+            geocoded_address: report.geocodedAddress,
             display_order: report.displayOrder,
           })
           .eq("id", reportId);
@@ -182,6 +188,9 @@ export const handler = async (
             title: report.title,
             description: report.description,
             location: report.location,
+            latitude: report.latitude,
+            longitude: report.longitude,
+            geocoded_address: report.geocodedAddress,
             display_order: report.displayOrder,
           })
           .select()
