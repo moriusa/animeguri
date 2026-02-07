@@ -1,60 +1,45 @@
-"use client";
-import { geocodeAddress } from "@/features/articles/geocoding";
-import { useState } from "react";
+import { MapView } from "@/components/map/MapView";
 
-export default function TestGeocodingPage() {
-  const [address, setAddress] = useState("東京タワー");
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleTest = async () => {
-    setLoading(true);
-    const geocoded = await geocodeAddress(address);
-    setResult(geocoded);
-    setLoading(false);
-  };
-
+export default function TestMapPage() {
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-4">Geocoding テスト</h1>
+    <div className="container mx-auto p-8 space-y-8">
+      <h1 className="text-2xl font-bold">地図表示テスト</h1>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block mb-2">住所を入力:</label>
-          <input
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="border p-2 w-full"
-            placeholder="例: 東京タワー"
-          />
+      {/* テスト1: デフォルト設定 */}
+      <div>
+        <h2 className="text-xl font-semibold mb-2">1. デフォルト（東京中心）</h2>
+        <div className="h-96 rounded-lg overflow-hidden border">
+          <MapView />
         </div>
+      </div>
 
-        <button
-          onClick={handleTest}
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-400"
-        >
-          {loading ? "変換中..." : "Geocoding実行"}
-        </button>
+      {/* テスト2: 大阪中心 */}
+      <div>
+        <h2 className="text-xl font-semibold mb-2">2. 大阪中心</h2>
+        <div className="h-96 rounded-lg overflow-hidden border">
+          <MapView center={[135.5022, 34.6937]} zoom={12} />
+        </div>
+      </div>
 
-        {result && (
-          <div className="bg-gray-100 p-4 rounded">
-            <h2 className="font-bold mb-2">結果:</h2>
-            <pre>{JSON.stringify(result, null, 2)}</pre>
+      {/* テスト3: コントロールなし */}
+      <div>
+        <h2 className="text-xl font-semibold mb-2">3. コントロールなし</h2>
+        <div className="h-96 rounded-lg overflow-hidden border">
+          <MapView showControls={false} />
+        </div>
+      </div>
 
-            <div className="mt-4">
-              <a
-                href={`https://www.google.com/maps?q=${result.latitude},${result.longitude}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 underline"
-              >
-                Google Mapsで確認 →
-              </a>
-            </div>
-          </div>
-        )}
+      {/* 確認事項 */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 className="font-bold mb-2">✅ 確認事項</h3>
+        <ul className="space-y-1 text-sm">
+          <li>✅ 地図が表示されるか</li>
+          <li>✅ ズーム・回転ボタンが右上に表示されるか</li>
+          <li>✅ フルスクリーンボタンが表示されるか</li>
+          <li>✅ 現在地ボタンをクリックすると位置情報を取得するか</li>
+          <li>✅ 左下にスケール（距離）が表示されるか</li>
+          <li>✅ マウスでドラッグ・ズームができるか</li>
+        </ul>
       </div>
     </div>
   );

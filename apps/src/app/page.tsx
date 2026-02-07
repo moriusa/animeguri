@@ -1,7 +1,8 @@
 "use client";
 
-import ConfirmDialog from "@/components/common/Popup";
 import HomeArticles from "@/components/HomeArticles";
+import { MAP_STYLES } from "@/components/map/mapStyles";
+import { MapView } from "@/components/map/MapView";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 
@@ -10,30 +11,28 @@ import { useSelector } from "react-redux";
 export default function Home() {
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 
-  // // ログイン済みの場合
-  // if (auth.isAuthenticated) {
-  //   return (
-  //     <div>
-  //       <h2>ログイン情報</h2>
-  //       <pre> Hello: {auth.user?.profile.email} </pre>
-  //       <pre> ID Token: {auth.user?.id_token} </pre>
-  //       <pre> Access Token: {auth.user?.access_token} </pre>
-  //       <pre> Refresh Token: {auth.user?.refresh_token} </pre>
-  //       <button onClick={handleLogout}>ログアウト</button>
-  //     </div>
-  //   );
-  // }
-
   return (
-    <div className="space-y-16">
-      <p>aboutpage</p>
-      <ConfirmDialog />
-      <HomeArticles type="latestArticles" />
-      {/* <HomeArticles type="popularArticles" />
+    <main className="flex-1 relative">
+      <div className="h-96 rounded-lg overflow-hidden border">
+          <MapView />
+        </div>
+
+      {/* 地図上に表示するUI（後で実装） */}
+      <div className="absolute top-4 left-4 z-10">
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <p className="text-sm text-gray-600">
+            📍 地図上のピンをクリックして聖地情報を見よう
+          </p>
+        </div>
+      </div>
+      <div className="space-y-16">
+        <HomeArticles type="latestArticles" />
+        {/* <HomeArticles type="popularArticles" />
       <HomeArticles type="followArticles" />
       <HomeArticles type="latestArticles" />
       <HomeArticles type="latestComments" />
       <HomeArticles type="monthlyAnimeArticleRanking" /> */}
-    </div>
+      </div>
+    </main>
   );
 }
