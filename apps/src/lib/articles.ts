@@ -1,6 +1,6 @@
 "use server"
 import { getCurrentUser } from "./auth";
-import { ArticleCardResponse, ArticleResponse } from "@/types/api/article";
+import { ArticleCardResponse, ArticleResponse, ReportsResponse } from "@/types/api/article";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -226,4 +226,54 @@ export const deleteArticle = async (articleId: string, idToken: string) => {
       }`,
     );
   }
+};
+
+export const getAllReports = async () => {
+  "use cache";
+  const response = await fetch(`${API_ENDPOINT}/reports`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to fetch reports"
+      }`,
+    );
+  }
+  const resData: ReportsResponse = await response.json();
+  // const resData: ReportsResponse = {
+  //   data: [
+  //     {
+  //       id: "aaaa",
+  //       title: "title",
+  //       description: "desc",
+  //       location: "location",
+  //       latitude: 35.6812,
+  //       longitude: 139.7671,
+  //       geocodedAddress: "address",
+  //       displayOrder: 1,
+  //       articleId: "123",
+  //       createdAt: "",
+  //       updatedAt: "",
+  //       reportImages: [
+  //         {
+  //           imageUrl: "https://placehold.jp/150x150.png",
+  //           id: "",
+  //           caption: "",
+  //           displayOrder: 0,
+  //           createdAt: "",
+  //           updatedAt: "",
+  //           reportId: ""
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // }
+  return resData;
 };

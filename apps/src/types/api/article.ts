@@ -62,3 +62,4 @@ export interface ArticleCard {
 
 export type ArticleCardResponse = PaginatedResponse<ArticleCard>;
 export type ArticleResponse = ApiResponse<Article>;
+export type ReportsResponse = ApiResponse<Report[]>;

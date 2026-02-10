@@ -198,6 +198,21 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const getReports = new NodejsFunction(this, "GetReports", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getReports/index.ts"),
+      functionName: "animeguri-get-reports",
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
     const generatePresignedUrl = new NodejsFunction(
       this,
       "GeneratePresignedUrl",
@@ -351,6 +366,11 @@ export class ApiStack extends cdk.Stack {
       deleteArticle,
     );
 
+    const getReportsIntegration = new HttpLambdaIntegration(
+      "GetReportsIntegration",
+      getReports,
+    );
+
     const generatePresignedUrlIntegration = new HttpLambdaIntegration(
       "GeneratePresignedUrlIntegration",
       generatePresignedUrl,
@@ -466,6 +486,12 @@ export class ApiStack extends cdk.Stack {
     });
 
     api.addRoutes({
+      path: "/reports",
+      methods: [HttpMethod.GET],
+      integration: getReportsIntegration,
+    });
+
+    api.addRoutes({
       path: "/presigned-url",
       methods: [HttpMethod.POST],
       integration: generatePresignedUrlIntegration,
@@ -499,24 +525,6 @@ export class ApiStack extends cdk.Stack {
       integration: getBookmarkCheckSingleIntegration,
       authorizer,
     });
-
-    // ParamStore読み取り許可
-    const fnList = [
-      getPublicUserFn,
-      getMeFn,
-      createUserFn,
-      patchUserProfile,
-      getListMyArticles,
-      getListArticles,
-      getListUserArticles,
-      getArticle,
-      createArticle,
-      deleteArticle,
-      createBookmark,
-      deleteBookmark,
-      getBookmarkArticlesList,
-      getBookmarkCheckSingle,
-    ];
 
     // s3読み許可
     imagesBucket.grantReadWrite(getMeFn);
