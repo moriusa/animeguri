@@ -15,6 +15,9 @@ export interface UpdateArticleBody {
     description?: string;
     location: string;
     displayOrder: number;
+    latitude?: number;
+    longitude?: number;
+    geocodedAddress?: string;
     images: {
       id?: string;
       s3Key?: string;
@@ -75,7 +78,11 @@ export const handler = async (
     const s3KeysToDelete: string[] = [];
 
     // 2-1. サムネイルの削除判定
-    if (existingArticle.thumbnail_s3_key && body.thumbnailS3Key) {
+    if (
+      existingArticle.thumbnail_s3_key &&
+      body.thumbnailS3Key &&
+      existingArticle.thumbnail_s3_key !== body.thumbnailS3Key
+    ) {
       s3KeysToDelete.push(existingArticle.thumbnail_s3_key);
     }
 
@@ -170,6 +177,9 @@ export const handler = async (
             title: report.title,
             description: report.description,
             location: report.location,
+            latitude: report.latitude,
+            longitude: report.longitude,
+            geocoded_address: report.geocodedAddress,
             display_order: report.displayOrder,
           })
           .eq("id", reportId);
@@ -182,6 +192,9 @@ export const handler = async (
             title: report.title,
             description: report.description,
             location: report.location,
+            latitude: report.latitude,
+            longitude: report.longitude,
+            geocoded_address: report.geocodedAddress,
             display_order: report.displayOrder,
           })
           .select()

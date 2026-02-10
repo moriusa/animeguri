@@ -92,7 +92,7 @@ const Page = () => {
               <div key={report.id}>
                 <div className="flex items-baseline gap-2 mb-2">
                   <span className="text-xs text-gray-400">
-                    {String(report.display_order ?? idx + 1).padStart(2, "0")}
+                    {String(report.displayOrder ?? idx + 1).padStart(2, "0")}
                   </span>
                   <h2 className="text-xl">{report.title}</h2>
                 </div>

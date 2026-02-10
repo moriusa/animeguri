@@ -16,7 +16,10 @@ export interface Report {
   title: string;
   description: string;
   location: string;
-  display_order: number;
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
+  displayOrder: number;
   articleId: string;
   createdAt: string;
   updatedAt: string;
@@ -59,3 +62,4 @@ export interface ArticleCard {
 
 export type ArticleCardResponse = PaginatedResponse<ArticleCard>;
 export type ArticleResponse = ApiResponse<Article>;
+export type ReportsResponse = ApiResponse<Report[]>;

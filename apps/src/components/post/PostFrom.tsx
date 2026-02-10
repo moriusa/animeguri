@@ -30,6 +30,9 @@ export interface ReportTypes {
   images: ImageItem[];
   location: string;
   description: string;
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
 }
 
 export interface PostFormValues {

@@ -1,8 +1,9 @@
 "use server";
-import { ImageItem, PostFormValues } from "@/components/post/PostFrom";
+import { ImageItem, PostFormValues, ReportTypes } from "@/components/post/PostFrom";
 import { createArticle, CreateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
+import { geocodeAddress } from "./geocoding";
 
 type ArticleStatus = "draft" | "published";
 
@@ -18,11 +19,15 @@ interface ReqArticleReport {
   location: string;
   displayOrder: number;
   images: ReqArticleImage[];
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
 }
 
 // 投稿スキーマからDBスキーマに変換
 const toReqArticle = (
   form: PostFormValues,
+  reportsIncludeGeo: ReportTypes[],
   params: {
     articleStatus: ArticleStatus;
     thumbnailS3Key: string | null;
@@ -30,7 +35,7 @@ const toReqArticle = (
   },
 ): CreateArticleBody => {
   const { articleStatus, thumbnailS3Key, reportImageS3Keys } = params;
-  const reports: ReqArticleReport[] = form.reports.map(
+  const reports: ReqArticleReport[] = reportsIncludeGeo.map(
     (report, reportIndex) => {
       const s3Keys = reportImageS3Keys[reportIndex] ?? [];
       const images: ReqArticleImage[] = s3Keys.map((s3Key, imageIndex) => {
@@ -46,6 +51,9 @@ const toReqArticle = (
         title: report.title,
         description: report.description, // フォームに description があればここでマッピング
         location: report.location,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        geocodedAddress: report.geocodedAddress,
         displayOrder: reportIndex + 1,
         images,
       };
@@ -66,6 +74,41 @@ export const createArticleWithImages = async (
   status: ArticleStatus = "draft",
   idToken: string,
 ) => {
+  // ==========================================
+  // Step 0: Geocoding（住所→緯度経度）
+  // ==========================================
+
+  console.log("🗺️ Geocoding実行中...");
+
+  const reportsWithGeocode = await Promise.all(
+    formValues.reports.map(async (report) => {
+      // 既存レポートで緯度経度がすでにある場合はスキップ
+      if (report.latitude && report.longitude) {
+        console.log(`✅ レポート "${report.title}" は既にGeocoding済み`);
+        return report;
+      }
+
+      // 新規 or 住所が変更された場合はGeocoding実行
+      const geocoded = await geocodeAddress(report.location);
+
+      if (geocoded) {
+        console.log(
+          `✅ "${report.location}" → (${geocoded.latitude}, ${geocoded.longitude})`,
+        );
+        return {
+          ...report,
+          latitude: geocoded.latitude,
+          longitude: geocoded.longitude,
+          geocodedAddress: geocoded.formattedAddress,
+        };
+      } else {
+        console.warn(`⚠️ Geocoding失敗: "${report.location}"`);
+        return report; // 緯度経度なしで続行
+      }
+    }),
+  );
+
+  console.log("✅ Geocoding完了");
   // 1. アップロード対象ファイルを 1 本の配列にまとめる
   const files: File[] = [];
 
@@ -77,7 +120,7 @@ export const createArticleWithImages = async (
 
   // 各レポートの images から File を抽出
   const reportImageStartIndex: number[] = [];
-  formValues.reports.forEach((report) => {
+  reportsWithGeocode.forEach((report) => {
     reportImageStartIndex.push(files.length);
 
     // ImageItem[] から file が存在するもののみ抽出
@@ -106,7 +149,7 @@ export const createArticleWithImages = async (
 
   // 4. thumbnailS3Key と reportImageS3Keys を組み立てる
   let thumbnailS3Key: string | null = null;
-  const reportImageS3Keys: string[][] = formValues.reports.map(() => []);
+  const reportImageS3Keys: string[][] = reportsWithGeocode.map(() => []);
 
   uploaded.forEach((item, index) => {
     const s3Key = item.urlInfo.s3Key;
@@ -129,7 +172,8 @@ export const createArticleWithImages = async (
   });
 
   // 5. フォーム + s3_key を DB スキーマに変換
-  const reqBody = toReqArticle(formValues, {
+  const reqBody = toReqArticle(formValues,reportsWithGeocode,
+  {
     articleStatus: status,
     thumbnailS3Key,
     reportImageS3Keys,

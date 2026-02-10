@@ -13,6 +13,9 @@ interface CreateArticleBody {
     description?: string;
     location: string;
     displayOrder: number;
+    latitude?: number;
+    longitude?: number;
+    geocodedAddress?: string;
     images: {
       s3Key: string;
       caption?: string;
@@ -109,6 +112,9 @@ export const handler = async (
         title: report.title,
         description: report.description || null,
         location: report.location,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        geocoded_address: report.geocodedAddress,
         display_order: report.displayOrder,
       }));
 
@@ -205,6 +211,9 @@ export const handler = async (
         id: report.id,
         title: report.title,
         location: report.location,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        geocodedAddress: report.geocoded_address,
         articleId: report.article_id,
         createdAt: report.created_at,
         updatedAt: report.updated_at,

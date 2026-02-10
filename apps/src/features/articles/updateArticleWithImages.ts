@@ -3,6 +3,8 @@ import { PostFormValues, ImageItem } from "@/components/post/PostFrom";
 import { updateArticle, UpdateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
+import { geocodeAddress } from "./geocoding";
+import { extractS3Key } from "@/utils/extractS3Key";
 
 type ArticleStatus = "draft" | "published";
 
@@ -20,6 +22,9 @@ interface ReqArticleReport {
   location: string;
   displayOrder: number;
   images: ReqArticleImage[];
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
 }
 
 export const updateArticleWithImages = async (
@@ -28,6 +33,42 @@ export const updateArticleWithImages = async (
   status: ArticleStatus = "draft",
   idToken: string,
 ) => {
+  // ==========================================
+  // Step 0: Geocoding（住所→緯度経度）
+  // ==========================================
+
+  console.log("🗺️ Geocoding実行中...");
+
+  const reportsWithGeocode = await Promise.all(
+    formValues.reports.map(async (report) => {
+      // 既存レポートで緯度経度がすでにある場合はスキップ
+      if (report.latitude && report.longitude) {
+        console.log(`✅ レポート "${report.title}" は既にGeocoding済み`);
+        return report;
+      }
+
+      // 新規 or 住所が変更された場合はGeocoding実行
+      const geocoded = await geocodeAddress(report.location);
+
+      if (geocoded) {
+        console.log(
+          `✅ "${report.location}" → (${geocoded.latitude}, ${geocoded.longitude})`,
+        );
+        return {
+          ...report,
+          latitude: geocoded.latitude,
+          longitude: geocoded.longitude,
+          geocodedAddress: geocoded.formattedAddress,
+        };
+      } else {
+        console.warn(`⚠️ Geocoding失敗: "${report.location}"`);
+        return report; // 緯度経度なしで続行
+      }
+    }),
+  );
+
+  console.log("✅ Geocoding完了");
+
   // ==========================================
   // Step 1: 新規画像のアップロード
   // ==========================================
@@ -46,7 +87,7 @@ export const updateArticleWithImages = async (
   }
 
   // 1-2. レポート画像（fileがあるもの = 新規）
-  formValues.reports.forEach((report, reportIndex) => {
+  reportsWithGeocode.forEach((report, reportIndex) => {
     report.images.forEach((img, imageIndex) => {
       if (img.file) {
         filesToUpload.push(img.file);
@@ -77,16 +118,16 @@ export const updateArticleWithImages = async (
     // 新規アップロード
     thumbnailS3Key = uploadedS3Keys[uploadIndex];
     uploadIndex++;
-  } else if (formValues.thumbnail?.isExisting) {
+  } else if (formValues.thumbnail?.isExisting && formValues.thumbnail?.url) {
     // 既存画像を維持
-    thumbnailS3Key = null;
+    thumbnailS3Key = extractS3Key(formValues.thumbnail.url);
   } else {
     // サムネイルなし
     thumbnailS3Key = null;
   }
 
   // レポート
-  const reports: ReqArticleReport[] = formValues.reports.map(
+  const reports: ReqArticleReport[] = reportsWithGeocode.map(
     (report, reportIndex) => {
       const images: ReqArticleImage[] = report.images.map((img) => {
         // 既存画像
@@ -115,6 +156,9 @@ export const updateArticleWithImages = async (
         title: report.title,
         description: report.description,
         location: report.location,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        geocodedAddress: report.geocodedAddress,
         displayOrder: reportIndex + 1,
         images,
       };

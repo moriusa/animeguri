@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { PostForm, PostFormValues } from "@/components/post/PostFrom";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -37,6 +37,9 @@ const Page = () => {
               displayOrder: image.displayOrder,
             })),
             location: report.location,
+            latitude: report.latitude,
+            longitude: report.longitude,
+            geocodedAddress: report.geocodedAddress,
             description: report.description,
           })),
         };
