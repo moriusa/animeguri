@@ -1,5 +1,9 @@
 "use server";
-import { ImageItem, PostFormValues, ReportTypes } from "@/components/post/PostFrom";
+import {
+  ImageItem,
+  PostFormValues,
+  ReportTypes,
+} from "@/components/post/PostFrom";
 import { createArticle, CreateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
@@ -131,15 +135,19 @@ export const createArticleWithImages = async (
     files.push(...imageFiles);
   });
 
-  // ファイルがなければ画像なし記事としてそのまま DB 保存してもよい
-  // if (files.length === 0) {
-  //   const reqBody = toReqArticle(formValues, {
-  //     articleStatus: status,
-  //     thumbnailUrl: null,
-  //     reportImageUrls: formValues.reports.map(() => []),
-  //   });
-  //   return await createArticle(reqBody);
-  // }
+  // ファイルがなければ画像なし記事としてそのまま DB 保存
+  if (files.length === 0) {
+    const reqBody = toReqArticle(formValues, reportsWithGeocode, {
+      articleStatus: status,
+      thumbnailS3Key: null,
+      reportImageS3Keys: formValues.reports.map(() => []),
+    });
+    const article = await createArticle(reqBody, idToken);
+    console.log("投稿完了");
+    // キャッシュを無効化
+    revalidatePath("/");
+    return article;
+  }
 
   // 2. 署名付きURLを取得
   const presigned = await genPresignedUrl(files, idToken);
@@ -172,8 +180,7 @@ export const createArticleWithImages = async (
   });
 
   // 5. フォーム + s3_key を DB スキーマに変換
-  const reqBody = toReqArticle(formValues,reportsWithGeocode,
-  {
+  const reqBody = toReqArticle(formValues, reportsWithGeocode, {
     articleStatus: status,
     thumbnailS3Key,
     reportImageS3Keys,

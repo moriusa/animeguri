@@ -1,6 +1,10 @@
-"use server"
+"use server";
 import { getCurrentUser } from "./auth";
-import { ArticleCardResponse, ArticleResponse, ReportsResponse } from "@/types/api/article";
+import {
+  ArticleCardResponse,
+  ArticleResponse,
+  ReportsResponse,
+} from "@/types/api/article";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -81,6 +85,28 @@ export const getUserArticleCards = async (
   }
 
   const resData: ArticleCardResponse = await response.json();
+  return resData;
+};
+
+export const getMyArticle = async (id: string, idToken: string) => {
+  const response = await fetch(`${API_ENDPOINT}/user/me/articles/${id}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      `HTTP ${response.status}: ${
+        errorData.message || "Failed to fetch articles"
+      }`,
+    );
+  }
+  const resData: ArticleResponse = await response.json();
   return resData;
 };
 

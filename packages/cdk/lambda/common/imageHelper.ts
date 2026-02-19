@@ -4,7 +4,7 @@ const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN!;
 // デフォルト画像はフロントの相対パスを返すようにする
 export const DEFAULT_IMAGES = {
   USER_AVATAR: `/defaults/user-avatar.png`,
-  ARTICLE_IMAGE: `/defaults/article-thumbnail.png`,
+  ARTICLE_IMAGE: null,
 } as const;
 
 export type ImageType = "user" | "article";
@@ -16,7 +16,7 @@ export type ImageType = "user" | "article";
 export const buildImageUrl = (
   s3Key: string | null | undefined,
   type: ImageType = "user"
-): string => {
+): string | null => {
   if (!s3Key) {
     return type === "user"
       ? DEFAULT_IMAGES.USER_AVATAR
@@ -28,13 +28,13 @@ export const buildImageUrl = (
 /**
  * ユーザー画像URL取得
  */
-export const getUserImageUrl = (s3Key?: string | null): string => {
+export const getUserImageUrl = (s3Key?: string | null) => {
   return buildImageUrl(s3Key, "user");
 };
 
 /**
  * 記事サムネイルURL取得
  */
-export const getArticleImageUrl = (s3Key?: string | null): string => {
+export const getArticleImageUrl = (s3Key?: string | null) => {
   return buildImageUrl(s3Key, "article");
 };

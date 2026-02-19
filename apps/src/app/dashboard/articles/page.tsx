@@ -1,6 +1,7 @@
 "use client";
 
 import { ArticleCard02 } from "@/components/common/ArticleCard02";
+import { DraftArticleCard } from "@/components/common/DraftArticleCard";
 import { useGetMyArticleCards } from "@/features/articles/useGetMyArticleCards";
 
 const Page = () => {
@@ -21,9 +22,13 @@ const Page = () => {
 
   return (
     <div className="space-y-4">
-      {articleData.map((article) => (
-        <ArticleCard02 data={article} key={article.id} />
-      ))}
+      {articles.data.map((article) =>
+        article.articleStatus === "draft" ? (
+          <DraftArticleCard key={article.id} data={article} />
+        ) : (
+          <ArticleCard02 key={article.id} data={article} />
+        ),
+      )}
     </div>
   );
 };

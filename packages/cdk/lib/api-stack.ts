@@ -92,6 +92,21 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
+    const getMyArticle = new NodejsFunction(this, "GetMyArticle", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getMyArticle/index.ts"),
+      functionName: "animeguri-get-My-article",
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
     const getListMyArticles = new NodejsFunction(this, "GetListMyArticles", {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -336,6 +351,11 @@ export class ApiStack extends cdk.Stack {
       getListMyArticles,
     );
 
+    const getMyArticleIntegration = new HttpLambdaIntegration(
+      "GetMyArticleIntegration",
+      getMyArticle,
+    );
+
     const getListArticlesIntegration = new HttpLambdaIntegration(
       "GetListArticlesIntegration",
       getListArticles,
@@ -443,6 +463,13 @@ export class ApiStack extends cdk.Stack {
       path: "/user/me/articles",
       methods: [HttpMethod.GET],
       integration: getListMyArticlesIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/user/me/articles/{id}",
+      methods: [HttpMethod.GET],
+      integration: getMyArticleIntegration,
       authorizer,
     });
 

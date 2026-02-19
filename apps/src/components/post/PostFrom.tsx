@@ -2,12 +2,13 @@
 import { Input } from "@/components/common";
 import { Thumbnail } from "@/components/post/Thumbnail";
 import { Report } from "@/components/post";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { createArticleWithImages } from "@/features/articles/createArticleWithImages";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { redirect } from "next/navigation";
 import { updateArticleWithImages } from "@/features/articles/updateArticleWithImages";
+import { useState } from "react";
 
 export interface ImageItem {
   id?: string; // 既存画像のID（編集時のみ使用）
@@ -49,6 +50,7 @@ interface PostFormProps {
 }
 
 export const PostForm = ({ mode, initialData }: PostFormProps) => {
+  const [submitMode, setSubmitMode] = useState<"draft" | "published">("draft");
   const user = useSelector((state: RootState) => state.auth.user);
 
   const {
@@ -61,6 +63,7 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     formState: { errors },
     watch,
     control,
+    getValues,
   } = useForm<PostFormValues>({
     defaultValues: initialData || {
       id: Date.now().toString(),
@@ -114,20 +117,33 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     return <p>ログインしてください</p>;
   }
 
-  const onSubmit: SubmitHandler<PostFormValues> = async (data) => {
+  const onSubmit = async (
+    data: PostFormValues,
+    status: "draft" | "published",
+  ) => {
+    console.log("送信:", status, data);
     if (mode === "create") {
-      await createArticleWithImages(data, "published", user.idToken); // status分岐
+      await createArticleWithImages(data, status, user.idToken);
     } else if (mode === "edit") {
-      await updateArticleWithImages(data.id, data, "published", user.idToken);
+      await updateArticleWithImages(data.id, data, status, user.idToken);
     }
-    // フォームクリア
     reset();
     redirect("/");
   };
 
+  // 下書き：バリデーション無しで保存
+  const handleDraftSubmit = async () => {
+    const data = getValues();
+    await onSubmit(data, "draft");
+  };
+  // 公開：バリデーションして保存（今ある required が効く）
+  const handlePublishSubmit = handleSubmit((data) =>
+    onSubmit(data, "published"),
+  );
+
   return (
     <div className="p-4">
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form>
         <Input
           id={"title"}
           text="タイトル"
@@ -181,10 +197,18 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
         )}
 
         {/* フォーム送信ボタン */}
-        <div className="text-right">
+        <div className="flex gap-4 justify-end mt-4">
           <button
-            type="submit"
-            className="bg-blue-500 text-white py-2 px-4 rounded mt-4 cursor-pointer"
+            type="button"
+            onClick={handleDraftSubmit}
+            className="bg-gray-500 text-white py-2 px-4 rounded cursor-pointer hover:bg-gray-600"
+          >
+            下書き保存
+          </button>
+          <button
+            type="button"
+            onClick={handlePublishSubmit}
+            className="bg-blue-500 text-white py-2 px-4 rounded cursor-pointer hover:bg-blue-600"
           >
             公開する
           </button>
