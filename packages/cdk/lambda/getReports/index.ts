@@ -8,11 +8,17 @@ export const handler = async (
   try {
     const { data, error } = await supabase
       .from("reports")
-      .select(`
+      .select(
+        `
         *,
-        report_images (*)
-        `)
-      // .eq("article_status", "published")
+        report_images (*),
+        articles!inner (
+          id,
+          article_status
+        )
+        `,
+      )
+      .eq("articles.article_status", "published")
       // report_images の並び順
       .order("created_at", { ascending: false })
       .order("display_order", {
