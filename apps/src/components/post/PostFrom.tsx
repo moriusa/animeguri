@@ -6,9 +6,10 @@ import { useForm } from "react-hook-form";
 import { createArticleWithImages } from "@/features/articles/createArticleWithImages";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { updateArticleWithImages } from "@/features/articles/updateArticleWithImages";
 import { getValidIdToken } from "@/lib/common/authFetch";
+import { useEffect, useMemo } from "react";
 
 export interface ImageItem {
   id?: string; // 既存画像のID（編集時のみ使用）
@@ -50,7 +51,27 @@ interface PostFormProps {
 }
 
 export const PostForm = ({ mode, initialData }: PostFormProps) => {
+  const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const defaultFormValues = useMemo<PostFormValues>(
+    () => ({
+      id: "",
+      title: "",
+      thumbnail: null,
+      animeName: "",
+      reports: [
+        {
+          id: "",
+          images: [],
+          title: "",
+          location: "",
+          description: "",
+        },
+      ],
+    }),
+    [],
+  );
 
   const {
     register,
@@ -64,29 +85,22 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     control,
     getValues,
   } = useForm<PostFormValues>({
-    defaultValues: initialData || {
-      id: Date.now().toString(),
-      title: "",
-      thumbnail: null,
-      animeName: "",
-      reports: [
-        {
-          id: "",
-          images: [],
-          title: "",
-          location: "",
-          description: "",
-        },
-      ],
-    },
+    defaultValues: initialData || defaultFormValues,
   });
 
   const reports = watch("reports");
 
+  // コンポーネントマウント時に初期化
+  useEffect(() => {
+    if (mode === "create" && !initialData) {
+      reset(defaultFormValues);
+    }
+  }, [defaultFormValues, initialData, mode, reset]);
+
   // レポート追加
   const handleAddReport = () => {
     const newReport = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       images: [],
       title: "",
       location: "",
@@ -128,8 +142,9 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     } else if (mode === "edit") {
       await updateArticleWithImages(data.id, data, status, idToken);
     }
-    reset();
-    redirect("/");
+    reset(defaultFormValues);
+    router.push("/");
+    router.refresh(); // キャッシュもリフレッシュ
   };
 
   // 下書き：バリデーション無しで保存

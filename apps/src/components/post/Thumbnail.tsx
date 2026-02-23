@@ -10,8 +10,6 @@ interface Props {
 }
 
 export const Thumbnail = ({ control, errors }: Props) => {
-  const defaultImage = control._defaultValues.thumbnail?.url
-  const [croppedImage, setCroppedImage] = useState<string | null>(defaultImage || null);
 
   return (
     <Controller
@@ -27,7 +25,7 @@ export const Thumbnail = ({ control, errors }: Props) => {
       render={({ field }) => (
         <ImageUploadWithCrop
           label="サムネイル画像"
-          currentImage={croppedImage}
+          currentImage={field.value?.url || null}
           onImageChange={(file, croppedDataUrl) => {
             const thumbnailItem: ThumbnailItem = {
               file: file,
@@ -35,11 +33,9 @@ export const Thumbnail = ({ control, errors }: Props) => {
               isExisting: false,
             };
             field.onChange(thumbnailItem); // React Hook Form に値を渡す
-            setCroppedImage(croppedDataUrl);
           }}
           onImageRemove={() => {
             field.onChange(null); // React Hook Form の値をクリア
-            setCroppedImage(null);
           }}
           aspectRatio={16 / 9}
           shape="rectangle"

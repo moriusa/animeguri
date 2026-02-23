@@ -102,12 +102,7 @@ export const UploadImage = ({
               multiple
               className="hidden"
               accept=".png, .jpg, .jpeg"
-              {...register(`reports.${reportIdx}.images`, {
-                onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                  handleFileChange(e);
-                  e.target.dispatchEvent(new Event("input", { bubbles: true }));
-                },
-              })}
+              onChange={handleFileChange}
             />
           </label>
           {/* ✅ アップロード可能な情報を表示 */}
