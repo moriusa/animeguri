@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 export const fetchDeleteArticle = async (
   articleId: string,
-  idToken: string
+  idToken: string,
 ) => {
   if (!articleId) {
     const errorMsg = "記事IDが指定されていません";

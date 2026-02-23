@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { redirect } from "next/navigation";
 import { updateArticleWithImages } from "@/features/articles/updateArticleWithImages";
-import { useState } from "react";
+import { getValidIdToken } from "@/lib/common/authFetch";
 
 export interface ImageItem {
   id?: string; // 既存画像のID（編集時のみ使用）
@@ -50,7 +50,6 @@ interface PostFormProps {
 }
 
 export const PostForm = ({ mode, initialData }: PostFormProps) => {
-  const [submitMode, setSubmitMode] = useState<"draft" | "published">("draft");
   const user = useSelector((state: RootState) => state.auth.user);
 
   const {
@@ -122,10 +121,12 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     status: "draft" | "published",
   ) => {
     console.log("送信:", status, data);
+    const idToken = await getValidIdToken();
+    if (!idToken) return console.log("idToken is undefined");
     if (mode === "create") {
-      await createArticleWithImages(data, status, user.idToken);
+      await createArticleWithImages(data, status, idToken);
     } else if (mode === "edit") {
-      await updateArticleWithImages(data.id, data, status, user.idToken);
+      await updateArticleWithImages(data.id, data, status, idToken);
     }
     reset();
     redirect("/");

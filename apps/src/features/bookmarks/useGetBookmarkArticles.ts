@@ -2,23 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { getBookmarkArticles } from "@/lib/bookmarks";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import { BookmarkArticleCardResponse } from "@/types/api/bookmark";
+import { getValidIdToken } from "@/lib/common/authFetch";
 
 export const useGetBookmarkArticles = (limit: number) => {
-  const idToken = useSelector((state: RootState) => state.auth.user?.idToken);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [articles, setArticles] = useState<BookmarkArticleCardResponse | null>(null);
+  const [articles, setArticles] = useState<BookmarkArticleCardResponse | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (!limit || !idToken) {
-      setLoading(false);
-      return;
-    }
-
     const fetchBookmark = async () => {
+      const idToken = await getValidIdToken();
+      if (!limit || !idToken) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         setError(null);
@@ -28,7 +28,7 @@ export const useGetBookmarkArticles = (limit: number) => {
       } catch (err) {
         console.error(err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch bookmark list"
+          err instanceof Error ? err.message : "Failed to fetch bookmark list",
         );
       } finally {
         setLoading(false);
@@ -36,7 +36,7 @@ export const useGetBookmarkArticles = (limit: number) => {
     };
 
     fetchBookmark();
-  }, [limit, idToken]);
+  }, [limit]);
 
   return { articles, loading, error };
 };

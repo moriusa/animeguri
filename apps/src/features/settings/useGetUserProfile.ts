@@ -1,20 +1,21 @@
 "use client";
+import { getValidIdToken } from "@/lib/common/authFetch";
 import { getUserProfile } from "@/lib/userProfile";
 import { User } from "@/types/api/user";
 import { useEffect, useState } from "react";
 
-export const useGetUserProfile = (idToken: string) => {
+export const useGetUserProfile = () => {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!idToken) {
-      setLoading(false);
-      return;
-    }
-
     const fetchProfile = async () => {
+      const idToken = await getValidIdToken();
+      if (!idToken) {
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         setError(null);
@@ -33,7 +34,7 @@ export const useGetUserProfile = (idToken: string) => {
     };
 
     fetchProfile();
-  }, [idToken]);
+  }, []);
 
   return { profile, loading, error };
 };

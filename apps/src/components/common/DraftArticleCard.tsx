@@ -1,18 +1,16 @@
 import { fetchDeleteArticle } from "@/features/articles/deleteArticle";
-import { RootState } from "@/store";
 import { JapaneseDateTime } from "@/utils/formatDate";
 import { redirect } from "next/navigation";
 import { useState } from "react";
 import { FaTrashAlt } from "react-icons/fa";
 import { FaPen } from "react-icons/fa6";
-import { useSelector } from "react-redux";
 import ConfirmDialog from "./Popup";
 import Image from "next/image";
 import { ArticleCard as ArticleCardType } from "@/types/api/article";
+import { getValidIdToken } from "@/lib/common/authFetch";
 
 export const DraftArticleCard = ({ data }: { data: ArticleCardType }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const idToken = useSelector((state: RootState) => state.auth.user?.idToken);
 
   const handleEdit = () => {
     redirect(`/post/edit/${data.id}`);
@@ -23,6 +21,7 @@ export const DraftArticleCard = ({ data }: { data: ArticleCardType }) => {
   };
 
   const handleConfirmDelete = async () => {
+    const idToken = await getValidIdToken();
     if (!idToken) {
       setIsOpen(false);
       return;

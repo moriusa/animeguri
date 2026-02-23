@@ -8,6 +8,7 @@ import { createArticle, CreateArticleBody } from "@/lib/articles";
 import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
 import { geocodeAddress } from "./geocoding";
+import { getValidIdToken } from "@/lib/common/authFetch";
 
 type ArticleStatus = "draft" | "published";
 

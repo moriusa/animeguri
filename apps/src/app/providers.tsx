@@ -2,10 +2,10 @@
 
 import { Provider } from "react-redux";
 import { store } from "../store";
-import { useAuthCheck } from "@/features/auth/useAuthCheck";
+import { useAuthInit } from "@/features/auth/useAuthInit";
 
 const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
-  useAuthCheck(); // アプリ起動時に認証状態をチェック
+  useAuthInit(); // アプリ起動時に認証状態をチェック
   return <>{children}</>;
 };
 

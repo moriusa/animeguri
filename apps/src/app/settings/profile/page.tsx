@@ -2,7 +2,6 @@
 import { Input } from "@/components/common";
 import { ProfileImageUpload } from "@/components/settings/ProfileImageUpload";
 import { setUserProfile } from "@/features";
-import { useAuthCheck } from "@/features/auth/useAuthCheck";
 import { updateUserProfileWithImages } from "@/features/settings/updateUserProfileWithImages";
 import { useGetUserProfile } from "@/features/settings/useGetUserProfile";
 import { RootState } from "@/store";
@@ -23,8 +22,7 @@ export interface ProfileFormValues {
 const Page = () => {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
-  useAuthCheck();
-  const { profile, error, loading } = useGetUserProfile(user?.idToken || "");
+  const { profile, error, loading } = useGetUserProfile();
 
   const {
     control,

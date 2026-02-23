@@ -5,15 +5,13 @@ import { ArticleCard as ArticleCardType } from "@/types/api/article";
 import Link from "next/link";
 import { JapaneseDateTime } from "@/utils/formatDate";
 import { fetchDeleteArticle } from "@/features/articles/deleteArticle";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import ConfirmDialog from "./Popup";
 import { useState } from "react";
 import { redirect } from "next/navigation";
+import { getValidIdToken } from "@/lib/common/authFetch";
 
 export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const idToken = useSelector((state: RootState) => state.auth.user?.idToken);
 
   const handleEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -29,6 +27,7 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
 
   // ダイアログからの削除確認
   const handleConfirmDelete = async () => {
+    const idToken = await getValidIdToken();
     if (!idToken) {
       setIsOpen(false);
       return;

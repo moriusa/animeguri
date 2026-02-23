@@ -89,6 +89,10 @@ export const getUserArticleCards = async (
 };
 
 export const getMyArticle = async (id: string, idToken: string) => {
+  // const idToken = getValidIdToken();
+  // const response = await authFetch(`${API_ENDPOINT}/user/me/articles/${id}`, {
+  //   method: "GET",
+  // });
   const response = await fetch(`${API_ENDPOINT}/user/me/articles/${id}`, {
     method: "GET",
     headers: {

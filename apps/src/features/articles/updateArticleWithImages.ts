@@ -5,6 +5,7 @@ import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { revalidatePath } from "next/cache";
 import { geocodeAddress } from "./geocoding";
 import { extractS3Key } from "@/utils/extractS3Key";
+import { getValidIdToken } from "@/lib/common/authFetch";
 
 type ArticleStatus = "draft" | "published";
 

@@ -8,10 +8,13 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
 
-// ユーザープール情報(環境変数から取得)
+const AWS_COGNITO_USER_POOL_ID = process.env.NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID!;
+const AWS_COGNITO_CLIENT_ID = process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID!;
+
+// ユーザープール情報
 const userPool = new CognitoUserPool({
-  UserPoolId: "ap-northeast-1_YUxI6TH2r",
-  ClientId: "3u3c8mot9i7dkqihb47oa1p51f",
+  UserPoolId: AWS_COGNITO_USER_POOL_ID,
+  ClientId: AWS_COGNITO_CLIENT_ID,
 });
 
 export interface SignUpResult {

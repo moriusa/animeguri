@@ -7,7 +7,7 @@ import { login, logout, setUserProfile } from "./AuthSlice";
 import { RootState } from "@/store";
 import { getUserProfile } from "@/lib/userProfile";
 
-export const useAuthCheck = () => {
+export const useAuthInit = () => {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 

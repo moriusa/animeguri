@@ -6,12 +6,10 @@ import {
   addBookmark,
   deleteBookmark,
 } from "@/lib/bookmarks";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import { useParams } from "next/navigation";
+import { getValidIdToken } from "@/lib/common/authFetch";
 
 export const useBookmark = () => {
-  const idToken = useSelector((state: RootState) => state.auth.user?.idToken);
   const params = useParams();
   const articleId = params.id as string;
 
@@ -22,12 +20,12 @@ export const useBookmark = () => {
 
   // 初回マウント時にブックマーク状態を確認
   useEffect(() => {
-    if (!articleId || !idToken) {
-      setCheckLoading(false);
-      return;
-    }
-
     const fetchBookmarkStatus = async () => {
+      const idToken = await getValidIdToken();
+      if (!articleId || !idToken) {
+        setCheckLoading(false);
+        return;
+      }
       try {
         setCheckLoading(true);
         const res = await getBookmarkCheckSingle(articleId, idToken);
@@ -41,10 +39,11 @@ export const useBookmark = () => {
     };
 
     fetchBookmarkStatus();
-  }, [articleId, idToken]);
+  }, [articleId]);
 
   // 楽観的更新を含むトグル関数
   const toggleBookmark = async () => {
+    const idToken = await getValidIdToken();
     if (!articleId || !idToken) {
       setError("Article ID or token is missing");
       return;
@@ -77,7 +76,7 @@ export const useBookmark = () => {
       // 3. エラー時はロールバック
       setIsBookmarked(previousState);
       setError(
-        err instanceof Error ? err.message : "Failed to toggle bookmark"
+        err instanceof Error ? err.message : "Failed to toggle bookmark",
       );
     } finally {
       setLoading(false);
