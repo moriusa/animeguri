@@ -1,9 +1,12 @@
-import { getArticleCards } from "@/lib/articles";
+"use client";
+import { ArticleCardsFilters, getArticleCards } from "@/lib/articles";
 import { ArticleCardResponse } from "@/types/api/article";
 import { useEffect, useState } from "react";
 
-export const useGetHomeArticleCards = () => {
-
+export const useGetArticleCards = (
+  limit: number,
+  filters?: ArticleCardsFilters,
+) => {
   const [articles, setArticles] = useState<ArticleCardResponse | null>(null);
   const [loading, setLoading] = useState(true); // ✅ 初期値を true に
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +16,7 @@ export const useGetHomeArticleCards = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await getArticleCards(20);
+        const res = await getArticleCards(limit, filters);
         setArticles(res);
       } catch (err) {
         const errorMessage =

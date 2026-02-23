@@ -1,11 +1,11 @@
 "use client";
 import { FC } from "react";
 import Link from "next/link";
-import { FaSearch } from "react-icons/fa";
 import { Button } from "@/components/common";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { UserMenu } from "@/components/header/UserMenu";
+import { SearchBox } from "@/components/header/SearchBox";
 
 export const Header: FC = () => {
   const { isAuthenticated, userProfile } = useSelector(
@@ -18,7 +18,7 @@ export const Header: FC = () => {
           animeguri
         </Link>
         <div className="flex items-center gap-8">
-          <FaSearch size={20} className="cursor-pointer" />
+          <SearchBox />
           {isAuthenticated && userProfile ? (
             <div className="flex items-center gap-4">
               <Link href={"/post"}>

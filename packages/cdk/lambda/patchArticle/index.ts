@@ -151,25 +151,37 @@ export const handler = async (
 
     if (updateError) throw updateError;
 
+    // DBに実際に存在するレポートIDのみを抽出
+    const existingReportIdsInDB = existingArticle.reports.map((r: any) => r.id);
+
+    // クライアントから送られた既存レポートIDのみをフィルタ
+    const validExistingReportIds = body.reports
+      .map((r) => r.id)
+      .filter((id) => id && existingReportIdsInDB.includes(id));
+
+    console.log("DB上の既存レポートID:", existingReportIdsInDB);
+    console.log("クライアントが送った有効な既存ID:", validExistingReportIds);
+
     // レポートの削除（クライアントから送られていないもの）
-    const { error: deleteReportsError } = await supabase
-      .from("reports")
-      .delete()
-      .eq("article_id", articleId)
-      .not(
-        "id",
-        "in",
-        `(${body.reports
-          .map((r) => r.id)
-          .filter(Boolean)
-          .join(",")})`,
-      );
+    if (validExistingReportIds.length > 0) {
+      await supabase
+        .from("reports")
+        .delete()
+        .eq("article_id", articleId)
+        .not("id", "in", `(${validExistingReportIds.join(",")})`);
+    } else {
+      // すべて新規レポートの場合、既存レポートをすべて削除
+      await supabase.from("reports").delete().eq("article_id", articleId);
+    }
 
     // レポートの更新/挿入
     for (const [index, report] of body.reports.entries()) {
       let reportId = report.id;
+      // DBに存在するIDかチェック
+      const isExistingReport =
+        reportId && existingReportIdsInDB.includes(reportId);
 
-      if (reportId) {
+      if (isExistingReport) {
         // 既存レポートの更新
         await supabase
           .from("reports")

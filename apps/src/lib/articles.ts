@@ -32,16 +32,29 @@ export const getArticle = async (id: string) => {
   return resData;
 };
 
+export type ArticleCardsFilters = {
+  anime?: string | null;
+  location?: string | null;
+};
+
 export const getArticleCards = async (
   limit: number,
+  filters?: ArticleCardsFilters,
 ): Promise<ArticleCardResponse> => {
   "use cache";
-  const response = await fetch(`${API_ENDPOINT}/articles?limit=${limit}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
+  const params = new URLSearchParams();
+  params.set("limit", String(limit));
+  if (filters?.anime) params.set("anime", filters.anime);
+  if (filters?.location) params.set("location", filters.location);
+  const response = await fetch(
+    `${API_ENDPOINT}/articles?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
   // レスポンスの状態チェック
   if (!response.ok) {
     const errorData = await response

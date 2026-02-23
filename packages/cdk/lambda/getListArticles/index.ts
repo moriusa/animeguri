@@ -6,11 +6,12 @@ export const handler = async (
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   try {
-
     // クエリパラメータから limit, offset を取得（例: /articles?limit=20&offset=40）
     const qs = event.queryStringParameters || {};
     const limit = qs.limit ? parseInt(qs.limit, 10) : 20; // デフォルト 20 件
     const offset = qs.offset ? parseInt(qs.offset, 10) : 0; // デフォルト 0 件目から
+    const animeName = qs.anime;
+    const location = qs.location;
 
     if (Number.isNaN(limit) || Number.isNaN(offset)) {
       return {
@@ -23,7 +24,7 @@ export const handler = async (
     const from = offset;
     const to = offset + limit - 1;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("articles")
       .select(
         `
@@ -32,12 +33,26 @@ export const handler = async (
             id,
             user_name,
             profile_image_s3_key
+          ),
+          reports!inner (
+            id,
+            location
           )
         `,
       )
-      .eq("article_status", "published")
-      .order("created_at", { ascending: false }) // 新しい順など
-      .range(from, to);
+      .eq("article_status", "published") // 新しい順など
+      .order("created_at", { ascending: false });
+
+    if (animeName) {
+      // 部分一致（大文字小文字を無視）: %でcontains検索
+      query = query.ilike("anime_name", `%${animeName}%`);
+    }
+
+    if (location) {
+      query = query.ilike("reports.location", `%${location}%`);
+    }
+
+    const { data, error } = await query.range(from, to);
 
     if (error) {
       console.error("supabase error:", error);
@@ -46,17 +61,6 @@ export const handler = async (
         body: JSON.stringify({ message: "Internal server error" }),
       };
     }
-
-    // ここで CloudFront URL に整形
-    // const items = (data ?? []).map((row) => ({
-    //   ...row,
-    //   thumbnail_url: buildImageUrl(row.thumbnail_s3_key),
-    //   author: {
-    //     ...row.user,
-    //     profile_image_url: buildImageUrl(row.user.profile_image_s3_key),
-    //   },
-    // }));
-    // console.log(items);
 
     const transData = data.map((article) => ({
       id: article.id,

@@ -1,6 +1,6 @@
 import { SubTitle } from "./common/SubTitle";
 import { ArticleCard } from "./common/ArticleCard";
-import { useGetHomeArticleCards } from "@/features/articles/useGetHomeArticleCards";
+import { useGetArticleCards } from "@/features/articles/useGetArticleCards";
 
 interface Props {
   type:
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function HomeArticles({ type }: Props) {
-  const {articles, error, loading} = useGetHomeArticleCards()
+  const { articles, error, loading } = useGetArticleCards(20);
 
   if (!articles) return <p>article not found</p>;
   if (loading) return <p>loading</p>;
