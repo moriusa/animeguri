@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Yomogi } from "next/font/google";
 import "./globals.css";
 import { Header } from "../layout";
 import { Providers } from "./providers";
@@ -12,6 +12,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// より柔らかい手書き（見出し用）
+const yomogi = Yomogi({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-yomogi",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased ${yomogi.variable}`}
       >
         <Providers>
           <Header />
