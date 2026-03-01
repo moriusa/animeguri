@@ -1,34 +1,33 @@
 import { fetchDeleteArticle } from "@/features/articles/deleteArticle";
 import { JapaneseDateTime } from "@/utils/formatDate";
 import { redirect } from "next/navigation";
-import { useState } from "react";
 import { FaTrashAlt } from "react-icons/fa";
 import { FaPen } from "react-icons/fa6";
-import ConfirmDialog from "./Popup";
+import { useConfirm } from "@/components/common/ConfirmDialog";
 import Image from "next/image";
 import { ArticleCard as ArticleCardType } from "@/types/api/article";
 import { getValidIdToken } from "@/lib/common/authFetch";
 
 export const DraftArticleCard = ({ data }: { data: ArticleCardType }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const confirm = useConfirm();
 
   const handleEdit = () => {
     redirect(`/post/edit/${data.id}`);
   };
 
   const handleDelete = async () => {
-    setIsOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
+    const ok = await confirm({
+      title: "下書きを削除しますか？",
+      description: "この操作は取り消せません。",
+      confirmText: "削除",
+      confirmVariant: "danger",
+    });
+    if (!ok) return;
     const idToken = await getValidIdToken();
     if (!idToken) {
-      setIsOpen(false);
       return;
     }
     const result = await fetchDeleteArticle(data.id, idToken);
-    setIsOpen(false);
-
     if (result.success) {
       window.location.reload();
     } else {
@@ -94,18 +93,6 @@ export const DraftArticleCard = ({ data }: { data: ArticleCardType }) => {
           </button>
         </div>
       </div>
-
-      <ConfirmDialog
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        title="下書きを削除しますか？"
-        description="この操作は取り消せません。"
-        confirmText="削除"
-        cancelText="キャンセル"
-        confirmVariant="danger"
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setIsOpen(false)}
-      />
     </>
   );
 };

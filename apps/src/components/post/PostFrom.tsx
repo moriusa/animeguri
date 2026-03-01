@@ -1,5 +1,5 @@
 "use client";
-import { Input } from "@/components/common";
+import { Button, Input } from "@/components/common";
 import { Thumbnail } from "@/components/post/Thumbnail";
 import { Report } from "@/components/post";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { updateArticleWithImages } from "@/features/articles/updateArticleWithImages";
 import { getValidIdToken } from "@/lib/common/authFetch";
 import { useEffect, useMemo } from "react";
+import { GoPlus } from "react-icons/go";
+import { useConfirm } from "../common/ConfirmDialog";
 
 export interface ImageItem {
   id?: string; // 既存画像のID（編集時のみ使用）
@@ -51,6 +53,7 @@ interface PostFormProps {
 }
 
 export const PostForm = ({ mode, initialData }: PostFormProps) => {
+  const confirm = useConfirm();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
 
@@ -111,8 +114,14 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
   };
 
   // レポート削除
-  const handleDeleteReport = (index: number) => {
-    alert(`このレポート${index + 1}を削除しました`);
+  const handleDeleteReport = async (index: number) => {
+    const ok = await confirm({
+      title: `レポート${index + 1}を本当に削除しますか？`,
+      description: "この操作は取り消せません。",
+      confirmText: "削除",
+      confirmVariant: "danger",
+    });
+    if (!ok) return;
     setValue(
       "reports",
       reports.filter((_, i) => i !== index),
@@ -134,6 +143,37 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     data: PostFormValues,
     status: "draft" | "published",
   ) => {
+    const confirmOptions = {
+      "published-create": {
+        title: "記事を公開しますか？",
+        description: "公開すると全てのユーザーが閲覧できるようになります。",
+        confirmText: "公開する",
+      },
+      "published-edit": {
+        title: "編集内容を公開しますか？",
+        description: "変更内容が全てのユーザーに反映されます。",
+        confirmText: "更新する",
+      },
+      "draft-create": {
+        title: "記事を下書き保存しますか？",
+        description: "他のユーザーは閲覧することはできません。",
+        confirmText: "下書き保存",
+      },
+      "draft-edit": {
+        title: "編集内容を下書き保存しますか？",
+        description: "公開していた記事の場合、非公開になります。",
+        confirmText: "下書き保存",
+      },
+    } as const;
+
+    const key = `${status}-${mode}` as keyof typeof confirmOptions;
+
+    const ok = await confirm({
+      ...confirmOptions[key],
+      confirmVariant: "default",
+    });
+    if (!ok) return;
+
     console.log("送信:", status, data);
     const idToken = await getValidIdToken();
     if (!idToken) return console.log("idToken is undefined");
@@ -207,27 +247,20 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
               onClick={handleAddReport}
               className="w-full border py-1 rounded mt-4 cursor-pointer text-4xl"
             >
-              +
+              <GoPlus className="mx-auto" />
             </button>
           </div>
         )}
 
         {/* フォーム送信ボタン */}
-        <div className="flex gap-4 justify-end mt-4">
-          <button
-            type="button"
+        <div className="flex gap-4 mt-8 w-1/3 ml-auto">
+          <Button
+            text="下書き保存"
+            btnColor="white"
             onClick={handleDraftSubmit}
-            className="bg-gray-500 text-white py-2 px-4 rounded cursor-pointer hover:bg-gray-600"
-          >
-            下書き保存
-          </button>
-          <button
             type="button"
-            onClick={handlePublishSubmit}
-            className="bg-blue-500 text-white py-2 px-4 rounded cursor-pointer hover:bg-blue-600"
-          >
-            公開する
-          </button>
+          />
+          <Button text="公開する" onClick={handlePublishSubmit} type="button" />
         </div>
       </form>
     </div>

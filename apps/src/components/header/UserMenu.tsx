@@ -12,7 +12,7 @@ type Props = {
 
 export const UserMenu = ({ userProfile }: Props) => {
   const { handleLogout } = useLogout();
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   // 外側クリックで閉じる
@@ -20,18 +20,18 @@ export const UserMenu = ({ userProfile }: Props) => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!menuRef.current) return;
       if (!menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
+        setIsOpen(false);
       }
     };
-    if (open) {
+    if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [open]);
+  }, [isOpen]);
 
-  const toggle = () => setOpen((prev) => !prev);
+  const toggle = () => setIsOpen((prev) => !prev);
 
   return (
     <div className="relative" ref={menuRef}>
@@ -50,7 +50,7 @@ export const UserMenu = ({ userProfile }: Props) => {
       </button>
 
       {/* ドロップダウンメニュー */}
-      {open && (
+      {isOpen && (
         <div className="absolute right-0 top-12 w-48 bg-white shadow-lg rounded-md border border-gray-100 z-50">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm text-gray-500">ログイン中</p>
@@ -62,23 +62,20 @@ export const UserMenu = ({ userProfile }: Props) => {
             <Link
               href="/dashboard/articles"
               className="block px-4 py-2 hover:bg-gray-50"
-              onClick={() => setOpen(false)}
+              onClick={() => setIsOpen(false)}
             >
               記事管理
             </Link>
             <Link
               href="/settings/profile"
               className="block px-4 py-2 hover:bg-gray-50"
-              onClick={() => setOpen(false)}
+              onClick={() => setIsOpen(false)}
             >
               設定
             </Link>
             <button
               type="button"
-              onClick={() => {
-                setOpen(false);
-                handleLogout();
-              }}
+              onClick={handleLogout}
               className="w-full text-left px-4 py-2 hover:bg-gray-50 text-red-500 cursor-pointer"
             >
               ログアウト

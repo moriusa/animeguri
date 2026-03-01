@@ -5,13 +5,12 @@ import { ArticleCard as ArticleCardType } from "@/types/api/article";
 import Link from "next/link";
 import { JapaneseDateTime } from "@/utils/formatDate";
 import { fetchDeleteArticle } from "@/features/articles/deleteArticle";
-import ConfirmDialog from "./Popup";
-import { useState } from "react";
 import { redirect } from "next/navigation";
 import { getValidIdToken } from "@/lib/common/authFetch";
+import { useConfirm } from "./ConfirmDialog";
 
 export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const confirm = useConfirm();
 
   const handleEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -22,19 +21,18 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsOpen(true); // ダイアログを開く
-  };
-
-  // ダイアログからの削除確認
-  const handleConfirmDelete = async () => {
+    const ok = await confirm({
+      title: "本当に削除しますか？",
+      description: "この操作は取り消せません。",
+      confirmText: "削除",
+      confirmVariant: "danger",
+    });
+    if (!ok) return;
     const idToken = await getValidIdToken();
     if (!idToken) {
-      setIsOpen(false);
       return;
     }
     const result = await fetchDeleteArticle(data.id, idToken);
-    setIsOpen(false); // ダイアログを閉じる
-
     if (result.success) {
       window.location.reload();
     } else {
@@ -42,10 +40,6 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
     }
   };
 
-  const handleCancel = () => {
-    console.log("キャンセルされました");
-    setIsOpen(false); // ダイアログを閉じる
-  };
 
   return (
     <>
@@ -92,18 +86,6 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
           </button>
         </div>
       </Link>
-
-      <ConfirmDialog
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        title="本当に削除しますか？"
-        description="この操作は取り消せません。"
-        confirmText="削除"
-        cancelText="キャンセル"
-        confirmVariant="danger"
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancel}
-      />
     </>
   );
 };

@@ -88,7 +88,7 @@ export const Report = ({
           <button
             type="button"
             onClick={() => onDelete(index)}
-            className="mt-8 cursor-pointer"
+            className="mt-8 cursor-pointer text-red-600"
           >
             <FaRegTrashCan size={24} />
           </button>
