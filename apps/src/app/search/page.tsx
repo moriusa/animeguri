@@ -26,10 +26,13 @@ const Page = () => {
   if (error) return <p>fetchError</p>;
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,_minmax(200px,_1fr))] gap-2 mt-5 justify-center">
-      {articles.data.map((article) => (
-        <ArticleCard data={article} key={article.id} />
-      ))}
+    <div className="max-w-4xl mx-auto">
+      <h1>検索結果</h1>
+      <div className="grid grid-cols-[repeat(auto-fill,_minmax(200px,_1fr))] gap-2 mt-5 justify-center">
+        {articles.data.map((article) => (
+          <ArticleCard data={article} key={article.id} />
+        ))}
+      </div>
     </div>
   );
 };

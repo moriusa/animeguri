@@ -22,7 +22,7 @@ const Page = () => {
 
 
   return (
-    <div>
+    <div className="max-w-4xl mx-auto">
       <div className="flex gap-8">
         <div className="w-30 h-30 relative rounded-full overflow-hidden">
           <Image

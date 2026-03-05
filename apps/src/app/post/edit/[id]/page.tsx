@@ -46,7 +46,11 @@ const Page = () => {
   if (error) return <div>取得に失敗しました</div>;
   if (!initialData) return <div>記事が見つかりません</div>;
 
-  return <PostForm mode="edit" initialData={initialData} />;
+  return (
+    <div className="max-w-4xl mx-auto">
+      <PostForm mode="edit" initialData={initialData} />
+    </div>
+  );
 };
 
 export default Page;

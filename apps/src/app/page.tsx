@@ -20,6 +20,7 @@ export default function Home() {
 
   // ✅ reports.data をメモ化（参照が変わらないようにする）
   const reportData = useMemo(() => reports?.data || [], [reports?.data]);
+  console.log("repoD",reportData);
 
   return (
     <main className="flex-1 relative">
@@ -43,7 +44,7 @@ export default function Home() {
       )}
 
       {/* 地図 */}
-      <div className="h-96 rounded-lg overflow-hidden border relative">
+      <div className="h-[65vh] overflow-hidden relative">
         <MapView
           mapStyle={MAP_STYLES.streets}
           reports={reportData} // ✅ メモ化されたデータ
@@ -52,13 +53,10 @@ export default function Home() {
         />
 
         {/* 左上: 説明 */}
-        <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 max-w-xs">
-          <div className="bg-white rounded-lg shadow-lg p-3 md:p-4">
-            <p className="text-xs md:text-sm text-gray-600">
-              📍 地図上のピンをクリックして聖地情報を見よう
-            </p>
+        <div className="absolute top-2 left-2 max-w-xs">
+          <div className="bg-white rounded-lg shadow-lg p-3">
             {reportData.length > 0 && (
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-gray-500">
                 {reportData.length}件の聖地が登録されています
               </p>
             )}
@@ -107,7 +105,7 @@ export default function Home() {
       </div>
 
       {/* 記事一覧 */}
-      <div className="space-y-16 mt-16">
+      <div className="space-y-16 mt-16 max-w-4xl mx-auto">
         <HomeArticles type="latestArticles" />
       </div>
     </main>
