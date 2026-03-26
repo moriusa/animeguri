@@ -1,7 +1,7 @@
 "use client";
 import { FC } from "react";
 import Link from "next/link";
-import { Button } from "@/components/common";
+import { Button, PostButton } from "@/components/common";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { UserMenu } from "@/components/header/UserMenu";
@@ -12,7 +12,7 @@ export const Header: FC = () => {
     (state: RootState) => state.auth
   );
   return (
-    <nav className="text-secondary">
+    <nav className="text-black">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between p-3">
         <Link href={"/"} className="cursor-pointer text-2xl font-bold">
           animeguri
@@ -22,7 +22,7 @@ export const Header: FC = () => {
           {isAuthenticated && userProfile ? (
             <div className="flex items-center gap-4">
               <Link href={"/post"}>
-                <Button text="投稿" btnColor="white" />
+                <PostButton />
               </Link>
               <UserMenu userProfile={userProfile}/>
             </div>

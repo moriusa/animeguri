@@ -1,8 +1,8 @@
-import React, { ButtonHTMLAttributes, FC } from "react";
+import { ButtonHTMLAttributes, FC } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   text: string;
-  btnColor?: "white" | "blown" | "red";
+  btnColor?: "white" | "blown" | "red" | "gray";
   disabled?: boolean;
 }
 
@@ -23,6 +23,9 @@ export const Button: FC<ButtonProps> = ({
       break;
     case "red":
       color = `bg-red-600 text-white hover:bg-red-700`;
+      break;
+    case "gray":
+      color = `bg-gray-400 text-white opacity-100 hover:opacity-80`;
       break;
   }
   let disabledStyle: string;

@@ -6,7 +6,7 @@ import { ArticleCard as ArticleCardType } from "@/types/api/article";
 
 export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
   return (
-    <div className="rounded bg-secondary text-xs">
+    <div className="rounded bg-secondary text-xs shadow-md">
       <Link href={`/article/${data.id}`}>
         <p className="py-1 px-2 text-white">{data.animeName}</p>
         <Image

@@ -11,6 +11,7 @@ import { useConfirm } from "./ConfirmDialog";
 
 export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
   const confirm = useConfirm();
+  const published = data.articleStatus === "published";
 
   const handleEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -40,17 +41,16 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
     }
   };
 
-
   return (
     <>
       <Link
-        className="flex bg-white items-center gap-4 p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+        className={`flex bg-white items-center gap-4 p-3 rounded-lg border border-gray-200 ${published && "hover:shadow-md transition-shadow"} ${!published && "pointer-events-none"}`}
         href={`/article/${data.id}`}
       >
         {/* 画像エリア */}
         <div className="flex-shrink-0">
           <Image
-            src={data.thumbnailUrl}
+            src={data.thumbnailUrl || "/defaults/no-image.jpg"}
             alt={""}
             width={100}
             height={100}
@@ -60,16 +60,25 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
 
         {/* テキストエリア（左寄せ） */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-500 mb-1">{data.animeName}</p>
-          <h3 className="font-bold text-lg mb-2 line-clamp-2">{data.title}</h3>
-          <p className="text-gray-400 text-xs">
-            {new JapaneseDateTime(data.publishedAt).toJapanese()}
-          </p>
-          <p className="text-gray-500 text-sm mb-1">{data.articleStatus}</p>
+          <div className="flex items-center gap-2">
+            <div className="border-gray-300 border-1 rounded-2xl text-xs py-1 px-2 flex gap-1 items-center">
+              <span className={`${published ? "bg-green-600" : "bg-gray-300"} w-3 h-3 rounded-full`}></span>
+              <p className="inline-block">
+                {published ? "公開" : "下書き"}
+              </p>
+            </div>
+            <p className="text-gray-400 text-xs">
+              {published
+                ? new JapaneseDateTime(data.publishedAt).toJapanese()
+                : new JapaneseDateTime(data.createdAt).toJapanese()}
+            </p>
+          </div>
+          <p className="text-xs text-gray-500 mt-3">{data.animeName || "アニメ名未設定"}</p>
+          <h3 className="font-bold text-lg mb-2 line-clamp-2">{data.title || "タイトル未設定"}</h3>
         </div>
 
         {/* ボタンエリア */}
-        <div className="flex-shrink-0 flex flex-col gap-3">
+        <div className="flex-shrink-0 flex flex-col gap-3 pointer-events-auto">
           <button
             className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
             aria-label="編集"

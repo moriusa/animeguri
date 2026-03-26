@@ -72,7 +72,7 @@ export function ConfirmDialogProvider({
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 z-50" />
 
-          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-primary rounded-lg shadow-lg p-6 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 z-50 border-1 border-secondary">
+          <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-lg shadow-lg p-6 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 z-50">
             <Dialog.Close asChild>
               <button
                 className="absolute right-3 top-3 opacity-70 transition-opacity hover:opacity-100 cursor-pointer"
@@ -95,7 +95,7 @@ export function ConfirmDialogProvider({
             <div className="flex justify-end gap-3 mt-10">
               <Button
                 text={options.cancelText ?? "キャンセル"}
-                btnColor="white"
+                btnColor="gray"
                 onClick={handleCancel}
               />
               <Button

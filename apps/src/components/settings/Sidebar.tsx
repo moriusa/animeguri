@@ -2,17 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { IoSettingsSharp } from 'react-icons/io5';
+import { MdAccountCircle } from 'react-icons/md';
 
 const menuItems = [
   {
     href: '/settings/profile',
     label: 'プロフィール',
-    icon: '📄',
+    icon: <MdAccountCircle size={20}/>,
   },
   {
     href: '/settings/account',
     label: 'アカウント',
-    icon: '⭐',
+    icon: <IoSettingsSharp size={20}/>,
   },
 ];
 

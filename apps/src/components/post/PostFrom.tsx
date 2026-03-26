@@ -209,15 +209,17 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
           validation={{ required: "タイトルを入力してください" }}
           error={errors?.title?.message}
         />
-        <Input
-          id={"animeName"}
-          text="アニメ名"
-          name={"animeName"}
-          register={register}
-          placeholder="アニメ名を入力"
-          validation={{ required: "アニメ名を入力してください" }}
-          error={errors?.animeName?.message}
-        />
+        <div className="mt-4">
+          <Input
+            id={"animeName"}
+            text="アニメ名"
+            name={"animeName"}
+            register={register}
+            placeholder="アニメ名を入力"
+            validation={{ required: "アニメ名を入力してください" }}
+            error={errors?.animeName?.message}
+          />
+        </div>
         <div className="mt-8">
           <Thumbnail control={control} errors={errors} />
         </div>

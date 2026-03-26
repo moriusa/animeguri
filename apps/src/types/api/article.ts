@@ -53,7 +53,7 @@ export interface ArticleCard {
   bookmarkCount: number;
   commentCount: number;
   reportCount: number;
-  articleStatus: "draft" | "public";
+  articleStatus: "draft" | "published";
   publishedAt: string;
   createdAt: string;
   updatedAt: string;

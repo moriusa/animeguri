@@ -2,17 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { FaBookmark } from 'react-icons/fa6';
+import { MdOutlineArticle } from 'react-icons/md';
 
 const menuItems = [
   {
     href: '/dashboard/articles',
     label: '投稿記事',
-    icon: '📄',
+    icon: <MdOutlineArticle size={20}/>,
   },
   {
     href: '/dashboard/bookmarks',
     label: 'ブックマーク',
-    icon: '⭐',
+    icon: <FaBookmark size={16}/>,
   },
 ];
 

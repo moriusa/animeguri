@@ -45,8 +45,8 @@ const Page = () => {
       </section>
 
       {/* 著者情報 */}
-      <div className="bg-white rounded-lg shadow-sm ">
-        <div className="p-5 flex justify-between">
+      <div className="">
+        <div className="p-3 flex justify-between">
           <section className="inline-block">
             <Link
               href={`/user/${data.author.id}`}
@@ -82,14 +82,14 @@ const Page = () => {
             )}
           </section>
         </div>
-        <hr className="text-gray-300" />
+        <hr className="" />
         {/* レポート一覧 */}
         <section>
           {data.reports.map((report, idx) => {
             return (
               <div
                 key={report.id}
-                className="relative mx-3 my-8 p-5 rounded-lg overflow-hidden"
+                className="relative my-8 p-5 rounded-lg overflow-hidden"
                 style={{
                   backgroundColor: "#f5e6d3",
                 }}
@@ -101,8 +101,8 @@ const Page = () => {
                   }}
                 ></div>
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-xs text-gray-400">
-                    {String(report.displayOrder ?? idx + 1).padStart(2, "0")}
+                  <span className="text-xs">
+                    {String(report.displayOrder ?? idx + 1).padStart(2, "0")} -
                   </span>
                   <h2 className="text-xl">{report.title}</h2>
                 </div>
@@ -111,7 +111,7 @@ const Page = () => {
                   <span className="text-red-600">
                     <CiLocationOn size={20} />
                   </span>
-                  <p className="text-gray-500">{report.location}</p>
+                  <p className="">{report.location}</p>
                 </div>
 
                 {/* 画像エリア */}
