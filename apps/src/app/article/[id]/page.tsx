@@ -2,11 +2,12 @@
 import { ReportImage } from "@/components/article/ReportImage";
 import { useGetArticle } from "@/features/articles/useGetArticle";
 import { useBookmark } from "@/features/bookmarks/useBookmark";
+import { useLike } from "@/features/likes/useLike";
 import { JapaneseDateTime } from "@/utils/formatDate";
 import Image from "next/image";
 import Link from "next/link";
 import { CiLocationOn } from "react-icons/ci";
-import { FaBookmark, FaRegBookmark } from "react-icons/fa";
+import { FaBookmark, FaHeart, FaRegBookmark, FaRegHeart } from "react-icons/fa";
 
 const Page = () => {
   const { article, loading, error } = useGetArticle();
@@ -16,9 +17,16 @@ const Page = () => {
     isBookmarked,
     toggleBookmark,
     loading: bookmarkLoading,
-    checkLoading,
+    checkLoading: checkBookmarkLoading,
     error: bookmarkError,
   } = useBookmark();
+  const {
+    isLiked,
+    toggleLike,
+    loading: likeLoading,
+    checkLoading: checkLikeLoading,
+    error: likeError,
+  } = useLike();
   if (loading) return <p>記事取得中...</p>;
   if (!data) return <p>記事が見つかりません</p>;
   return (
@@ -65,22 +73,38 @@ const Page = () => {
               </div>
             </Link>
           </section>
-          <section>
-            <button
-              onClick={toggleBookmark}
-              disabled={bookmarkLoading}
-              className={`mt-3 cursor-pointer`}
-            >
-              {isBookmarked ? <FaBookmark /> : <FaRegBookmark />}
-            </button>
-
-            {bookmarkError && (
-              <div className="error-message">
-                <p>{bookmarkError}</p>
-                <button onClick={toggleBookmark}>再試行</button>
-              </div>
-            )}
-          </section>
+          <div className="flex gap-5 items-center">
+            <section>
+              <button
+                onClick={toggleLike}
+                disabled={likeLoading}
+                className={`mt-3 cursor-pointer`}
+              >
+                {isLiked ? <FaHeart size={24}/> : <FaRegHeart size={24}/>}
+              </button>
+              {likeError && (
+                <div className="text-red-600">
+                  <p>{likeError}</p>
+                  <button onClick={toggleLike}>再試行</button>
+                </div>
+              )}
+            </section>
+            <section>
+              <button
+                onClick={toggleBookmark}
+                disabled={bookmarkLoading}
+                className={`mt-3 cursor-pointer`}
+              >
+                {isBookmarked ? <FaBookmark size={24}/> : <FaRegBookmark size={24}/>}
+              </button>
+              {bookmarkError && (
+                <div className="text-red-600">
+                  <p>{bookmarkError}</p>
+                  <button onClick={toggleBookmark}>再試行</button>
+                </div>
+              )}
+            </section>
+          </div>
         </div>
         <hr className="" />
         {/* レポート一覧 */}

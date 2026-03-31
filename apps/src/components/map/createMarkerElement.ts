@@ -10,7 +10,7 @@ export const createMarkerElement = (report: Report): HTMLElement => {
   inner.className = "custom-marker-inner";
 
   const thumbnailUrl =
-    report.reportImages?.[0]?.imageUrl || "https://via.placeholder.com/40";
+    report.reportImages?.[0]?.imageUrl || "/defaults/no-image.jpg";
 
   inner.style.cssText = `
     width: 40px;

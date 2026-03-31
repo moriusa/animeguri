@@ -35,7 +35,7 @@ export const ReportImage = ({ reportImages }: ReportImageProps) => {
   return (
     <>
       {reportImages.map((image, index) => (
-        <>
+        <div key={index}>
           {/* ── 画像：ポラロイド風 ── */}
           <figure
             key={image.id}
@@ -72,7 +72,7 @@ export const ReportImage = ({ reportImages }: ReportImageProps) => {
               </figcaption>
             )}
           </figure>
-        </>
+        </div>
       ))}
 
       <Lightbox

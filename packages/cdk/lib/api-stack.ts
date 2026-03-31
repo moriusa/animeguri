@@ -316,6 +316,54 @@ export class ApiStack extends cdk.Stack {
       },
     );
 
+    const createLike = new NodejsFunction(this, "CreateLike", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/createLike/index.ts"),
+      functionName: "animeguri-create-like",
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const deleteLike = new NodejsFunction(this, "DeleteLike", {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/deleteLike/index.ts"),
+      functionName: "animeguri-delete-like",
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const getLikeCheckSingle = new NodejsFunction(
+      this,
+      "GetLikeCheckSingle",
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(
+          __dirname,
+          "../lambda/getLikeCheckSingle/index.ts",
+        ),
+        functionName: "animeguri-get-like-check-single",
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      },
+    );
+
     // cognito authorizer
     const authorizer = new HttpUserPoolAuthorizer(
       "UserPoolAuthorizer",
@@ -414,6 +462,21 @@ export class ApiStack extends cdk.Stack {
     const getBookmarkCheckSingleIntegration = new HttpLambdaIntegration(
       "GetBookmarkCheckSingleIntegration",
       getBookmarkCheckSingle,
+    );
+
+    const createLikeIntegration = new HttpLambdaIntegration(
+      "CreateLikeIntegration",
+      createLike,
+    );
+
+    const deleteLikeIntegration = new HttpLambdaIntegration(
+      "DeleteLikeIntegration",
+      deleteLike,
+    );
+
+    const getLikeCheckSingleIntegration = new HttpLambdaIntegration(
+      "GetLikeCheckSingleIntegration",
+      getLikeCheckSingle,
     );
 
     // API Gateway
@@ -550,6 +613,27 @@ export class ApiStack extends cdk.Stack {
       path: "/bookmarks/check",
       methods: [HttpMethod.GET],
       integration: getBookmarkCheckSingleIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/likes",
+      methods: [HttpMethod.POST],
+      integration: createLikeIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/likes/{id}",
+      methods: [HttpMethod.DELETE],
+      integration: deleteLikeIntegration,
+      authorizer,
+    });
+
+    api.addRoutes({
+      path: "/likes/check",
+      methods: [HttpMethod.GET],
+      integration: getLikeCheckSingleIntegration,
       authorizer,
     });
 
