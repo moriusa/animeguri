@@ -114,16 +114,7 @@ const Page = () => {
               <div
                 key={report.id}
                 className="relative my-8 p-5 rounded-lg overflow-hidden"
-                style={{
-                  backgroundColor: "#f5e6d3",
-                }}
               >
-                <div
-                  className="absolute inset-0 rounded-lg shadow-inner pointer-events-none"
-                  style={{
-                    boxShadow: "inset 0 0 30px rgba(34, 23, 9, 0.15)",
-                  }}
-                ></div>
                 <div className="flex items-baseline gap-2 mb-2">
                   <span className="text-xs">
                     {String(report.displayOrder ?? idx + 1).padStart(2, "0")} -
