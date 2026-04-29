@@ -34,7 +34,7 @@ export const UserMenu = ({ userProfile }: Props) => {
   const toggle = () => setIsOpen((prev) => !prev);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative flex items-center" ref={menuRef}>
       {/* アイコン（クリックでメニュー開閉） */}
       <button
         type="button"

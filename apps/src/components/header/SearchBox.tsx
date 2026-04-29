@@ -44,7 +44,7 @@ export const SearchBox = () => {
       >
         <button
           type="button"
-          className="cursor-pointer focus:outline-none"
+          className="cursor-pointer focus:outline-none text-sm text-nowrap"
           onClick={toggle}
         >
           {queryType === "anime" ? "アニメ名" : "聖地の場所"}
