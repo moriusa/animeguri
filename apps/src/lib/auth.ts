@@ -8,7 +8,8 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
 
-const AWS_COGNITO_USER_POOL_ID = process.env.NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID!;
+const AWS_COGNITO_USER_POOL_ID =
+  process.env.NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID!;
 const AWS_COGNITO_CLIENT_ID = process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID!;
 
 // ユーザープール情報
@@ -56,7 +57,7 @@ export const signUp = (signUpData: SignUpFormValues): Promise<SignUpResult> => {
           user: result.user,
           userSub: result.userSub,
         });
-      }
+      },
     );
   });
 };
@@ -64,7 +65,7 @@ export const signUp = (signUpData: SignUpFormValues): Promise<SignUpResult> => {
 // 確認コードによる認証
 export const confirmSignUp = (
   email: string,
-  confirmationCode: string
+  confirmationCode: string,
 ): Promise<string> => {
   const cognitoUser = new CognitoUser({
     Username: email,
@@ -200,7 +201,7 @@ export interface UpdateUserAttributesParams {
 }
 
 const updateUserAttributes = (
-  attributes: UpdateUserAttributesParams
+  attributes: UpdateUserAttributesParams,
 ): Promise<string> => {
   const cognitoUser = userPool.getCurrentUser();
 
@@ -223,7 +224,7 @@ const updateUserAttributes = (
           new CognitoUserAttribute({
             Name: "email",
             Value: attributes.email,
-          })
+          }),
         );
       }
 
@@ -258,6 +259,26 @@ const updateUserAttributes = (
   });
 };
 
+// IDトークンからメールアドレスを取得
+export const getCurrentUserEmail = (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const currentUser = userPool.getCurrentUser();
+    if (!currentUser) return resolve(null);
+
+    // getSession() でストレージからセッションを読み込む
+    currentUser.getSession((err: any, session: any) => {
+      // エラーがある場合は、Errorオブジェクトではなく null を返す
+      if (err || !session || !session.isValid()) {
+        console.error("Cognito session error:", err);
+        return resolve(null);
+      }
+
+      const payload = session.getIdToken().decodePayload();
+      resolve(payload.email);
+    });
+  });
+};
+
 // ============================================
 // 🆕 メールアドレス変更（確認コード送信）
 // ============================================
@@ -270,7 +291,7 @@ export const updateEmail = (newEmail: string): Promise<string> => {
 // ============================================
 export const verifyEmailChange = (
   attributeName: string,
-  confirmationCode: string
+  confirmationCode: string,
 ): Promise<string> => {
   const cognitoUser = userPool.getCurrentUser();
 
@@ -302,7 +323,7 @@ export const verifyEmailChange = (
 // ============================================
 export const changePassword = (
   oldPassword: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<string> => {
   const cognitoUser = userPool.getCurrentUser();
 
@@ -355,7 +376,7 @@ export const forgotPassword = (email: string): Promise<string> => {
 export const confirmPassword = (
   email: string,
   confirmationCode: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<string> => {
   const cognitoUser = new CognitoUser({
     Username: email,
@@ -386,7 +407,7 @@ export const deleteUserViaBackend = async (idToken: string): Promise<void> => {
         Authorization: `Bearer ${idToken}`,
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   if (!response.ok) {

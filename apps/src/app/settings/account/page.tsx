@@ -1,12 +1,17 @@
 "use client";
 
-import { RootState } from "@/store";
+import { getCurrentUserEmail } from "@/lib";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 
 const Page = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    getCurrentUserEmail().then(setUserEmail);
+  }, []);
+
   return (
     <div>
       <h2>アカウント設定</h2>
@@ -15,7 +20,7 @@ const Page = () => {
         onClick={() => router.push("/settings/account/mail")}
       >
         <h3>メールアドレス</h3>
-        <p>{user?.email}</p>
+        <p>{userEmail}</p>
       </div>
       <div
         className="bg-white p-3 cursor-pointer hover:bg-amber-100"

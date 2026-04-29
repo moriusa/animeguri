@@ -3,15 +3,13 @@ import { Button, Input } from "@/components/common";
 import { Thumbnail } from "@/components/post/Thumbnail";
 import { Report } from "@/components/post";
 import { useForm } from "react-hook-form";
-import { createArticleWithImages } from "@/features/articles/createArticleWithImages";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
-import { updateArticleWithImages } from "@/features/articles/updateArticleWithImages";
 import { getValidIdToken } from "@/lib/common/authFetch";
 import { useEffect, useMemo } from "react";
 import { GoPlus } from "react-icons/go";
 import { useConfirm } from "../common/ConfirmDialog";
+import { useCreateArticle } from "@/features/articles/hooks/useCreateArticle";
+import { useUpdateArticle } from "@/features/articles/hooks/useUpdateArticle";
 
 export interface ImageItem {
   id?: string; // 既存画像のID（編集時のみ使用）
@@ -55,7 +53,8 @@ interface PostFormProps {
 export const PostForm = ({ mode, initialData }: PostFormProps) => {
   const confirm = useConfirm();
   const router = useRouter();
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { createArticle } = useCreateArticle();
+  const { updateArticle } = useUpdateArticle();
 
   const defaultFormValues = useMemo<PostFormValues>(
     () => ({
@@ -135,9 +134,9 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     setValue("reports", updatedReports);
   };
 
-  if (!user) {
-    return <p>ログインしてください</p>;
-  }
+  // if (!user) {
+  //   return <p>ログインしてください</p>;
+  // }
 
   const onSubmit = async (
     data: PostFormValues,
@@ -178,9 +177,9 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     const idToken = await getValidIdToken();
     if (!idToken) return console.log("idToken is undefined");
     if (mode === "create") {
-      await createArticleWithImages(data, status, idToken);
+      await createArticle(data, status);
     } else if (mode === "edit") {
-      await updateArticleWithImages(data.id, data, status, idToken);
+      await updateArticle(data.id, data, status);
     }
     reset(defaultFormValues);
     router.push("/");

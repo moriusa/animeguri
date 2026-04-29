@@ -1,13 +1,10 @@
 "use client";
 import { Input } from "@/components/common";
 import { ProfileImageUpload } from "@/components/settings/ProfileImageUpload";
-import { setUserProfile } from "@/features";
-import { updateUserProfileWithImages } from "@/features/settings/updateUserProfileWithImages";
-import { useGetUserProfile } from "@/features/settings/useGetUserProfile";
-import { RootState } from "@/store";
+import { useGetUserProfile } from "@/features/user/hooks/useGetUserProfile";
+import { useUpdateUserProfile } from "@/features/user/hooks/useUpdateUserProfile";
 import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
 
 export interface ProfileFormValues {
   userName: string;
@@ -20,16 +17,16 @@ export interface ProfileFormValues {
 }
 
 const Page = () => {
-  const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.auth.user);
-  const { profile, error, loading } = useGetUserProfile();
+  const { user, error, isLoading, isLoggedIn, updateUser } =
+    useGetUserProfile();
+  const { updateProfile, isSubmitting } = useUpdateUserProfile();
 
   const {
     control,
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
     mode: "onChange",
     defaultValues: {
@@ -45,24 +42,23 @@ const Page = () => {
 
   // プロフィール取得後、フォームにデフォルト値をセット
   useEffect(() => {
-    console.log(profile);
-    if (profile) {
+    if (user) {
       reset({
-        userName: profile.userName || "",
-        bio: profile.bio || "",
-        profileImage: profile.profileImageUrl,
-        xUrl: profile.xUrl || "",
-        facebookUrl: profile.facebookUrl || "",
-        youtubeUrl: profile.youtubeUrl || "",
-        websiteUrl: profile.websiteUrl || "",
+        userName: user.userName || "",
+        bio: user.bio || "",
+        profileImage: user.profileImageUrl,
+        xUrl: user.xUrl || "",
+        facebookUrl: user.facebookUrl || "",
+        youtubeUrl: user.youtubeUrl || "",
+        websiteUrl: user.websiteUrl || "",
       });
     }
-  }, [profile, reset]);
+  }, [user, reset]);
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     try {
-      const res = await updateUserProfileWithImages(data, user!.idToken);
-      dispatch(setUserProfile(res.data));
+      const res = await updateProfile(data);
+      if (res) updateUser(res?.data);
       // フォームの状態をリセット（これで isDirty が false になる）
       reset(data);
     } catch (error) {
@@ -79,21 +75,21 @@ const Page = () => {
     }
 
     // プロフィール値にリセット
-    if (profile) {
+    if (user) {
       reset({
-        userName: profile.userName || "",
-        bio: profile.bio || "",
-        profileImage: profile.profileImageUrl || null,
-        xUrl: profile.xUrl || "",
-        facebookUrl: profile.facebookUrl || "",
-        youtubeUrl: profile.youtubeUrl || "",
-        websiteUrl: profile.websiteUrl || "",
+        userName: user.userName || "",
+        bio: user.bio || "",
+        profileImage: user.profileImageUrl || null,
+        xUrl: user.xUrl || "",
+        facebookUrl: user.facebookUrl || "",
+        youtubeUrl: user.youtubeUrl || "",
+        websiteUrl: user.websiteUrl || "",
       });
     }
   };
 
   // ローディング表示
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-center items-center min-h-[400px]">
@@ -121,7 +117,7 @@ const Page = () => {
   }
 
   // ユーザー未認証
-  if (!user) {
+  if (!isLoggedIn) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
@@ -149,7 +145,7 @@ const Page = () => {
           </h3>
           <ProfileImageUpload
             control={control}
-            defaultImage={profile?.profileImageUrl}
+            defaultImage={user?.profileImageUrl}
             errors={errors}
           />
         </div>

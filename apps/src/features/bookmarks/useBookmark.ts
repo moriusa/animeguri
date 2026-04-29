@@ -1,93 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  getBookmarkCheckSingle,
-  addBookmark,
-  deleteBookmark,
-} from "@/lib/bookmarks";
+import useSWR from "swr";
 import { useParams } from "next/navigation";
-import { getValidIdToken } from "@/lib/common/authFetch";
+import { authFetcher } from "@/lib/fetcher";
+import { useState } from "react";
+import { BookmarkCheckResponse } from "@/types/api/bookmark";
+
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export const useBookmark = () => {
   const params = useParams();
   const articleId = params.id as string;
+  const [isToggling, setIsToggling] = useState(false);
 
-  const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [checkLoading, setCheckLoading] = useState<boolean>(true); // 初回確認用
-  const [error, setError] = useState<string | null>(null);
+  // GET：SWRでブックマーク状態を取得
+  const { data, error, isLoading, mutate } = useSWR<BookmarkCheckResponse>(
+    articleId ? `${API_ENDPOINT}/bookmarks/check?articleId=${articleId}` : null,
+    authFetcher<BookmarkCheckResponse>,
+  );
 
-  // 初回マウント時にブックマーク状態を確認
-  useEffect(() => {
-    const fetchBookmarkStatus = async () => {
-      const idToken = await getValidIdToken();
-      if (!articleId || !idToken) {
-        setCheckLoading(false);
-        return;
-      }
-      try {
-        setCheckLoading(true);
-        const res = await getBookmarkCheckSingle(articleId, idToken);
-        setIsBookmarked(res.data.isBookmarked);
-      } catch (err) {
-        console.error("Failed to check bookmark status:", err);
-        // エラーでも続行（デフォルトはfalse）
-      } finally {
-        setCheckLoading(false);
-      }
-    };
+  const isBookmarked = data?.data.isBookmarked ?? false;
 
-    fetchBookmarkStatus();
-  }, [articleId]);
-
-  // 楽観的更新を含むトグル関数
+  // トグル：楽観的更新
   const toggleBookmark = async () => {
-    const idToken = await getValidIdToken();
-    if (!articleId || !idToken) {
-      setError("Article ID or token is missing");
-      return;
-    }
+    if (!articleId || isToggling) return;
 
-    // 現在の状態を保存（ロールバック用）
-    const previousState = isBookmarked;
+    setIsToggling(true);
 
     try {
-      // 1. 先にUIを更新（楽観的更新）
-      setIsBookmarked(!isBookmarked);
-      setError(null);
-      setLoading(true);
-
-      // 2. API呼び出し
-      if (previousState) {
-        // ブックマーク済み → 削除
-        await deleteBookmark(articleId, idToken);
-        console.log("✓ Bookmark removed");
-      } else {
-        // 未ブックマーク → 追加
-        await addBookmark(articleId, idToken);
-        console.log("✓ Bookmark added");
-      }
-
-      // 成功（UIはすでに更新済み）
+      // 1. 楽観的更新（即座にUIを反転）
+      await mutate(
+        async () => {
+          // 2. API呼び出し
+          if (isBookmarked) {
+            await authFetcher(`${API_ENDPOINT}/bookmarks/${articleId}`, {
+              method: "DELETE",
+            });
+          } else {
+            await authFetcher(`${API_ENDPOINT}/bookmarks`, {
+              method: "POST",
+              body: JSON.stringify({ articleId: articleId }),
+            });
+          }
+          // 3. 成功 → 新しい状態を返す
+          return { data: { isBookmarked: !isBookmarked } };
+        },
+        {
+          // 楽観的更新：APIの結果を待たずにUIを更新
+          optimisticData: { data: { isBookmarked: !isBookmarked } },
+          // 失敗時は元に戻す
+          rollbackOnError: true,
+          // API成功後に再fetchはしない（自分で値を返しているから）
+          revalidate: false,
+        },
+      );
     } catch (err) {
       console.error("Failed to toggle bookmark:", err);
-
-      // 3. エラー時はロールバック
-      setIsBookmarked(previousState);
-      setError(
-        err instanceof Error ? err.message : "Failed to toggle bookmark",
-      );
     } finally {
-      setLoading(false);
+      setIsToggling(false);
     }
   };
 
   return {
     isBookmarked,
     toggleBookmark,
-    loading, // トグル処理中
-    checkLoading, // 初回確認中
+    isToggling,
+    isLoading, // 初回取得中
     error,
   };
 };

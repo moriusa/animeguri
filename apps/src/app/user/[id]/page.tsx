@@ -1,25 +1,22 @@
 "use client";
 import { ArticleCard } from "@/components/common/ArticleCard";
-import { useGetUserArticleCards } from "@/features/articles/useGetUserArticleCards";
-import { useGetPublicUserProfile } from "@/features/user/useGetPublicUserProfile";
+import { useGetUserArticleCards } from "@/features/articles/hooks/useGetUserArticleCards";
+import { useGetPublicUserProfile } from "@/features/user/hooks/useGetPublicUserProfile";
 import Image from "next/image";
 
 const Page = () => {
   const {
     articles,
     error: articleError,
-    loading: articleLoading,
-  } = useGetUserArticleCards();
+    isLoading: articleLoading,
+  } = useGetUserArticleCards(20);
   const {
     profile,
     error: profileError,
-    loading: profileLoading,
+    isLoading: profileLoading,
   } = useGetPublicUserProfile();
 
-  const articleData = articles?.data;
-
   if(!profile) return <p>プロフィールが見つかりません</p>
-
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -40,9 +37,9 @@ const Page = () => {
       </div>
       <div className="mt-10">
         <h2 className="font-bold text-2xl">投稿記事一覧</h2>
-        {articleData ? (
+        {articles ? (
           <div className="grid grid-cols-[repeat(auto-fill,_minmax(200px,_1fr))] gap-2 mt-5 justify-center">
-            {articleData.map((article) => (
+            {articles.map((article) => (
               <ArticleCard data={article} key={article.id} />
             ))}
           </div>

@@ -4,14 +4,14 @@ import Image from "next/image";
 import { ArticleCard as ArticleCardType } from "@/types/api/article";
 import Link from "next/link";
 import { JapaneseDateTime } from "@/utils/formatDate";
-import { fetchDeleteArticle } from "@/features/articles/deleteArticle";
 import { redirect } from "next/navigation";
-import { getValidIdToken } from "@/lib/common/authFetch";
 import { useConfirm } from "./ConfirmDialog";
+import { useDeleteArticle } from "@/features/articles/hooks/useDeleteArticle";
 
 export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
   const confirm = useConfirm();
   const published = data.articleStatus === "published";
+  const { deleteArticle, isSuccess } = useDeleteArticle();
 
   const handleEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -29,15 +29,9 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
       confirmVariant: "danger",
     });
     if (!ok) return;
-    const idToken = await getValidIdToken();
-    if (!idToken) {
-      return;
-    }
-    const result = await fetchDeleteArticle(data.id, idToken);
-    if (result.success) {
+    await deleteArticle(data.id);
+    if (isSuccess) {
       window.location.reload();
-    } else {
-      alert(`削除に失敗: ${result.error}`);
     }
   };
 
@@ -62,10 +56,10 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <div className="border-gray-300 border-1 rounded-2xl text-xs py-1 px-2 flex gap-1 items-center">
-              <span className={`${published ? "bg-green-600" : "bg-gray-300"} w-3 h-3 rounded-full`}></span>
-              <p className="inline-block">
-                {published ? "公開" : "下書き"}
-              </p>
+              <span
+                className={`${published ? "bg-green-600" : "bg-gray-300"} w-3 h-3 rounded-full`}
+              ></span>
+              <p className="inline-block">{published ? "公開" : "下書き"}</p>
             </div>
             <p className="text-gray-400 text-xs">
               {published
@@ -73,8 +67,12 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
                 : new JapaneseDateTime(data.createdAt).toJapanese()}
             </p>
           </div>
-          <p className="text-xs text-gray-500 mt-3">{data.animeName || "アニメ名未設定"}</p>
-          <h3 className="font-bold text-lg mb-2 line-clamp-2">{data.title || "タイトル未設定"}</h3>
+          <p className="text-xs text-gray-500 mt-3">
+            {data.animeName || "アニメ名未設定"}
+          </p>
+          <h3 className="font-bold text-lg mb-2 line-clamp-2">
+            {data.title || "タイトル未設定"}
+          </h3>
         </div>
 
         {/* ボタンエリア */}

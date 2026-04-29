@@ -1,86 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getLikeCheckSingle, addLike, deleteLike } from "@/lib/Likes";
+import useSWR from "swr";
 import { useParams } from "next/navigation";
-import { getValidIdToken } from "@/lib/common/authFetch";
+import { authFetcher } from "@/lib/fetcher";
+import { useState } from "react";
+import { LikeCheckResponse } from "@/types/api/like";
+
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export const useLike = () => {
   const params = useParams();
   const articleId = params.id as string;
+  const [isToggling, setIsToggling] = useState(false);
 
-  const [isLiked, setIsLiked] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [checkLoading, setCheckLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // GET：SWRでいいね状態を取得
+  const { data, error, isLoading, mutate } = useSWR<LikeCheckResponse>(
+    articleId ? `${API_ENDPOINT}/likes/check?articleId=${articleId}` : null,
+    authFetcher<LikeCheckResponse>,
+  );
 
-  useEffect(() => {
-    const fetchLikeStatus = async () => {
-      const idToken = await getValidIdToken();
-      if (!articleId || !idToken) {
-        setCheckLoading(false);
-        return;
-      }
-      try {
-        setCheckLoading(true);
-        const res = await getLikeCheckSingle(articleId, idToken);
-        setIsLiked(res.data.isLiked);
-      } catch (err) {
-        console.error("Failed to check Like status:", err);
-        // エラーでも続行（デフォルトはfalse）
-      } finally {
-        setCheckLoading(false);
-      }
-    };
+  const isLiked = data?.data.isLiked ?? false;
 
-    fetchLikeStatus();
-  }, [articleId]);
-
-  // 楽観的更新を含むトグル関数
+  // トグル：楽観的更新
   const toggleLike = async () => {
-    const idToken = await getValidIdToken();
-    if (!articleId || !idToken) {
-      setError("Article ID or token is missing");
-      return;
-    }
+    if (!articleId || isToggling) return;
 
-    // 現在の状態を保存（ロールバック用）
-    const previousState = isLiked;
+    setIsToggling(true);
 
     try {
-      // 1. 先にUIを更新（楽観的更新）
-      setIsLiked(!isLiked);
-      setError(null);
-      setLoading(true);
-
-      // 2. API呼び出し
-      if (previousState) {
-        // いいね済み → 削除
-        await deleteLike(articleId, idToken);
-        console.log("✓ Like removed");
-      } else {
-        // 未いいね → 追加
-        await addLike(articleId, idToken);
-        console.log("✓ Like added");
-      }
-
-      // 成功（UIはすでに更新済み）
+      // 1. 楽観的更新（即座にUIを反転）
+      await mutate(
+        async () => {
+          // 2. API呼び出し
+          if (isLiked) {
+            await authFetcher(`${API_ENDPOINT}/likes/${articleId}`, {
+              method: "DELETE",
+            });
+          } else {
+            await authFetcher(`${API_ENDPOINT}/likes`, {
+              method: "POST",
+              body: JSON.stringify({ articleId: articleId }),
+            });
+          }
+          // 3. 成功 → 新しい状態を返す
+          return { data: { isLiked: !isLiked } };
+        },
+        {
+          // 楽観的更新：APIの結果を待たずにUIを更新
+          optimisticData: { data: { isLiked: !isLiked } },
+          // 失敗時は元に戻す
+          rollbackOnError: true,
+          // API成功後に再fetchはしない（自分で値を返しているから）
+          revalidate: false,
+        },
+      );
     } catch (err) {
       console.error("Failed to toggle Like:", err);
-
-      // 3. エラー時はロールバック
-      setIsLiked(previousState);
-      setError(err instanceof Error ? err.message : "Failed to toggle Like");
     } finally {
-      setLoading(false);
+      setIsToggling(false);
     }
   };
 
   return {
     isLiked,
     toggleLike,
-    loading, // トグル処理中
-    checkLoading, // 初回確認中
+    isToggling,
+    isLoading, // 初回取得中
     error,
   };
 };

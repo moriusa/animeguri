@@ -13,7 +13,7 @@ interface Props {
 export const ProfileImageUpload = ({
   control,
   errors,
-  defaultImage = "https://placehold.jp/150x150.png",
+  defaultImage = "/defaults/user-avatar.png",
 }: Props) => {
   const [croppedImage, setCroppedImage] = useState<string | null>(defaultImage);
 

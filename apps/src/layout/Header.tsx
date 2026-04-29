@@ -2,15 +2,12 @@
 import { FC } from "react";
 import Link from "next/link";
 import { Button, PostButton } from "@/components/common";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import { UserMenu } from "@/components/header/UserMenu";
 import { SearchBox } from "@/components/header/SearchBox";
+import { useGetUserProfile } from "@/features/user/hooks/useGetUserProfile";
 
 export const Header: FC = () => {
-  const { isAuthenticated, userProfile } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { user, isLoggedIn } = useGetUserProfile();
   return (
     <nav className="text-black">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between p-3">
@@ -19,12 +16,12 @@ export const Header: FC = () => {
         </Link>
         <div className="flex items-center gap-8">
           <SearchBox />
-          {isAuthenticated && userProfile ? (
+          {isLoggedIn && user ? (
             <div className="flex items-center gap-4">
               <Link href={"/post"}>
                 <PostButton />
               </Link>
-              <UserMenu userProfile={userProfile}/>
+              <UserMenu userProfile={user} />
             </div>
           ) : (
             <div className="flex items-center gap-4">

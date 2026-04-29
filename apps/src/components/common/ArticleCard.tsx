@@ -34,7 +34,7 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-0.5">
                 <FaRegHeart />
-                <p>{data.likesCount}</p>
+                <p>{data.likeCount}</p>
               </div>
               <div className="flex items-center gap-0.5">
                 <FaRegComment />

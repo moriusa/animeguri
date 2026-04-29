@@ -49,7 +49,7 @@ export interface ArticleCard {
   title: string;
   animeName: string;
   thumbnailUrl: string;
-  likesCount: number;
+  likeCount: number;
   bookmarkCount: number;
   commentCount: number;
   reportCount: number;

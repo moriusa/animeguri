@@ -1,6 +1,6 @@
 import { SubTitle } from "./common/SubTitle";
 import { ArticleCard } from "./common/ArticleCard";
-import { useGetArticleCards } from "@/features/articles/useGetArticleCards";
+import { useGetArticleCards } from "@/features/articles/hooks/useGetArticleCards";
 
 interface Props {
   type:
@@ -12,10 +12,10 @@ interface Props {
 }
 
 export default function HomeArticles({ type }: Props) {
-  const { articles, error, loading } = useGetArticleCards(20);
+  const { articles, error, isLoading } = useGetArticleCards(20);
 
   if (!articles) return <p>article not found</p>;
-  if (loading) return <p>loading</p>;
+  if (isLoading) return <p>loading</p>;
   if (error) return <p>fetchError</p>;
 
   return (
@@ -23,7 +23,7 @@ export default function HomeArticles({ type }: Props) {
       <div>
         <SubTitle type={type} />
         <div className="grid grid-cols-[repeat(auto-fill,_minmax(200px,_1fr))] gap-2 mt-5 justify-center">
-          {articles.data.map((article) => (
+          {articles.map((article) => (
             <ArticleCard data={article} key={article.id} />
           ))}
         </div>

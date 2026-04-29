@@ -3,12 +3,12 @@
 import HomeArticles from "@/components/HomeArticles";
 import { MAP_STYLES } from "@/components/map/mapStyles";
 import { MapView } from "@/components/map/MapView";
-import { useGetAllReports } from "@/features/articles/useGetAllReports";
+import { useGetReports } from "@/features/articles/hooks/useGetReports";
 import { Report } from "@/types/api/article";
-import { useCallback, useState, useMemo } from "react"; // useMemo 追加
+import { useCallback, useState, useMemo } from "react";
 
 export default function Home() {
-  const { reports, loading, error } = useGetAllReports();
+  const { reports, isLoading, error } = useGetReports();
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   // useCallback でメモ化
@@ -18,7 +18,7 @@ export default function Home() {
   }, []);
 
   // reports.data をメモ化（参照が変わらないようにする）
-  const reportData = useMemo(() => reports?.data || [], [reports?.data]);
+  const reportData = useMemo(() => reports || [], [reports]);
 
   return (
     <main className="">
@@ -26,7 +26,7 @@ export default function Home() {
       {/* 地図 */}
       <div className="h-[65vh] overflow-hidden relative">
         {/* ローディング表示 */}
-        {loading && (
+        {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary mx-auto mb-4"></div>

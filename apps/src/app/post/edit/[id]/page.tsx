@@ -1,11 +1,11 @@
 "use client";
 
 import { PostForm, PostFormValues } from "@/components/post/PostFrom";
+import { useGetMyArticle } from "@/features/articles/hooks/useGetMyArticle";
 import { useEffect, useMemo, useState } from "react";
-import { useGetMyArticle } from "@/features/articles/useGetMyArticle";
 
 const Page = () => {
-  const { article, error, loading } = useGetMyArticle();
+  const { article, error, isLoading } = useGetMyArticle();
   const [initialData, setInitialData] = useState<PostFormValues | null>(null);
 
   // article から formData を作る処理はメモ化しておくと安全
@@ -13,13 +13,13 @@ const Page = () => {
     if (!article) return null;
 
     return {
-      id: article.data.id,
-      title: article.data.title,
-      thumbnail: article.data.thumbnailUrl
-        ? { url: article.data.thumbnailUrl, isExisting: true }
+      id: article.id,
+      title: article.title,
+      thumbnail: article.thumbnailUrl
+        ? { url: article.thumbnailUrl, isExisting: true }
         : null,
-      animeName: article.data.animeName,
-      reports: article.data.reports.map((report) => ({
+      animeName: article.animeName,
+      reports: article.reports.map((report) => ({
         id: report.id,
         title: report.title,
         images: report.reportImages.map((image) => ({
@@ -42,7 +42,7 @@ const Page = () => {
     setInitialData(formData);
   }, [formData]);
 
-  if (loading) return <div>読み込み中...</div>;
+  if (isLoading) return <div>読み込み中...</div>;
   if (error) return <div>取得に失敗しました</div>;
   if (!initialData) return <div>記事が見つかりません</div>;
 

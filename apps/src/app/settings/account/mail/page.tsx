@@ -1,12 +1,9 @@
 "use client";
 
 import { Input } from "@/components/common";
-import { updateUserEmail } from "@/features";
-import { updateEmail, verifyEmailChange } from "@/lib";
-import { RootState } from "@/store";
-import { useState } from "react";
+import { getCurrentUserEmail, updateEmail, verifyEmailChange } from "@/lib";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
 
 interface EmailFormValues {
   newEmail: string;
@@ -17,8 +14,10 @@ interface VerificationFormValues {
 }
 
 const Page = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+    useEffect(() => {
+      getCurrentUserEmail().then(setUserEmail);
+    }, []);
 
   // ステップ管理
   const [step, setStep] = useState<"input" | "verify">("input");
@@ -64,8 +63,7 @@ const Page = () => {
       await verifyEmailChange("email", data.verificationCode);
       alert("メールアドレスを変更しました");
 
-      // 必要に応じてReduxの状態を更新
-      dispatch(updateUserEmail(newEmail));
+      setUserEmail(newEmail);
 
       // リセット
       setStep("input");
@@ -103,7 +101,7 @@ const Page = () => {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-gray-600">現在のメールアドレス</p>
           <p className="font-semibold text-gray-900 mt-1">
-            {user?.email || "未設定"}
+            {userEmail || "未設定"}
           </p>
         </div>
 
@@ -126,7 +124,7 @@ const Page = () => {
                   message: "正しいメールアドレスを入力してください",
                 },
                 validate: (value) =>
-                  value !== user?.email || "現在のメールアドレスと同じです",
+                  value !== userEmail || "現在のメールアドレスと同じです",
               }}
               error={emailErrors?.newEmail?.message}
               placeholder="example@email.com"

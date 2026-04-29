@@ -1,13 +1,15 @@
 import { PresignedUrlResponse } from "@/types/api/presignedUrl";
-import dotenv from "dotenv";
+import { getValidIdToken } from "./common/authFetch";
 
-dotenv.config();
-const API_ENDPOINT = process.env.API_ENDPOINT;
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export const genPresignedUrl = async (
   files: File[],
-  idToken: string,
 ): Promise<PresignedUrlResponse> => {
+  const idToken = await getValidIdToken();
+  if (!idToken) {
+    throw new Error("認証トークンが取得できません");
+  }
   const payload = {
     files: files.map((file) => ({
       fileName: file.name,

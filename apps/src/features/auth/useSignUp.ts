@@ -1,11 +1,11 @@
 import { SignUpFormValues } from "@/app/signUp/page";
 import { confirmSignUp, resendConfirmationCode, signIn, signUp } from "@/lib";
-import { createUserProfile } from "@/lib/userProfile";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { UserInfo } from "./AuthSlice";
+import { useCreateUserProfile } from "../user/hooks/useCreateUserProfile";
 
 export const useSignUp = () => {
+  const { createProfile } = useCreateUserProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState<"signup" | "confirm">("signup");
@@ -46,9 +46,9 @@ export const useSignUp = () => {
       // 1. サインアップ検証
       await confirmSignUp(v.email, v.confirmationCode);
       // 2. ログインしてidToken取得(cognito)
-      const cognitoUser: UserInfo = await signIn(v.email, v.password);
+      await signIn(v.email, v.password);
       // 3. idTokenを使用してAPI叩く
-      await createUserProfile(cognitoUser.idToken);
+      await createProfile();
       alert("アカウントが正常に作成されました");
       router.push("/login");
     } catch (err: any) {

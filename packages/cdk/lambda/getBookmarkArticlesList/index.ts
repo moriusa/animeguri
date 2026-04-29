@@ -67,7 +67,7 @@ export const handler = async (
         title: bookmark.article.title,
         animeName: bookmark.article.anime_name,
         thumbnailUrl: getArticleImageUrl(bookmark.article.thumbnail_s3_key),
-        likesCount: bookmark.article.likes_count,
+        likeCount: bookmark.article.like_count,
         bookmarkCount: bookmark.article.bookmark_count,
         commentCount: bookmark.article.comment_count,
         reportCount: bookmark.article.report_count,
