@@ -254,7 +254,7 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
         )}
 
         {/* フォーム送信ボタン */}
-        <div className="flex gap-4 mt-8 w-1/3 ml-auto">
+        <div className="flex gap-4 mt-8 sm:w-1/3 ml-auto">
           <Button
             text="下書き保存"
             btnColor="white"
