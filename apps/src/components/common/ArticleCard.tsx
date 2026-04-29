@@ -9,13 +9,14 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
     <div className="rounded bg-secondary text-xs shadow-md">
       <Link href={`/article/${data.id}`}>
         <p className="py-1 px-2 text-white">{data.animeName}</p>
-        <Image
-          src={data.thumbnailUrl}
-          alt=""
-          className="aspect-video object-cover"
-          width={250}
-          height={250}
-        />
+        <div className="relative aspect-video w-full">
+          <Image
+            src={data.thumbnailUrl}
+            alt=""
+            fill
+            className="object-cover"
+          />
+        </div>
         <div className="bg-white p-3 text-gray-500">
           <p className="text-black text-base font-bold line-clamp-2 h-[48px]">
             {data.title}
