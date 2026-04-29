@@ -54,23 +54,21 @@ export const ArticleCard02 = ({ data }: { data: ArticleCardType }) => {
 
         {/* テキストエリア（左寄せ） */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <div className="border-gray-300 border-1 rounded-2xl text-xs py-1 px-2 flex gap-1 items-center">
-              <span
-                className={`${published ? "bg-green-600" : "bg-gray-300"} w-3 h-3 rounded-full`}
-              ></span>
-              <p className="inline-block">{published ? "公開" : "下書き"}</p>
-            </div>
-            <p className="text-gray-400 text-xs">
-              {published
-                ? new JapaneseDateTime(data.publishedAt).toJapanese()
-                : new JapaneseDateTime(data.createdAt).toJapanese()}
-            </p>
+          <div className="border-gray-300 border-1 rounded-2xl text-xs py-1 px-2 flex gap-1 items-center w-fit">
+            <span
+              className={`${published ? "bg-green-600" : "bg-gray-300"} w-3 h-3 rounded-full`}
+            ></span>
+            <p className="inline-block">{published ? "公開" : "下書き"}</p>
           </div>
-          <p className="text-xs text-gray-500 mt-3">
+          <p className="text-gray-400 text-xs mt-1">
+            {published
+              ? new JapaneseDateTime(data.publishedAt).toJapanese()
+              : new JapaneseDateTime(data.createdAt).toJapanese()}
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
             {data.animeName || "アニメ名未設定"}
           </p>
-          <h3 className="font-bold text-lg mb-2 line-clamp-2">
+          <h3 className="font-bold text-lg line-clamp-2">
             {data.title || "タイトル未設定"}
           </h3>
         </div>
