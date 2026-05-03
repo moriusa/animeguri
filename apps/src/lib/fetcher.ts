@@ -1,11 +1,11 @@
 import { getValidIdToken } from "./common/authFetch";
 
-type FetcherOptions = {
+interface FetcherOptions extends RequestInit {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
   headers?: Record<string, string>;
-};
+}
 
 export const fetcher = async <T>(url: string): Promise<T> => {
   const res = await fetch(url);

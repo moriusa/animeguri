@@ -16,6 +16,7 @@ import {
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
 interface ApiStackProps extends cdk.StackProps {
+  envName: string;
   userPool: cognito.IUserPool;
   userPoolClient: cognito.IUserPoolClient;
   imagesBucket: s3.IBucket;
@@ -25,126 +26,32 @@ interface ApiStackProps extends cdk.StackProps {
 export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
+    const {
+      envName,
+      userPool,
+      userPoolClient,
+      imagesBucket,
+      cloudFrontDistribution,
+    } = props;
 
-    const supabaseUrl = process.env.SUPABASE_URL!;
-    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-    const { userPool, userPoolClient, imagesBucket, cloudFrontDistribution } =
-      props;
+    const supabaseUrl =
+      envName === "dev"
+        ? process.env.SUPABASE_URL_DEV!
+        : process.env.SUPABASE_URL_PROD!;
+    const supabaseServiceRoleKey =
+      envName === "dev"
+        ? process.env.SUPABASE_SERVICE_ROLE_KEY_DEV!
+        : process.env.SUPABASE_SERVICE_ROLE_KEY_PROD!;
 
     // lambda関数
-    const getPublicUserFn = new NodejsFunction(this, "GetPublicUserFn", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/getPublicUserProfile/index.ts"),
-      functionName: "animeguri-get-public-user",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
-
-    const getMeFn = new NodejsFunction(this, "GetMeFn", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/getMyProfile/index.ts"),
-      functionName: "animeguri-get-my-profile",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
-
-    const createUserFn = new NodejsFunction(this, "CreateUserFn", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/createUserProfile/index.ts"),
-      functionName: "animeguri-create-user",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
-
-    const patchUserProfile = new NodejsFunction(this, "PatchUserProfile", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/patchUserProfile/index.ts"),
-      functionName: "animeguri-patch-user",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
-
-    const getMyArticle = new NodejsFunction(this, "GetMyArticle", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/getMyArticle/index.ts"),
-      functionName: "animeguri-get-My-article",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
-
-    const getListMyArticles = new NodejsFunction(this, "GetListMyArticles", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/getListMyArticles/index.ts"),
-      functionName: "animeguri-get-list-My-articles",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
-
-    const getListArticles = new NodejsFunction(this, "GetListArticles", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/getListArticles/index.ts"),
-      functionName: "animeguri-get-list-articles",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        S3_BUCKET_NAME: imagesBucket.bucketName,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
-      },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
-
-    const getListUserArticles = new NodejsFunction(
+    const getPublicUserFn = new NodejsFunction(
       this,
-      "GetListUserArticles",
+      `GetPublicUserFn-${envName}`,
       {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
-        entry: path.join(__dirname, "../lambda/getListUserArticles/index.ts"),
-        functionName: "animeguri-get-list-user-articles",
+        entry: path.join(__dirname, "../lambda/getPublicUserProfile/index.ts"),
+        functionName: `animeguri-get-public-user-${envName}`,
         environment: {
           SUPABASE_URL: supabaseUrl,
           SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -155,11 +62,131 @@ export class ApiStack extends cdk.Stack {
       },
     );
 
-    const getArticle = new NodejsFunction(this, "GetArticle", {
+    const getMeFn = new NodejsFunction(this, `GetMeFn-${envName}`, {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getMyProfile/index.ts"),
+      functionName: `animeguri-get-my-profile-${envName}`,
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const createUserFn = new NodejsFunction(this, `CreateUserFn-${envName}`, {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/createUserProfile/index.ts"),
+      functionName: `animeguri-create-user-${envName}`,
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const patchUserProfile = new NodejsFunction(
+      this,
+      `PatchUserProfile-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/patchUserProfile/index.ts"),
+        functionName: `animeguri-patch-user-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          S3_BUCKET_NAME: imagesBucket.bucketName,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      },
+    );
+
+    const getMyArticle = new NodejsFunction(this, `GetMyArticle-${envName}`, {
+      handler: "handler",
+      runtime: lambda.Runtime.NODEJS_22_X,
+      entry: path.join(__dirname, "../lambda/getMyArticle/index.ts"),
+      functionName: `animeguri-get-My-article-${envName}`,
+      environment: {
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        S3_BUCKET_NAME: imagesBucket.bucketName,
+        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+    });
+
+    const getListMyArticles = new NodejsFunction(
+      this,
+      `GetListMyArticles-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/getListMyArticles/index.ts"),
+        functionName: `animeguri-get-list-My-articles-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          S3_BUCKET_NAME: imagesBucket.bucketName,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      },
+    );
+
+    const getListArticles = new NodejsFunction(
+      this,
+      `GetListArticles-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/getListArticles/index.ts"),
+        functionName: `animeguri-get-list-articles-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          S3_BUCKET_NAME: imagesBucket.bucketName,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      },
+    );
+
+    const getListUserArticles = new NodejsFunction(
+      this,
+      `GetListUserArticles-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/getListUserArticles/index.ts"),
+        functionName: `animeguri-get-list-user-articles-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
+      },
+    );
+
+    const getArticle = new NodejsFunction(this, `GetArticle-${envName}`, {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/getArticle/index.ts"),
-      functionName: "animeguri-get-article",
+      functionName: `animeguri-get-article-${envName}`,
       environment: {
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -170,11 +197,11 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
-    const createArticle = new NodejsFunction(this, "CreateArticle", {
+    const createArticle = new NodejsFunction(this, `CreateArticle-${envName}`, {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/createArticle/index.ts"),
-      functionName: "animeguri-create-article",
+      functionName: `animeguri-create-article-${envName}`,
       environment: {
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -185,11 +212,11 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
-    const patchArticle = new NodejsFunction(this, "PatchArticle", {
+    const patchArticle = new NodejsFunction(this, `PatchArticle-${envName}`, {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/patchArticle/index.ts"),
-      functionName: "animeguri-patch-article",
+      functionName: `animeguri-patch-article-${envName}`,
       environment: {
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -200,11 +227,11 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
-    const deleteArticle = new NodejsFunction(this, "DeleteArticle", {
+    const deleteArticle = new NodejsFunction(this, `DeleteArticle-${envName}`, {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/deleteArticle/index.ts"),
-      functionName: "animeguri-delete-article",
+      functionName: `animeguri-delete-article-${envName}`,
       environment: {
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -213,11 +240,11 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
-    const getReports = new NodejsFunction(this, "GetReports", {
+    const getReports = new NodejsFunction(this, `GetReports-${envName}`, {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/getReports/index.ts"),
-      functionName: "animeguri-get-reports",
+      functionName: `animeguri-get-reports-${envName}`,
       environment: {
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -230,12 +257,12 @@ export class ApiStack extends cdk.Stack {
 
     const generatePresignedUrl = new NodejsFunction(
       this,
-      "GeneratePresignedUrl",
+      `GeneratePresignedUrl-${envName}`,
       {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
         entry: path.join(__dirname, "../lambda/generatePresignedUrl/index.ts"),
-        functionName: "animeguri-generate-presigned-url",
+        functionName: `animeguri-generate-presigned-url-${envName}`,
         environment: {
           SUPABASE_URL: supabaseUrl,
           SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -247,36 +274,44 @@ export class ApiStack extends cdk.Stack {
       },
     );
 
-    const createBookmark = new NodejsFunction(this, "CreateBookmark", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/createBookmark/index.ts"),
-      functionName: "animeguri-create-bookmark",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+    const createBookmark = new NodejsFunction(
+      this,
+      `CreateBookmark-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/createBookmark/index.ts"),
+        functionName: `animeguri-create-bookmark-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+          CLOUDFRONT_DOMAIN: cloudFrontDistribution.distributionDomainName,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
       },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
+    );
 
-    const deleteBookmark = new NodejsFunction(this, "DeleteBookmark", {
-      handler: "handler",
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../lambda/deleteBookmark/index.ts"),
-      functionName: "animeguri-delete-bookmark",
-      environment: {
-        SUPABASE_URL: supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+    const deleteBookmark = new NodejsFunction(
+      this,
+      `DeleteBookmark-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/deleteBookmark/index.ts"),
+        functionName: `animeguri-delete-bookmark-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 256,
       },
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-    });
+    );
 
     const getBookmarkArticlesList = new NodejsFunction(
       this,
-      "GetBookmarkArticlesList",
+      `GetBookmarkArticlesList-${envName}`,
       {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
@@ -284,7 +319,7 @@ export class ApiStack extends cdk.Stack {
           __dirname,
           "../lambda/getBookmarkArticlesList/index.ts",
         ),
-        functionName: "animeguri-get-bookmark-articles-list",
+        functionName: `animeguri-get-bookmark-articles-list-${envName}`,
         environment: {
           SUPABASE_URL: supabaseUrl,
           SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -297,7 +332,7 @@ export class ApiStack extends cdk.Stack {
 
     const getBookmarkCheckSingle = new NodejsFunction(
       this,
-      "GetBookmarkCheckSingle",
+      `GetBookmarkCheckSingle-${envName}`,
       {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
@@ -305,7 +340,7 @@ export class ApiStack extends cdk.Stack {
           __dirname,
           "../lambda/getBookmarkCheckSingle/index.ts",
         ),
-        functionName: "animeguri-get-bookmark-check-single",
+        functionName: `animeguri-get-bookmark-check-single-${envName}`,
         environment: {
           SUPABASE_URL: supabaseUrl,
           SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -316,11 +351,11 @@ export class ApiStack extends cdk.Stack {
       },
     );
 
-    const createLike = new NodejsFunction(this, "CreateLike", {
+    const createLike = new NodejsFunction(this, `CreateLike-${envName}`, {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/createLike/index.ts"),
-      functionName: "animeguri-create-like",
+      functionName: `animeguri-create-like-${envName}`,
       environment: {
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -330,11 +365,11 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
     });
 
-    const deleteLike = new NodejsFunction(this, "DeleteLike", {
+    const deleteLike = new NodejsFunction(this, `DeleteLike-${envName}`, {
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "../lambda/deleteLike/index.ts"),
-      functionName: "animeguri-delete-like",
+      functionName: `animeguri-delete-like-${envName}`,
       environment: {
         SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -345,15 +380,12 @@ export class ApiStack extends cdk.Stack {
 
     const getLikeCheckSingle = new NodejsFunction(
       this,
-      "GetLikeCheckSingle",
+      `GetLikeCheckSingle-${envName}`,
       {
         handler: "handler",
         runtime: lambda.Runtime.NODEJS_22_X,
-        entry: path.join(
-          __dirname,
-          "../lambda/getLikeCheckSingle/index.ts",
-        ),
-        functionName: "animeguri-get-like-check-single",
+        entry: path.join(__dirname, "../lambda/getLikeCheckSingle/index.ts"),
+        functionName: `animeguri-get-like-check-single-${envName}`,
         environment: {
           SUPABASE_URL: supabaseUrl,
           SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
@@ -481,10 +513,11 @@ export class ApiStack extends cdk.Stack {
 
     // API Gateway
     const api = new HttpApi(this, "AnimeguriApi", {
-      apiName: "animeguri-api",
+      apiName: `animeguri-api-${envName}`,
       corsPreflight: {
         allowHeaders: ["Content-Type", "Authorization"],
         allowOrigins: ["*"], // 本番はドメインを絞る
+        // allowOrigins: envName === "prd" ? ["https://animeguri.com"] : ["*"],
         allowMethods: [
           CorsHttpMethod.GET,
           CorsHttpMethod.POST,

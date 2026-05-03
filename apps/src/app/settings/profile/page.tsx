@@ -282,8 +282,12 @@ const Page = () => {
         {/* 送信ボタン */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex justify-end gap-4">
-            <Button text="キャンセル" btnColor="white"/>
-            <Button text="保存" type="submit" disabled={isSubmitting || !isDirty}/>
+            <Button text="キャンセル" btnColor="white" />
+            <Button
+              text="保存"
+              type="submit"
+              disabled={isSubmitting || !isDirty}
+            />
           </div>
 
           {/* 変更があることを示すメッセージ */}

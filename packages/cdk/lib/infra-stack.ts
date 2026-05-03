@@ -5,6 +5,10 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
 
+interface InfraStackProps extends cdk.StackProps {
+  envName: string;
+}
+
 export class InfraStack extends cdk.Stack {
   // 他スタックから使うために public に出す
   public readonly userPool: cognito.UserPool;
@@ -12,12 +16,13 @@ export class InfraStack extends cdk.Stack {
   public readonly imagesBucket: s3.Bucket;
   public readonly imagesDistribution: cloudfront.Distribution;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: InfraStackProps) {
     super(scope, id, props);
+    const { envName } = props;
 
     // Cognito UserPool
-    this.userPool = new cognito.UserPool(this, "UserPool", {
-      userPoolName: "animeguri-user-pool",
+    this.userPool = new cognito.UserPool(this, `UserPool-${envName}`, {
+      userPoolName: `animeguri-user-pool-${envName}`,
       selfSignUpEnabled: true,
       signInAliases: { email: true },
       passwordPolicy: {
@@ -29,24 +34,33 @@ export class InfraStack extends cdk.Stack {
       },
     });
 
-    this.userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
-      userPool: this.userPool,
-      authFlows: {
-        userPassword: true,
-        userSrp: true,
+    this.userPoolClient = new cognito.UserPoolClient(
+      this,
+      `UserPoolClient-${envName}`,
+      {
+        userPool: this.userPool,
+        authFlows: {
+          userPassword: true,
+          userSrp: true,
+        },
+        accessTokenValidity: cdk.Duration.hours(1), // アクセストークン有効期限
+        idTokenValidity: cdk.Duration.hours(1), // IDトークン有効期限
+        refreshTokenValidity: cdk.Duration.days(30), // リフレッシュトークン有効期限
       },
-      accessTokenValidity: cdk.Duration.hours(1), // アクセストークン有効期限
-      idTokenValidity: cdk.Duration.hours(1), // IDトークン有効期限
-      refreshTokenValidity: cdk.Duration.days(30), // リフレッシュトークン有効期限
-    });
+    );
 
     // S3バケット
-    this.imagesBucket = new s3.Bucket(this, "ImagesBucket", {
-      // bucketName は省略でも可（CDK に任せる方が安全）
-      bucketName: `animeguri-images`,
+    this.imagesBucket = new s3.Bucket(this, `ImagesBucket-${envName}`, {
+      bucketName: `animeguri-images-${envName}`,
       versioned: false,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      // 本番（prd）は削除してもデータ保持、それ以外は削除時にバケットも消す設定
+      removalPolicy:
+        envName === "prd"
+          ? cdk.RemovalPolicy.RETAIN
+          : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: envName !== "prd", // prd以外はバケット削除時に中身も空にする
       cors: [
         {
           allowedMethods: [
@@ -55,6 +69,7 @@ export class InfraStack extends cdk.Stack {
             s3.HttpMethods.PUT,
           ],
           allowedOrigins: ["*"], // 本番では制限
+          // allowedOrigins: envName === "prd" ? ["https://animeguri.com"] : ["*"],
           allowedHeaders: ["*"],
         },
       ],
@@ -63,18 +78,18 @@ export class InfraStack extends cdk.Stack {
     // cloudFront
     this.imagesDistribution = new cloudfront.Distribution(
       this,
-      "ImagesDistribution",
+      `ImagesDistribution-${envName}`,
       {
         defaultRootObject: "", // 静的サイトじゃないので基本不要
         defaultBehavior: {
           // ← ここが「最新の OAC を使う S3 オリジン」の書き方
           origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
-            this.imagesBucket
+            this.imagesBucket,
           ),
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
-      }
+      },
     );
   }
 }

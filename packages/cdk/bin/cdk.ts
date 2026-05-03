@@ -9,16 +9,21 @@ import * as path from "path";
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = new cdk.App();
+const awsEnv = {
+  account: "661303382183",
+  region: "ap-northeast-1",
+};
 
-const infra = new InfraStack(app, "InfraStack", {
-  env: { account: "661303382183", region: "ap-northeast-1" }, // 必要に応じて
+const envName = process.env.APP_ENV || "dev";
+
+const infra = new InfraStack(app, `InfraStack-${envName}`, {
+  env: awsEnv,
+  envName: envName,
 });
 
-new ApiStack(app, "ApiStack", {
-  env: {
-    account: "661303382183",
-    region: "ap-northeast-1",
-  },
+new ApiStack(app, `ApiStack-${envName}`, {
+  env: awsEnv,
+  envName: envName,
   userPool: infra.userPool,
   userPoolClient: infra.userPoolClient,
   imagesBucket: infra.imagesBucket,

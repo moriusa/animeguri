@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build": "next build --turbopack",
+    "deploy:prod:frontend": "npm run build && aws s3 sync out/ s3://animeguri-frontend-prod --delete"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

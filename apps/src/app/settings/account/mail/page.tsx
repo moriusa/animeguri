@@ -123,7 +123,7 @@ const Page = () => {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                   message: "正しいメールアドレスを入力してください",
                 },
-                validate: (value) =>
+                validate: (value: string) =>
                   value !== userEmail || "現在のメールアドレスと同じです",
               }}
               error={emailErrors?.newEmail?.message}
