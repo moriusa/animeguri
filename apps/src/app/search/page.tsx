@@ -1,29 +1,38 @@
-"use client";
 import { ArticleCard } from "@/components/common/ArticleCard";
-import { useGetArticleCards } from "@/features/articles/hooks/useGetArticleCards";
-import { useSearchParams } from "next/navigation";
+import { getArticleCards } from "@/features/articles/hooks/getArticleCards";
+
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 const DEFAULT_LIMIT = 20;
 
-const Page = () => {
-  const sp = useSearchParams();
+const Page = async ({ searchParams }: Props) => {
+  // 1. searchParamsをawaitして取得
+  const resolvedSearchParams = await searchParams;
 
-  const anime = sp.get("anime");
-  const location = sp.get("location");
+  // 2. 各値を取り出す（Promiseなので直接 .get() は使えず、オブジェクトとしてアクセス）
+  const anime =
+    typeof resolvedSearchParams.anime === "string"
+      ? resolvedSearchParams.anime
+      : null;
+  const location =
+    typeof resolvedSearchParams.location === "string"
+      ? resolvedSearchParams.location
+      : null;
 
-  const limitRaw = sp.get("limit");
-  const limitNum = limitRaw ? Number(limitRaw) : NaN;
+  const limitRaw = resolvedSearchParams.limit;
+  const limitNum = typeof limitRaw === "string" ? Number(limitRaw) : NaN;
   const limit =
     Number.isFinite(limitNum) && limitNum > 0 ? limitNum : DEFAULT_LIMIT;
 
-  const { articles, isLoading, error } = useGetArticleCards(limit, {
-    anime,
-    location,
+  // 3. データ取得
+  const articles = await getArticleCards(limit, {
+    anime: anime ?? undefined,
+    location: location ?? undefined,
   });
 
   if (!articles) return <p>article not found</p>;
-  if (isLoading) return <p>loading</p>;
-  if (error) return <p>fetchError</p>;
 
   return (
     <div className="max-w-4xl mx-auto">

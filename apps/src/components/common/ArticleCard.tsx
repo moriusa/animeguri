@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { FaRegHeart, FaRegComment } from "react-icons/fa";
-import { daysAgoConvert } from "@/utils/daysAgoConvert";
 import Image from "next/image";
 import { ArticleCard as ArticleCardType } from "@/types/api/article";
+import { DateText } from "./DateText";
 
 export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
   return (
@@ -42,7 +42,7 @@ export const ArticleCard = ({ data }: { data: ArticleCardType }) => {
                 <p>{data.commentCount}</p>
               </div>
             </div>
-            <p className="">{daysAgoConvert(new Date(data.publishedAt))}</p>
+            <DateText date={data.publishedAt}/>
           </div>
         </div>
       </Link>

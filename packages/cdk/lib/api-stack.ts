@@ -522,6 +522,7 @@ export class ApiStack extends cdk.Stack {
           CorsHttpMethod.GET,
           CorsHttpMethod.POST,
           CorsHttpMethod.PATCH,
+          CorsHttpMethod.DELETE,
           CorsHttpMethod.OPTIONS,
         ],
       },

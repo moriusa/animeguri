@@ -7,8 +7,13 @@ interface FetcherOptions extends RequestInit {
   headers?: Record<string, string>;
 }
 
-export const fetcher = async <T>(url: string): Promise<T> => {
-  const res = await fetch(url);
+export const fetcher = async <T>(
+  url: string,
+  cacheTime?: number,
+): Promise<T> => {
+  const res = await fetch(url, {
+    next: { revalidate: cacheTime },
+  });
 
   if (!res.ok) {
     const error = new Error("An error occurred while fetching the data.");
