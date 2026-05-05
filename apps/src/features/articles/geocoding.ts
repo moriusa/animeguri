@@ -6,13 +6,22 @@ interface GeocodingResult {
   formattedAddress: string;
 }
 
+interface Location {
+  prefecture: string;
+  city: string;
+  streetAddress?: string;
+  spotName?: string;
+}
+const MAPBOX_TOKEN = process.env.MAPBOX_SECRET_TOKEN;
+
 /**
  * Mapbox Geocoding APIで住所→緯度経度を取得
  */
 export const geocodeAddress = async (
-  address: string
+  location: Location,
 ): Promise<GeocodingResult | null> => {
-  const MAPBOX_TOKEN = process.env.MAPBOX_SECRET_TOKEN;
+  const { prefecture, city, streetAddress, spotName } = location;
+  const address = `${prefecture} ${city} ${streetAddress} ${spotName}`
 
   if (!MAPBOX_TOKEN) {
     console.error("MAPBOX_SECRET_TOKEN が設定されていません");
@@ -29,14 +38,14 @@ export const geocodeAddress = async (
 
     const response = await fetch(
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-        address
+        address,
       )}.json?` +
         new URLSearchParams({
           access_token: MAPBOX_TOKEN,
           country: "JP", // 日本に限定
           language: "ja", // 日本語
           limit: "1", // 最も関連性の高い結果のみ
-        })
+        }),
     );
 
     if (!response.ok) {
@@ -71,7 +80,7 @@ export const geocodeAddress = async (
  * 複数の住所を一括でGeocoding（並列実行）
  */
 export const geocodeAddresses = async (
-  addresses: string[]
+  addresses: Location[],
 ): Promise<(GeocodingResult | null)[]> => {
   return Promise.all(addresses.map((addr) => geocodeAddress(addr)));
 };

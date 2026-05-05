@@ -13,7 +13,10 @@ export interface UpdateArticleBody {
     id?: string;
     title: string;
     description?: string;
-    location: string;
+    prefecture: string;
+    city: string;
+    streetAddress?: string;
+    spotName?: string;
     displayOrder: number;
     latitude?: number;
     longitude?: number;
@@ -188,7 +191,10 @@ export const handler = async (
           .update({
             title: report.title,
             description: report.description,
-            location: report.location,
+            prefecture: report.prefecture,
+            city: report.city,
+            street_address: report.streetAddress,
+            spot_name: report.spotName,
             latitude: report.latitude,
             longitude: report.longitude,
             geocoded_address: report.geocodedAddress,
@@ -203,7 +209,10 @@ export const handler = async (
             article_id: articleId,
             title: report.title,
             description: report.description,
-            location: report.location,
+            prefecture: report.prefecture,
+            city: report.city,
+            street_address: report.streetAddress,
+            spot_name: report.spotName,
             latitude: report.latitude,
             longitude: report.longitude,
             geocoded_address: report.geocodedAddress,

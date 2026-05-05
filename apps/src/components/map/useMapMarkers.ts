@@ -158,7 +158,7 @@ const createHoverHTML = (report: Report): string => `
       ${report.title}
     </h3>
     <p style="margin: 0; font-size: 12px; color: #666;">
-      ${report.location || "住所不明"}
+      ${report.geocodedAddress || "住所不明"}
     </p>
   </div>
 `;
@@ -182,7 +182,7 @@ const createDetailHTML = (report: Report): string => `
       </h2>
       <div style="font-size:13px; color:#666; display:flex; align-items:center;">
         ${locationIcon}
-        <p>${report.location || "住所不明"}</p>
+        <p>${report.geocodedAddress || "住所不明"}</p>
       </div>
     </div>
     ${

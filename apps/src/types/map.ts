@@ -12,5 +12,8 @@ export interface ReportLocation extends Coordinates {
   title: string;
   animeName: string;
   thumbnailUrl: string;
-  location: string; // 元の住所文字列
+  prefecture: string;
+  city: string;
+  streetAddress?: string;
+  spotName?: string;
 }

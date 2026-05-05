@@ -11,7 +11,7 @@ export const handler = async (
     const limit = qs.limit ? parseInt(qs.limit, 10) : 20; // デフォルト 20 件
     const offset = qs.offset ? parseInt(qs.offset, 10) : 0; // デフォルト 0 件目から
     const animeName = qs.anime;
-    const location = qs.location;
+    const prefecture = qs.prefecture;
 
     if (Number.isNaN(limit) || Number.isNaN(offset)) {
       return {
@@ -36,7 +36,7 @@ export const handler = async (
           ),
           reports!inner (
             id,
-            location
+            prefecture
           )
         `,
       )
@@ -48,8 +48,8 @@ export const handler = async (
       query = query.ilike("anime_name", `%${animeName}%`);
     }
 
-    if (location) {
-      query = query.ilike("reports.location", `%${location}%`);
+    if (prefecture) {
+      query = query.filter("reports.prefecture", "ilike", `%${prefecture}%`);
     }
 
     const { data, error } = await query.range(from, to);

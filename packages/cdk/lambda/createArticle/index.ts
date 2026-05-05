@@ -3,25 +3,30 @@ import { supabase } from "../common/supabaseClient";
 import { randomUUID } from "crypto";
 import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
+interface Report {
+  title: string;
+  description?: string;
+  prefecture: string;
+  city: string;
+  streetAddress?: string;
+  spotName?: string;
+  displayOrder: number;
+  latitude?: number;
+  longitude?: number;
+  geocodedAddress?: string;
+  images: {
+    s3Key: string;
+    caption?: string;
+    displayOrder: number;
+  }[];
+}
+
 interface CreateArticleBody {
   title: string;
   thumbnailS3Key: string;
   animeName: string;
   articleStatus: "draft" | "published";
-  reports: {
-    title: string;
-    description?: string;
-    location: string;
-    displayOrder: number;
-    latitude?: number;
-    longitude?: number;
-    geocodedAddress?: string;
-    images: {
-      s3Key: string;
-      caption?: string;
-      displayOrder: number;
-    }[];
-  }[];
+  reports: Report[];
 }
 
 export const handler = async (
@@ -111,7 +116,10 @@ export const handler = async (
         article_id: articleId,
         title: report.title,
         description: report.description || null,
-        location: report.location,
+        prefecture: report.prefecture,
+        city: report.city,
+        street_address: report.streetAddress,
+        spot_name: report.spotName,
         latitude: report.latitude,
         longitude: report.longitude,
         geocoded_address: report.geocodedAddress,
@@ -210,7 +218,10 @@ export const handler = async (
       return {
         id: report.id,
         title: report.title,
-        location: report.location,
+        prefecture: report.prefecture,
+        city: report.city,
+        streetAddress: report.street_address,
+        spotName: report.spot_name,
         latitude: report.latitude,
         longitude: report.longitude,
         geocodedAddress: report.geocoded_address,

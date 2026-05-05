@@ -30,7 +30,10 @@ export interface ReportTypes {
   id: string;
   title: string;
   images: ImageItem[];
-  location: string;
+  prefecture: string;
+  city: string;
+  streetAddress?: string;
+  spotName?: string;
   description: string;
   latitude?: number;
   longitude?: number;
@@ -67,7 +70,10 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
           id: "",
           images: [],
           title: "",
-          location: "",
+          prefecture: "",
+          city: "",
+          streetAddress: "",
+          spotName: "",
           description: "",
         },
       ],
@@ -105,7 +111,10 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
       id: crypto.randomUUID(),
       images: [],
       title: "",
-      location: "",
+      prefecture: "",
+      city: "",
+      streetAddress: "",
+      spotName: "",
       captions: [],
       description: "",
     };
@@ -236,6 +245,8 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
               reportData={report}
               clearErrors={clearErrors}
               resetField={resetField}
+              setValue={setValue}
+              watch={watch}
             />
           ))}
         </div>

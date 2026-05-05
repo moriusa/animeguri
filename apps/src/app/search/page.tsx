@@ -16,9 +16,9 @@ const Page = async ({ searchParams }: Props) => {
     typeof resolvedSearchParams.anime === "string"
       ? resolvedSearchParams.anime
       : null;
-  const location =
-    typeof resolvedSearchParams.location === "string"
-      ? resolvedSearchParams.location
+  const prefecture =
+    typeof resolvedSearchParams.prefecture === "string"
+      ? resolvedSearchParams.prefecture
       : null;
 
   const limitRaw = resolvedSearchParams.limit;
@@ -29,7 +29,7 @@ const Page = async ({ searchParams }: Props) => {
   // 3. データ取得
   const articles = await getArticleCards(limit, {
     anime: anime ?? undefined,
-    location: location ?? undefined,
+    prefecture: prefecture ?? undefined,
   });
 
   if (!articles) return <p>article not found</p>;

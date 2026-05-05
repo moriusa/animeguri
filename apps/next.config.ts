@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+const CLOUDFRONT_DOMAIN = process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN!;
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -12,7 +13,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "d3fqrk25m9nqej.cloudfront.net",
+        hostname: CLOUDFRONT_DOMAIN,
         pathname: "/**",
       },
       {

@@ -5,7 +5,7 @@ import { FaSearch } from "react-icons/fa";
 export const SearchBox = () => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [queryType, setQueryType] = useState<"anime" | "location">("anime");
+  const [queryType, setQueryType] = useState<"anime" | "prefecture">("anime");
   const [queryValue, setQueryValue] = useState("");
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -47,7 +47,7 @@ export const SearchBox = () => {
           className="cursor-pointer focus:outline-none text-sm text-nowrap"
           onClick={toggle}
         >
-          {queryType === "anime" ? "アニメ名" : "聖地の場所"}
+          {queryType === "anime" ? "アニメ名" : "都道府県名"}
         </button>
 
         {open && (
@@ -65,12 +65,12 @@ export const SearchBox = () => {
             <button
               type="button"
               onClick={() => {
-                setQueryType("location");
+                setQueryType("prefecture");
                 setOpen(false);
               }}
               className="block px-3 py-2 hover:bg-gray-50 w-full text-left cursor-pointer"
             >
-              聖地の場所
+              都道府県名
             </button>
           </div>
         )}

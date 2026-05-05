@@ -52,7 +52,10 @@ export const handler = async (
       return {
         id: report.id,
         title: report.title,
-        location: report.location,
+        prefecture: report.prefecture,
+        city: report.city,
+        streetAddress: report.street_address,
+        spotName: report.spot_name,
         articleId: report.article_id,
         createdAt: report.created_at,
         updatedAt: report.updated_at,

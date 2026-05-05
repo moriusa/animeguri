@@ -23,7 +23,10 @@ interface ReqArticleImage {
 interface ReqArticleReport {
   title: string;
   description?: string;
-  location: string;
+  prefecture: string;
+  city: string;
+  streetAddress?: string;
+  spotName?: string;
   displayOrder: number;
   images: ReqArticleImage[];
   latitude?: number;
@@ -57,7 +60,10 @@ const toReqArticle = (
       return {
         title: report.title,
         description: report.description, // フォームに description があればここでマッピング
-        location: report.location,
+        prefecture: report.prefecture,
+        city: report.city,
+        streetAddress: report.streetAddress,
+        spotName: report.spotName,
         latitude: report.latitude,
         longitude: report.longitude,
         geocodedAddress: report.geocodedAddress,
@@ -100,11 +106,16 @@ export const useCreateArticle = () => {
         }
 
         // 新規 or 住所が変更された場合はGeocoding実行
-        const geocoded = await geocodeAddress(report.location);
+        const geocoded = await geocodeAddress({
+          prefecture: report.prefecture,
+          city: report.city,
+          streetAddress: report.streetAddress,
+          spotName: report.spotName,
+        });
 
         if (geocoded) {
           console.log(
-            `✅ "${report.location}" → (${geocoded.latitude}, ${geocoded.longitude})`,
+            `"${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}" → (${geocoded.latitude}, ${geocoded.longitude})`,
           );
           return {
             ...report,
@@ -113,7 +124,7 @@ export const useCreateArticle = () => {
             geocodedAddress: geocoded.formattedAddress,
           };
         } else {
-          console.warn(`⚠️ Geocoding失敗: "${report.location}"`);
+          console.warn(`⚠️ Geocoding失敗: "${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}"`);
           return report; // 緯度経度なしで続行
         }
       }),

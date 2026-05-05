@@ -15,7 +15,10 @@ export interface Report {
   id: string;
   title: string;
   description: string;
-  location: string;
+  prefecture: string;
+  city: string;
+  streetAddress?: string;
+  spotName?: string;
   latitude?: number;
   longitude?: number;
   geocodedAddress?: string;

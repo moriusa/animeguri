@@ -88,7 +88,7 @@ export const ArticleContent = async ({
                   <span className="text-red-600">
                     <CiLocationOn size={20} />
                   </span>
-                  <p className="">{report.location}</p>
+                  <p className="">{report.prefecture}{report.city}{report.streetAddress}{report.spotName}</p>
                 </div>
 
                 {/* 画像エリア */}
