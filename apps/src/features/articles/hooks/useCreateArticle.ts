@@ -9,6 +9,7 @@ import { geocodeAddress } from "../geocoding";
 import { ArticleResponse } from "@/types/api/article";
 import { authFetcher } from "@/lib/fetcher";
 import { useSWRConfig } from "swr";
+import { clearCache } from "../clearCache";
 
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -239,6 +240,7 @@ export const useCreateArticle = () => {
       await mutate(
         (key) => typeof key === "string" && key.includes("/reports"),
       );
+      clearCache()
       return res;
     } catch (error: unknown) {
       setError(error);

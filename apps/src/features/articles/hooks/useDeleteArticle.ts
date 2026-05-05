@@ -2,6 +2,7 @@
 import { useSWRConfig } from "swr";
 import { authFetcher } from "@/lib/fetcher";
 import { useState } from "react";
+import { clearCache } from "../clearCache";
 
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -26,6 +27,7 @@ export const useDeleteArticle = () => {
       await mutate(
         (key) => typeof key === "string" && key.includes("/reports"),
       );
+      clearCache()
       setIsSuccess(true)
     } catch (error) {
       console.error("削除エラー:", error);

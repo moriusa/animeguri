@@ -6,6 +6,7 @@ import { ArticleResponse } from "@/types/api/article";
 import { authFetcher } from "@/lib/fetcher";
 import { extractS3Key } from "@/utils/extractS3Key";
 import { useSWRConfig } from "swr";
+import { clearCache } from "../clearCache";
 
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
@@ -214,6 +215,7 @@ export const useUpdateArticle = () => {
       await mutate(
         (key) => typeof key === "string" && key.includes("/reports"),
       );
+      clearCache()
       return res;
     } catch (error: unknown) {
       setError(error);
