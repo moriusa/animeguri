@@ -1,7 +1,6 @@
 "use client";
 import { Control, Controller, FieldErrors } from "react-hook-form";
 import { ImageUploadWithCrop } from "../common/ImageUploadWithCrop";
-import { useState } from "react";
 import { PostFormValues, ThumbnailItem } from "./PostFrom";
 
 interface Props {

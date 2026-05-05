@@ -15,6 +15,7 @@ interface Props<T extends FieldValues> {
   error?: string; // エラーメッセージ用
   mask?: boolean;
   defaultValue?: string;
+  required?: boolean;
 }
 
 export const Input = <T extends FieldValues>({
@@ -28,6 +29,7 @@ export const Input = <T extends FieldValues>({
   error,
   mask = undefined,
   defaultValue,
+  required = false,
 }: Props<T>) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -41,14 +43,17 @@ export const Input = <T extends FieldValues>({
     <div className="w-full">
       <label htmlFor={id}>
         <div className="flex gap-2 items-center">
-          <p className="font-bold">{text}</p>
+          <p className="font-bold">
+            {text}
+            {required && <span className="text-red-500 ml-1">&#42;</span>}
+          </p>
           {error && <p className="text-red-500 text-xs">{error}</p>}
         </div>
         <div className="flex items-center">
           <input
             id={id}
             type={isVisible ? "text" : type}
-            className="bg-white w-full rounded-sm border border-gray-300 px-2 py-1.5 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60"
+            className={`bg-white w-full rounded-sm border px-2 py-1.5 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60 ${error ? "border-red-400" : "border-gray-300"}`}
             placeholder={placeholder}
             defaultValue={defaultValue}
             {...register(name, validation)}

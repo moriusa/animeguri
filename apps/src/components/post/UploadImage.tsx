@@ -143,18 +143,26 @@ export const UploadImage = ({
               >
                 <HiOutlineXMark size={25} color="white" />
               </button>
-              <Input
-                id={`reports.${reportIdx}.captions.${imageIdx}`}
-                text={`画像 ${imageIdx + 1} のキャプション`}
-                name={`reports.${reportIdx}.images.${imageIdx}.caption`}
-                register={register}
-                placeholder="キャプションを入力（例：駐車場から見た景色）"
-                defaultValue={imageItem.caption}
-                error={
-                  errors?.reports?.[reportIdx]?.images?.[imageIdx]?.caption
-                    ?.message
-                }
-              />
+              <div className="mt-2">
+                <Input
+                  id={`reports.${reportIdx}.captions.${imageIdx}`}
+                  text={``}
+                  name={`reports.${reportIdx}.images.${imageIdx}.caption`}
+                  register={register}
+                  placeholder="キャプションを入力（例：駐車場から見た景色）"
+                  defaultValue={imageItem.caption}
+                  error={
+                    errors?.reports?.[reportIdx]?.images?.[imageIdx]?.caption
+                      ?.message
+                  }
+                  validation={{
+                    maxLength: {
+                      value: 100,
+                      message: "キャプションは100文字以内で入力してください",
+                    },
+                  }}
+                />
+              </div>
               {/* ✅ 文字数カウント */}
               <p className="text-xs text-gray-500 mt-1">
                 {VALIDATION.MAX_CAPTION_LENGTH} 文字まで

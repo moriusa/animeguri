@@ -5,6 +5,7 @@ import {
   UseFormClearErrors,
   UseFormRegister,
   UseFormResetField,
+  UseFormSetError,
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
@@ -12,6 +13,7 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { Input } from "../common";
 import { ImageItem, PostFormValues, ReportTypes } from "./PostFrom";
 import { useEffect, useState } from "react";
+import { SelectField } from "./SelectField";
 
 const PREFECTURES = [
   "北海道",
@@ -86,59 +88,6 @@ const fetchCitiesMap = (): Promise<Record<string, string[]>> => {
   return fetchPromise;
 };
 
-const SelectField = ({
-  id,
-  label,
-  name,
-  register,
-  validation,
-  error,
-  options,
-  placeholder,
-  disabled = false,
-  onChangeProp,
-}: {
-  id: string;
-  label: string;
-  name: Parameters<UseFormRegister<PostFormValues>>[0];
-  register: UseFormRegister<PostFormValues>;
-  validation?: Record<string, unknown>;
-  error?: string;
-  options: string[];
-  placeholder: string;
-  disabled?: boolean;
-  onChangeProp?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-}) => (
-  <div className="flex flex-col gap-1">
-    <label htmlFor={id} className="text-sm font-medium text-gray-700">
-      {label}
-    </label>
-    <select
-      id={id}
-      {...register(name, validation)}
-      disabled={disabled}
-      className={`
-        w-full rounded border px-3 py-2 text-sm bg-white
-        focus:outline-none focus:ring-2 focus:ring-blue-500
-        disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed
-        ${error ? "border-red-400" : "border-gray-300"}
-      `}
-      onChange={(e) => {
-        register(name, validation).onChange(e);
-        onChangeProp?.(e);
-      }}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-    {error && <p className="text-xs text-red-500">{error}</p>}
-  </div>
-);
-
 export const Report = ({
   index,
   onDelete,
@@ -153,7 +102,6 @@ export const Report = ({
   onDelete: (index: number) => void;
   register: UseFormRegister<PostFormValues>;
   resetField: UseFormResetField<PostFormValues>;
-  clearErrors: UseFormClearErrors<PostFormValues>;
   errors: FieldErrors<PostFormValues>;
   onImageChange: (index: number, images: ImageItem[]) => void;
   reportData: ReportTypes;
@@ -212,63 +160,63 @@ export const Report = ({
           placeholder="タイトルを入力"
           validation={{ required: "タイトルを入力してください" }}
           error={errors?.reports?.[index]?.title?.message}
+          required={true}
         />
       </div>
 
       {/* 聖地の場所 */}
       <div className="mt-8">
-        <p className="text-sm font-medium text-gray-700 mb-3">聖地の場所</p>
+        <div className="sm:flex gap-3">
+          {/* 都道府県 */}
+          <SelectField
+            id={`prefecture-${index}`}
+            label="都道府県"
+            name={`reports.${index}.prefecture`}
+            register={register}
+            validation={{ required: "都道府県を選択してください" }}
+            error={errors?.reports?.[index]?.prefecture?.message}
+            options={[...PREFECTURES]}
+            placeholder="都道府県を選択"
+            onChangeProp={handlePrefectureChange}
+            required={true}
+          />
 
-        <div className="flex flex-col gap-4">
-          {/* 都道府県 + 市区町村を横並び */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* 都道府県 */}
-            <SelectField
-              id={`prefecture-${index}`}
-              label="都道府県"
-              name={`reports.${index}.prefecture`}
-              register={register}
-              validation={{ required: "都道府県を選択してください" }}
-              error={errors?.reports?.[index]?.prefecture?.message}
-              options={[...PREFECTURES]}
-              placeholder="都道府県を選択"
-              onChangeProp={handlePrefectureChange}
-            />
+          {/* 市区町村（都道府県連動） */}
+          <SelectField
+            id={`city-${index}`}
+            label={citiesError ? "市区町村（取得失敗）" : "市区町村"}
+            name={`reports.${index}.city`}
+            register={register}
+            validation={{ required: "市区町村を選択してください" }}
+            error={errors?.reports?.[index]?.city?.message}
+            options={cities}
+            placeholder={
+              citiesLoading
+                ? "読み込み中…"
+                : citiesError
+                  ? "取得に失敗しました"
+                  : selectedPrefecture
+                    ? "市区町村を選択"
+                    : "都道府県を先に選択"
+            }
+            disabled={citiesLoading || !!citiesError || !selectedPrefecture}
+            required={true}
+          />
+        </div>
 
-            {/* 市区町村（都道府県連動） */}
-            <SelectField
-              id={`city-${index}`}
-              label={citiesError ? "市区町村（取得失敗）" : "市区町村"}
-              name={`reports.${index}.city`}
-              register={register}
-              validation={{ required: "市区町村を選択してください" }}
-              error={errors?.reports?.[index]?.city?.message}
-              options={cities}
-              placeholder={
-                citiesLoading
-                  ? "読み込み中…"
-                  : citiesError
-                    ? "取得に失敗しました"
-                    : selectedPrefecture
-                      ? "市区町村を選択"
-                      : "都道府県を先に選択"
-              }
-              disabled={citiesLoading || !!citiesError || !selectedPrefecture}
-            />
-          </div>
-
-          {/* 町名・番地 */}
+        {/* 町名・番地 */}
+        <div className="mt-3">
           <Input
             id={`streetAddress-${index}`}
             text="町名・番地"
             name={`reports.${index}.streetAddress`}
             register={register}
             placeholder="例: 千代田1-1-1"
-            validation={{}}
-            error={errors?.reports?.[index]?.streetAddress?.message}
           />
+        </div>
 
-          {/* スポット名称 */}
+        {/* スポット名称 */}
+        <div className="mt-3">
           <Input
             id={`spotName-${index}`}
             text="スポット名称"
@@ -277,6 +225,7 @@ export const Report = ({
             placeholder="例: 〇〇神社、△△公園"
             validation={{ required: "スポット名称を入力してください" }}
             error={errors?.reports?.[index]?.spotName?.message}
+            required={true}
           />
         </div>
       </div>
@@ -286,10 +235,6 @@ export const Report = ({
         <TextArea
           name={`reports.${index}.description`}
           register={register}
-          validation={{
-            required: "内容を入力してください",
-          }}
-          error={errors.reports?.[index]?.description?.message}
           text="説明"
           placeholder="この聖地はどうだった？"
         />

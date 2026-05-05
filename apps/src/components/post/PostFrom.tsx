@@ -85,13 +85,14 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     register,
     handleSubmit,
     setValue,
-    clearErrors,
     resetField,
     reset,
     formState: { errors },
     watch,
     control,
     getValues,
+    setError,
+    clearErrors,
   } = useForm<PostFormValues>({
     defaultValues: initialData || defaultFormValues,
   });
@@ -201,9 +202,33 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     await onSubmit(data, "draft");
   };
   // 公開：バリデーションして保存（今ある required が効く）
-  const handlePublishSubmit = handleSubmit((data) =>
-    onSubmit(data, "published"),
-  );
+  const handlePublishSubmit = async () => {
+    // 画像バリデーションを手動で実行
+    let hasImageError = false;
+    reports.forEach((report, index) => {
+      if (report.images.length === 0) {
+        setError(`reports.${index}.images`, {
+          type: "manual",
+          message: "画像を1枚以上アップロードしてください",
+        });
+        hasImageError = true;
+      } else {
+        clearErrors(`reports.${index}.images`);
+      }
+    });
+
+    // 画像エラーがあっても handleSubmit は必ず実行して他のエラーも表示
+    handleSubmit((data) => {
+      // ここに来るのは react-hook-form のバリデーションが全部通った時だけ
+      // 画像エラーが残っていれば送信しない
+      const hasImageError = reports.some(
+        (report) => report.images.length === 0,
+      );
+      if (hasImageError) return;
+
+      onSubmit(data, "published");
+    })();
+  };
 
   return (
     <div className="p-4">
@@ -216,6 +241,7 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
           placeholder="タイトルを入力"
           validation={{ required: "タイトルを入力してください" }}
           error={errors?.title?.message}
+          required={true}
         />
         <div className="mt-4">
           <Input
@@ -226,6 +252,7 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
             placeholder="アニメ名を入力"
             validation={{ required: "アニメ名を入力してください" }}
             error={errors?.animeName?.message}
+            required={true}
           />
         </div>
         <div className="mt-8">
@@ -243,7 +270,6 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
               register={register}
               errors={errors}
               reportData={report}
-              clearErrors={clearErrors}
               resetField={resetField}
               setValue={setValue}
               watch={watch}

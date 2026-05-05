@@ -72,11 +72,11 @@ export const ImageUploadWithCrop = ({
   return (
     <div className="w-full">
       <div className="flex gap-2 items-center">
-        <p className="font-bold text-xl">
+        <p className="font-bold">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-red-500 ml-1">&#42;</span>}
         </p>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-xs">{error}</p>}
       </div>
 
       {currentImage ? (
