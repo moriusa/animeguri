@@ -5,7 +5,7 @@ import { Report } from "@/components/post";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { getValidIdToken } from "@/lib/common/authFetch";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import { useConfirm } from "../common/ConfirmDialog";
 import { useCreateArticle } from "@/features/articles/hooks/useCreateArticle";
@@ -53,33 +53,30 @@ interface PostFormProps {
   initialData?: PostFormValues; // 編集時の初期データ
 }
 
+const createDefaultValues = (): PostFormValues => ({
+  id: crypto.randomUUID(),
+  title: "",
+  thumbnail: null,
+  animeName: "",
+  reports: [
+    {
+      id: crypto.randomUUID(),
+      images: [],
+      title: "",
+      prefecture: "",
+      city: "",
+      streetAddress: "",
+      spotName: "",
+      description: "",
+    },
+  ],
+});
+
 export const PostForm = ({ mode, initialData }: PostFormProps) => {
   const confirm = useConfirm();
   const router = useRouter();
   const { createArticle } = useCreateArticle();
   const { updateArticle } = useUpdateArticle();
-
-  const defaultFormValues = useMemo<PostFormValues>(
-    () => ({
-      id: crypto.randomUUID(),
-      title: "",
-      thumbnail: null,
-      animeName: "",
-      reports: [
-        {
-          id: crypto.randomUUID(),
-          images: [],
-          title: "",
-          prefecture: "",
-          city: "",
-          streetAddress: "",
-          spotName: "",
-          description: "",
-        },
-      ],
-    }),
-    [],
-  );
 
   const {
     register,
@@ -94,7 +91,13 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     setError,
     clearErrors,
   } = useForm<PostFormValues>({
-    defaultValues: initialData || defaultFormValues,
+    defaultValues: initialData ?? {
+      id: "",
+      title: "",
+      thumbnail: null,
+      animeName: "",
+      reports: [],
+    },
   });
 
   const reports = watch("reports");
@@ -102,9 +105,9 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
   // コンポーネントマウント時に初期化
   useEffect(() => {
     if (mode === "create" && !initialData) {
-      reset(defaultFormValues);
+      reset(createDefaultValues());
     }
-  }, [defaultFormValues, initialData, mode, reset]);
+  }, [initialData, mode, reset]);
 
   // レポート追加
   const handleAddReport = () => {
@@ -142,6 +145,16 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     const updatedReports = [...reports];
     updatedReports[index].images = images;
     setValue("reports", updatedReports);
+
+    // 画像が1枚以上になったらエラーを消す
+    if (images.length > 0) {
+      clearErrors(`reports.${index}.images`);
+    } else {
+      setError(`reports.${index}.images`, {
+        type: "manual",
+        message: "画像を1枚以上アップロードしてください",
+      });
+    }
   };
 
   // if (!user) {
@@ -191,7 +204,7 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     } else if (mode === "edit") {
       await updateArticle(data.id, data, status);
     }
-    reset(defaultFormValues);
+    reset(createDefaultValues());
     router.push("/");
     router.refresh(); // キャッシュもリフレッシュ
   };
@@ -204,28 +217,22 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
   // 公開：バリデーションして保存（今ある required が効く）
   const handlePublishSubmit = async () => {
     // 画像バリデーションを手動で実行
-    let hasImageError = false;
     reports.forEach((report, index) => {
       if (report.images.length === 0) {
         setError(`reports.${index}.images`, {
           type: "manual",
           message: "画像を1枚以上アップロードしてください",
         });
-        hasImageError = true;
       } else {
         clearErrors(`reports.${index}.images`);
       }
     });
 
-    // 画像エラーがあっても handleSubmit は必ず実行して他のエラーも表示
     handleSubmit((data) => {
-      // ここに来るのは react-hook-form のバリデーションが全部通った時だけ
-      // 画像エラーが残っていれば送信しない
       const hasImageError = reports.some(
         (report) => report.images.length === 0,
       );
       if (hasImageError) return;
-
       onSubmit(data, "published");
     })();
   };
