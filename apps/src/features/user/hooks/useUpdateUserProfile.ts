@@ -68,7 +68,9 @@ const resolveProfileImage = async (
   if (profileImage instanceof File) {
     console.log("新しい画像をアップロード中...");
     // 1. 署名付きURLを取得
-    const presigned = await genPresignedUrl([profileImage]);
+    const presigned = await genPresignedUrl([
+      { file: profileImage, imageType: "profile" },
+    ]);
     // 2. S3 にアップロード
     const uploaded = await uploadImageToS3(presigned, [profileImage]);
     return uploaded[0].urlInfo.s3Key;

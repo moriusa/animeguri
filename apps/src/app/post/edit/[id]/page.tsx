@@ -45,9 +45,8 @@ const Page = () => {
     setInitialData(formData);
   }, [formData]);
 
-  if (isLoading) return <div>読み込み中...</div>;
+  if (isLoading || !initialData) return <div>読み込み中...</div>;
   if (error) return <div>取得に失敗しました</div>;
-  if (!initialData) return <div>記事が見つかりません</div>;
 
   return (
     <div className="max-w-4xl mx-auto">

@@ -1,21 +1,30 @@
 import { PresignedUrlResponse } from "@/types/api/presignedUrl";
 import { getValidIdToken } from "./common/authFetch";
 
+export interface FileWithMeta {
+  file: File;
+  imageType: "profile" | "thumbnail" | "report";
+  articleId?: string;
+  reportId?: string;
+}
+
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
 export const genPresignedUrl = async (
-  files: File[],
+  filesWithMeta: FileWithMeta[],
 ): Promise<PresignedUrlResponse> => {
   const idToken = await getValidIdToken();
   if (!idToken) {
     throw new Error("認証トークンが取得できません");
   }
   const payload = {
-    files: files.map((file) => ({
+    files: filesWithMeta.map(({ file, imageType, articleId, reportId }) => ({
       fileName: file.name,
       contentType: file.type,
       fileSize: file.size,
-      imageType: "report" as const,
+      imageType: imageType,
+      articleId,
+      reportId,
     })),
   };
   const response = await fetch(`${API_ENDPOINT}/presigned-url`, {

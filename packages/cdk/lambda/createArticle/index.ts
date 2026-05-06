@@ -1,9 +1,9 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { supabase } from "../common/supabaseClient";
-import { randomUUID } from "crypto";
 import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
 
 interface Report {
+  id: string;
   title: string;
   description?: string;
   prefecture: string;
@@ -15,6 +15,7 @@ interface Report {
   longitude?: number;
   geocodedAddress?: string;
   images: {
+    id: string;
     s3Key: string;
     caption?: string;
     displayOrder: number;
@@ -22,6 +23,7 @@ interface Report {
 }
 
 interface CreateArticleBody {
+  id: string;
   title: string;
   thumbnailS3Key: string;
   animeName: string;
@@ -79,13 +81,12 @@ export const handler = async (
     // }
 
     // Step 1: 記事を作成
-    const articleId = randomUUID();
     const now = new Date().toISOString();
 
     const { data: article, error: articleError } = await supabase
       .from("articles")
       .insert({
-        id: articleId,
+        id: body.id,
         user_id: sub,
         title: body.title,
         thumbnail_s3_key: body.thumbnailS3Key || null,
@@ -112,8 +113,8 @@ export const handler = async (
     let reports: any[] = [];
     if (body.reports && body.reports.length > 0) {
       const reportsToInsert = body.reports.map((report) => ({
-        id: randomUUID(),
-        article_id: articleId,
+        id: report.id,
+        article_id: body.id,
         title: report.title,
         description: report.description || null,
         prefecture: report.prefecture,
@@ -134,7 +135,7 @@ export const handler = async (
       if (reportsError) {
         console.error("Failed to create reports:", reportsError);
         // 記事は作成されているので、ロールバック処理
-        await supabase.from("articles").delete().eq("id", articleId);
+        await supabase.from("articles").delete().eq("id", body.id);
 
         return {
           statusCode: 500,
@@ -153,7 +154,7 @@ export const handler = async (
         const reportImages = body.reports[i].images;
         if (reportImages && reportImages.length > 0) {
           const imagesToInsert = reportImages.map((img) => ({
-            id: randomUUID(),
+            id: img.id,
             report_id: reports[i].id,
             s3_key: img.s3Key,
             caption: img.caption || null,
@@ -167,7 +168,7 @@ export const handler = async (
           if (imagesError) {
             console.error("Failed to create images:", imagesError);
             // ロールバック
-            await supabase.from("articles").delete().eq("id", articleId);
+            await supabase.from("articles").delete().eq("id", body.id);
 
             return {
               statusCode: 500,
@@ -199,7 +200,7 @@ export const handler = async (
         )
       `,
       )
-      .eq("id", articleId)
+      .eq("id", body.id)
       .single();
 
     if (fetchError) {

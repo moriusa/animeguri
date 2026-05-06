@@ -1,9 +1,9 @@
+import { PostFormValues, ReportTypes } from "@/components/post/PostFrom";
 import {
-  PostFormValues,
-  ImageItem,
-  ReportTypes,
-} from "@/components/post/PostFrom";
-import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
+  FileWithMeta,
+  genPresignedUrl,
+  uploadImageToS3,
+} from "@/lib/presignedUrl";
 import { useState } from "react";
 import { geocodeAddress } from "../geocoding";
 import { ArticleResponse } from "@/types/api/article";
@@ -16,12 +16,14 @@ const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 type ArticleStatus = "draft" | "published";
 
 interface ReqArticleImage {
+  id: string;
   s3Key: string;
   caption?: string;
   displayOrder: number;
 }
 
 interface ReqArticleReport {
+  id: string;
   title: string;
   description?: string;
   prefecture: string;
@@ -52,6 +54,7 @@ const toReqArticle = (
       const images: ReqArticleImage[] = s3Keys.map((s3Key, imageIndex) => {
         const imageItem = report.images[imageIndex];
         return {
+          id: crypto.randomUUID(),
           s3Key: s3Key,
           caption: imageItem?.caption || undefined,
           displayOrder: imageItem?.displayOrder ?? imageIndex + 1,
@@ -59,6 +62,7 @@ const toReqArticle = (
       });
 
       return {
+        id: report.id,
         title: report.title,
         description: report.description, // フォームに description があればここでマッピング
         prefecture: report.prefecture,
@@ -75,6 +79,7 @@ const toReqArticle = (
   );
 
   return {
+    id: form.id,
     title: form.title,
     thumbnailS3Key: thumbnailS3Key,
     animeName: form.animeName,
@@ -92,139 +97,113 @@ export const useCreateArticle = () => {
     formValues: PostFormValues,
     status: ArticleStatus = "draft",
   ) => {
-    // ==========================================
-    // Step 0: Geocoding（住所→緯度経度）
-    // ==========================================
+    try {
+      // ==========================================
+      // Step 0: Geocoding（住所→緯度経度）
+      // ==========================================
 
-    console.log("🗺️ Geocoding実行中...");
+      console.log("🗺️ Geocoding実行中...");
 
-    const reportsWithGeocode = await Promise.all(
-      formValues.reports.map(async (report) => {
-        // 既存レポートで緯度経度がすでにある場合はスキップ
-        if (report.latitude && report.longitude) {
-          console.log(`✅ レポート "${report.title}" は既にGeocoding済み`);
-          return report;
-        }
+      const reportsWithGeocode = await Promise.all(
+        formValues.reports.map(async (report) => {
+          // 既存レポートで緯度経度がすでにある場合はスキップ
+          if (report.latitude && report.longitude) {
+            console.log(`✅ レポート "${report.title}" は既にGeocoding済み`);
+            return report;
+          }
 
-        // 新規 or 住所が変更された場合はGeocoding実行
-        const geocoded = await geocodeAddress({
-          prefecture: report.prefecture,
-          city: report.city,
-          streetAddress: report.streetAddress,
-          spotName: report.spotName,
+          // 新規 or 住所が変更された場合はGeocoding実行
+          const geocoded = await geocodeAddress({
+            prefecture: report.prefecture,
+            city: report.city,
+            streetAddress: report.streetAddress,
+            spotName: report.spotName,
+          });
+
+          if (geocoded) {
+            console.log(
+              `"${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}" → (${geocoded.latitude}, ${geocoded.longitude})`,
+            );
+            return {
+              ...report,
+              latitude: geocoded.latitude,
+              longitude: geocoded.longitude,
+              geocodedAddress: geocoded.formattedAddress,
+            };
+          } else {
+            console.warn(
+              `⚠️ Geocoding失敗: "${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}"`,
+            );
+            return report; // 緯度経度なしで続行
+          }
+        }),
+      );
+
+      console.log("✅ Geocoding完了");
+      // ==========================================
+      // Step 1: アップロード対象ファイルをまとめる
+      // ==========================================
+      const filesWithMeta: FileWithMeta[] = [];
+      if (formValues.thumbnail?.file) {
+        filesWithMeta.push({
+          file: formValues.thumbnail.file,
+          imageType: "thumbnail",
+          articleId: formValues.id, // フロントで事前生成したID
         });
+      }
 
-        if (geocoded) {
-          console.log(
-            `"${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}" → (${geocoded.latitude}, ${geocoded.longitude})`,
-          );
-          return {
-            ...report,
-            latitude: geocoded.latitude,
-            longitude: geocoded.longitude,
-            geocodedAddress: geocoded.formattedAddress,
-          };
-        } else {
-          console.warn(`⚠️ Geocoding失敗: "${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}"`);
-          return report; // 緯度経度なしで続行
-        }
-      }),
-    );
+      // 各レポートの images から File を抽出
+      reportsWithGeocode.forEach((report) => {
+        report.images
+          .filter((img) => img.file)
+          .forEach((img) => {
+            filesWithMeta.push({
+              file: img.file!,
+              imageType: "report",
+              articleId: formValues.id,
+              reportId: report.id,
+            });
+          });
+      });
 
-    console.log("✅ Geocoding完了");
-    // 1. アップロード対象ファイルを 1 本の配列にまとめる
-    const files: File[] = [];
+      // ==========================================
+      // Step 2: S3アップロード
+      // ==========================================
+      let uploadedS3Keys: string[] = [];
+      if (filesWithMeta.length > 0) {
+        console.log(`${filesWithMeta.length}個の新規画像をアップロード中...`);
+        const presigned = await genPresignedUrl(filesWithMeta);
+        const uploaded = await uploadImageToS3(
+          presigned,
+          filesWithMeta.map((f) => f.file),
+        );
+        uploadedS3Keys = uploaded.map((item) => item.urlInfo.s3Key);
+      }
 
-    // thumbnail を先頭に入れる（あれば）
-    const hasThumbnail = !!formValues.thumbnail;
-    if (formValues.thumbnail?.file) {
-      files.push(formValues.thumbnail.file);
-    }
+      // ==========================================
+      // Step 3: thumbnailS3Key と reportImageS3Keys を組み立てる
+      // ==========================================
+      let uploadIndex = 0;
 
-    // 各レポートの images から File を抽出
-    const reportImageStartIndex: number[] = [];
-    reportsWithGeocode.forEach((report) => {
-      reportImageStartIndex.push(files.length);
+      const thumbnailS3Key = formValues.thumbnail?.file
+        ? uploadedS3Keys[uploadIndex++] // 新規
+        : null; // サムネイルなし
 
-      // ImageItem[] から file が存在するもののみ抽出
-      const imageFiles = report.images
-        .filter((img: ImageItem) => img.file !== undefined)
-        .map((img: ImageItem) => img.file!);
+      const reportImageS3Keys: string[][] = reportsWithGeocode.map((report) => {
+        return report.images
+          .filter((img) => img.file)
+          .map(() => uploadedS3Keys[uploadIndex++]);
+      });
 
-      files.push(...imageFiles);
-    });
-
-    // ファイルがなければ画像なし記事としてそのまま DB 保存
-    if (files.length === 0) {
+      // ==========================================
+      // Step 4: DBスキーマに変換してAPI呼び出し
+      // ==========================================
       const reqBody = toReqArticle(formValues, reportsWithGeocode, {
         articleStatus: status,
-        thumbnailS3Key: null,
-        reportImageS3Keys: formValues.reports.map(() => []),
+        thumbnailS3Key,
+        reportImageS3Keys,
       });
-      try {
-        const res = await authFetcher<ArticleResponse>(
-          `${API_ENDPOINT}/articles`,
-          {
-            method: "POST",
-            body: JSON.stringify(reqBody),
-          },
-        );
-        // キャッシュ削除
-        await mutate(
-          (key) => typeof key === "string" && key.includes("/articles"),
-        );
-        await mutate((key) => typeof key === "string" && key.includes("/user"));
-        await mutate(
-          (key) => typeof key === "string" && key.includes("/reports"),
-        );
-        return res;
-      } catch (error: unknown) {
-        setError(error);
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
 
-    // 2. 署名付きURLを取得
-    const presigned = await genPresignedUrl(files);
-
-    // 3. S3 にアップロード
-    const uploaded = await uploadImageToS3(presigned, files);
-
-    // 4. thumbnailS3Key と reportImageS3Keys を組み立てる
-    let thumbnailS3Key: string | null = null;
-    const reportImageS3Keys: string[][] = reportsWithGeocode.map(() => []);
-
-    uploaded.forEach((item, index) => {
-      const s3Key = item.urlInfo.s3Key;
-
-      if (hasThumbnail && index === 0) {
-        thumbnailS3Key = s3Key;
-        return;
-      }
-
-      const offset = hasThumbnail ? index - 1 : index;
-
-      let reportIndex = 0;
-      while (
-        reportIndex < reportImageStartIndex.length - 1 &&
-        offset >=
-          reportImageStartIndex[reportIndex + 1] - (hasThumbnail ? 1 : 0)
-      ) {
-        reportIndex++;
-      }
-      reportImageS3Keys[reportIndex].push(s3Key);
-    });
-
-    // 5. フォーム + s3_key を DB スキーマに変換
-    const reqBody = toReqArticle(formValues, reportsWithGeocode, {
-      articleStatus: status,
-      thumbnailS3Key,
-      reportImageS3Keys,
-    });
-
-    // 6. DB 保存
-    try {
       const res = await authFetcher<ArticleResponse>(
         `${API_ENDPOINT}/articles`,
         {
@@ -232,6 +211,7 @@ export const useCreateArticle = () => {
           body: JSON.stringify(reqBody),
         },
       );
+
       // キャッシュ削除
       await mutate(
         (key) => typeof key === "string" && key.includes("/articles"),
@@ -240,7 +220,7 @@ export const useCreateArticle = () => {
       await mutate(
         (key) => typeof key === "string" && key.includes("/reports"),
       );
-      clearCache()
+      clearCache();
       return res;
     } catch (error: unknown) {
       setError(error);

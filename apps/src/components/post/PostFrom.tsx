@@ -61,13 +61,13 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
 
   const defaultFormValues = useMemo<PostFormValues>(
     () => ({
-      id: "",
+      id: crypto.randomUUID(),
       title: "",
       thumbnail: null,
       animeName: "",
       reports: [
         {
-          id: "",
+          id: crypto.randomUUID(),
           images: [],
           title: "",
           prefecture: "",

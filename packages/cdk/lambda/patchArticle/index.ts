@@ -10,7 +10,7 @@ export interface UpdateArticleBody {
   animeName: string;
   articleStatus: "draft" | "published";
   reports: {
-    id?: string;
+    id: string;
     title: string;
     description?: string;
     prefecture: string;
@@ -22,7 +22,7 @@ export interface UpdateArticleBody {
     longitude?: number;
     geocodedAddress?: string;
     images: {
-      id?: string;
+      id: string;
       s3Key?: string;
       caption?: string;
       displayOrder: number;
@@ -206,6 +206,7 @@ export const handler = async (
         const { data: newReport } = await supabase
           .from("reports")
           .insert({
+            id: report.id,
             article_id: articleId,
             title: report.title,
             description: report.description,
@@ -247,6 +248,7 @@ export const handler = async (
         } else {
           // 新規画像の挿入
           await supabase.from("report_images").insert({
+            id: crypto.randomUUID(),
             report_id: reportId,
             s3_key: image.s3Key,
             caption: image.caption,

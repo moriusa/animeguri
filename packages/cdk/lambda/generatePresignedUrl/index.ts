@@ -21,7 +21,9 @@ interface PresignedUrlRequest {
   fileName: string;
   contentType: string;
   fileSize: number;
-  imageType: "thumbnail" | "report";
+  imageType: "profile" | "thumbnail" | "report";
+  articleId?: string;
+  reportId?: string;
 }
 
 interface PresignedUrlBatchRequest {
@@ -79,7 +81,12 @@ export const handler = async (
         const extension = file.contentType.split("/")[1];
         const timestamp = new Date().toISOString().split("T")[0];
 
-        const s3Key = `uploads/${sub}/${file.imageType}/${timestamp}/${imageId}.${extension}`;
+        const s3Key =
+          file.imageType === "thumbnail"
+            ? `${sub}/articles/${file.articleId}/thumbnail/${imageId}.${extension}`
+            : file.imageType === "report"
+              ? `${sub}/articles/${file.articleId}/reports/${file.reportId}/${imageId}.${extension}`
+              : `${sub}/profile/${imageId}.${extension}`; // profile
 
         const command = new PutObjectCommand({
           Bucket: BUCKET_NAME,
