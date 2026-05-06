@@ -11,16 +11,16 @@ const nextConfig: NextConfig = {
         hostname: "placehold.jp",
         pathname: "/**",
       },
-      {
-        protocol: "https",
-        hostname: CLOUDFRONT_DOMAIN,
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "animeguri-images.s3.ap-northeast-1.amazonaws.com",
-        pathname: "/**",
-      },
+      // CLOUDFRONT_DOMAINが存在する場合のみ追加
+      ...(CLOUDFRONT_DOMAIN
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: CLOUDFRONT_DOMAIN,
+              pathname: "/**",
+            },
+          ]
+        : []),
     ],
   },
   cacheComponents: true,
