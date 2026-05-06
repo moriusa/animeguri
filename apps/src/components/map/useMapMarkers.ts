@@ -123,7 +123,11 @@ export const useMapMarkers = ({
     if (!isMapReady) {
       console.log("🗑️ map destroyed, clearing markers");
       markersRef.current.forEach(({ marker }) => {
-        try { marker.remove(); } catch { /* 無視 */ }
+        try {
+          marker.remove();
+        } catch {
+          /* 無視 */
+        }
       });
       markersRef.current.clear();
       clickPopupRef.current = null;
@@ -135,7 +139,7 @@ export const useMapMarkers = ({
   useEffect(() => {
     markersRef.current.forEach(({ element }, id) => {
       const inner = element.querySelector(
-        ".custom-marker-inner"
+        ".custom-marker-inner",
       ) as HTMLElement;
       if (!inner) return;
 
@@ -158,7 +162,7 @@ const createHoverHTML = (report: Report): string => `
       ${report.title}
     </h3>
     <p style="margin: 0; font-size: 12px; color: #666;">
-      ${report.geocodedAddress || "住所不明"}
+      ${`${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}` || "住所不明"}
     </p>
   </div>
 `;
@@ -182,7 +186,7 @@ const createDetailHTML = (report: Report): string => `
       </h2>
       <div style="font-size:13px; color:#666; display:flex; align-items:center;">
         ${locationIcon}
-        <p>${report.geocodedAddress || "住所不明"}</p>
+        <p>${`${report.prefecture} ${report.city} ${report.streetAddress} ${report.spotName}` || "住所不明"}</p>
       </div>
     </div>
     ${
