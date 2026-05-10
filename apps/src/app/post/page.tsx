@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { PostForm } from "@/components/post/PostFrom";
 
 const Page = () => {

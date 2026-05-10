@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import { PostForm, PostFormValues } from "@/components/post/PostFrom";
 import { useGetMyArticle } from "@/features/articles/hooks/useGetMyArticle";

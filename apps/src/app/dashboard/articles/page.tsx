@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import { ArticleCard02 } from "@/components/common/ArticleCard02";
 import { useGetMyArticleCards } from "@/features/articles/hooks/useGetMyArticleCards";
 
