@@ -2,6 +2,7 @@ import HomeArticles from "@/components/HomeArticles";
 import HomeMap from "@/components/map/HomeMap";
 import { getReports } from "@/features/articles/hooks/getReports";
 import { Suspense } from "react";
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const reports = await getReports();
