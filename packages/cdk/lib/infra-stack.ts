@@ -55,12 +55,12 @@ export class InfraStack extends cdk.Stack {
       versioned: false,
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      // 本番（prd）は削除してもデータ保持、それ以外は削除時にバケットも消す設定
+      // 本番（prod）は削除してもデータ保持、それ以外は削除時にバケットも消す設定
       removalPolicy:
-        envName === "prd"
+        envName === "prod"
           ? cdk.RemovalPolicy.RETAIN
           : cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: envName !== "prd", // prd以外はバケット削除時に中身も空にする
+      autoDeleteObjects: envName !== "prod", // prod以外はバケット削除時に中身も空にする
       cors: [
         {
           allowedMethods: [
@@ -68,8 +68,7 @@ export class InfraStack extends cdk.Stack {
             s3.HttpMethods.POST,
             s3.HttpMethods.PUT,
           ],
-          allowedOrigins: ["*"], // 本番では制限
-          // allowedOrigins: envName === "prd" ? ["https://animeguri.com"] : ["*"],
+          allowedOrigins: envName === "prod" ? ["https://animeguri.app"] : ["*"],
           allowedHeaders: ["*"],
         },
       ],
