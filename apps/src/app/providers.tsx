@@ -3,6 +3,7 @@
 import { useAuthInit } from "@/features/auth/useAuthInit";
 import { ConfirmDialogProvider } from "@/components/common/ConfirmDialog";
 import { SWRConfig } from "swr";
+import "@/lib/amplifyConfig";
 
 const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   useAuthInit(); // アプリ起動時に認証状態をチェック

@@ -197,8 +197,6 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     if (!ok) return;
 
     console.log("送信:", status, data);
-    const idToken = await getValidIdToken();
-    if (!idToken) return console.log("idToken is undefined");
     if (mode === "create") {
       await createArticle(data, status);
     } else if (mode === "edit") {
