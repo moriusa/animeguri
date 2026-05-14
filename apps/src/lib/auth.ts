@@ -14,6 +14,7 @@ import {
   fetchUserAttributes,
   confirmUserAttribute,
   updateUserAttributes,
+  signInWithRedirect,
 } from "aws-amplify/auth";
 
 // ユーザープール情報
@@ -174,4 +175,9 @@ export const deleteUserViaBackend = async (idToken: string): Promise<void> => {
     },
   );
   if (!response.ok) throw new Error("アカウントの削除に失敗しました");
+};
+
+// Googleログイン
+export const signInWithGoogle = async (): Promise<void> => {
+  await signInWithRedirect({ provider: "Google" });
 };

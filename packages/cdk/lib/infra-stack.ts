@@ -4,6 +4,10 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as path from "path";
+import { Duration } from "aws-cdk-lib";
 
 interface InfraStackProps extends cdk.StackProps {
   envName: string;
@@ -20,6 +24,15 @@ export class InfraStack extends cdk.Stack {
     super(scope, id, props);
     const { envName } = props;
 
+    const supabaseUrl =
+      envName === "dev"
+        ? process.env.SUPABASE_URL_DEV!
+        : process.env.SUPABASE_URL_PROD!;
+    const supabaseServiceRoleKey =
+      envName === "dev"
+        ? process.env.SUPABASE_SERVICE_ROLE_KEY_DEV!
+        : process.env.SUPABASE_SERVICE_ROLE_KEY_PROD!;
+
     // Cognito UserPool
     this.userPool = new cognito.UserPool(this, `UserPool-${envName}`, {
       userPoolName: `animeguri-user-pool-${envName}`,
@@ -34,6 +47,33 @@ export class InfraStack extends cdk.Stack {
       },
     });
 
+    // Cognitoドメイン
+    this.userPool.addDomain(`UserPoolDomain-${envName}`, {
+      cognitoDomain: {
+        domainPrefix: `animeguri-auth-${envName}`,
+      },
+    });
+
+    // Googleプロバイダー
+    const googleProvider = new cognito.UserPoolIdentityProviderGoogle(
+      this,
+      `GoogleProvider-${envName}`,
+      {
+        userPool: this.userPool,
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecretValue: cdk.SecretValue.unsafePlainText(
+          process.env.GOOGLE_CLIENT_SECRET!,
+        ),
+        scopes: ["email", "openid", "profile"],
+        attributeMapping: {
+          email: cognito.ProviderAttribute.GOOGLE_EMAIL,
+          custom: {
+            username: cognito.ProviderAttribute.other("sub"),
+          },
+        },
+      },
+    );
+
     this.userPoolClient = new cognito.UserPoolClient(
       this,
       `UserPoolClient-${envName}`,
@@ -46,7 +86,53 @@ export class InfraStack extends cdk.Stack {
         accessTokenValidity: cdk.Duration.hours(1), // アクセストークン有効期限
         idTokenValidity: cdk.Duration.hours(1), // IDトークン有効期限
         refreshTokenValidity: cdk.Duration.days(30), // リフレッシュトークン有効期限
+        oAuth: {
+          flows: {
+            authorizationCodeGrant: true,
+          },
+          scopes: [
+            cognito.OAuthScope.EMAIL,
+            cognito.OAuthScope.OPENID,
+            cognito.OAuthScope.PROFILE,
+          ],
+          callbackUrls: [
+            "http://localhost:3000/",
+            "https://animeguri.vercel.app/",
+          ],
+          logoutUrls: [
+            "http://localhost:3000/",
+            "https://animeguri.vercel.app/",
+          ],
+        },
+        supportedIdentityProviders: [
+          cognito.UserPoolClientIdentityProvider.COGNITO,
+          cognito.UserPoolClientIdentityProvider.GOOGLE,
+        ],
       },
+    );
+    this.userPoolClient.node.addDependency(googleProvider);
+    const createGoogleUserProfile = new NodejsFunction(
+      this,
+      `CreateGoogleUserProfile-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(
+          __dirname,
+          "../lambda/trigger/createGoogleUserProfile/index.ts",
+        ),
+        functionName: `animeguri-create-google-user-profile-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 128,
+      },
+    );
+    this.userPool.addTrigger(
+      cognito.UserPoolOperation.POST_AUTHENTICATION,
+      createGoogleUserProfile,
     );
 
     // S3バケット
@@ -68,7 +154,8 @@ export class InfraStack extends cdk.Stack {
             s3.HttpMethods.POST,
             s3.HttpMethods.PUT,
           ],
-          allowedOrigins: envName === "prod" ? ["https://animeguri.app"] : ["*"],
+          allowedOrigins:
+            envName === "prod" ? ["https://animeguri.app"] : ["*"],
           allowedHeaders: ["*"],
         },
       ],

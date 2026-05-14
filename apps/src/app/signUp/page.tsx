@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Input } from "@/components/common";
+import { GoogleButton } from "@/components/common/GoogleButton";
 import { useSignUp } from "@/features";
 import Link from "next/link";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -126,7 +127,8 @@ const Page = () => {
           </div>
         </div>
         <div className="border-t-1 border-gray-300 p-10">
-          <div className="block text-center">
+          <GoogleButton type="signUp"/>
+          <div className="block text-center mt-8">
             <Link href="/login">
               <p className="border-b-1 inline hover:opacity-80 cursor-pointer">
                 ログインはこちら

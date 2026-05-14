@@ -26,7 +26,8 @@ export const handler = async (
     const { data: existing, error: existingError } = await supabase
       .from("users")
       .select("id")
-      .eq("id", sub)
+      .eq("email", email)
+      .eq("auth_provider", "email")
       .maybeSingle();
 
     if (existingError) {
@@ -55,6 +56,7 @@ export const handler = async (
       .insert({
         id: sub,
         email,
+        auth_provider: "email",
         user_name: defaultUserName,
       })
       .select("*")
