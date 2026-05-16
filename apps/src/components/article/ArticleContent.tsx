@@ -6,6 +6,7 @@ import { JapaneseDateTime } from "@/utils/formatDate";
 import Image from "next/image";
 import Link from "next/link";
 import { CiLocationOn } from "react-icons/ci";
+import { MapView } from "../map/MapView";
 
 export const ArticleContent = async ({
   params,
@@ -18,30 +19,42 @@ export const ArticleContent = async ({
   return (
     <article className="max-w-3xl mx-auto pb-16">
       {/* サムネイル */}
-      <section className="text-center pt-8 pb-6">
-        <div className="mx-auto">
+      <section>
+        <div className="relative w-full aspect-video overflow-hidden">
           <Image
             src={article.thumbnailUrl}
             alt={article.title}
-            width={800}
-            height={600}
-            className="w-full h-full object-cover rounded-lg shadow"
+            fill
+            className="object-cover"
+            priority
           />
+          <span className="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded-full backdrop-blur-sm">
+            {article.animeName}
+          </span>
         </div>
-
-        <h1 className="font-bold text-2xl sm:text-3xl mt-18">
-          {article.title}
-        </h1>
-
-        <p className="mt-2 text-sm text-gray-500">
-          {new JapaneseDateTime(article.publishedAt).toJST()}
-        </p>
-
-        <p className="mt-1 text-sm text-gray-600">{article.animeName}</p>
+        <div className="mt-10 text-center">
+          <h1 className="font-bold text-2xl sm:text-3xl leading-snug">
+            {article.title}
+          </h1>
+          <p className="mt-1 text-sm text-gray-400">
+            {new JapaneseDateTime(article.publishedAt).toJST()}
+          </p>
+        </div>
       </section>
+      <div className="mt-8">
+        <MapView
+          initialReports={article.reports}
+          initialViewState={{
+            latitude: article.reports[0]?.latitude,
+            longitude: article.reports[0]?.longitude,
+            zoom: 12,
+          }}
+          popType="navigation"
+        />
+      </div>
 
       {/* 著者情報 */}
-      <div className="">
+      <div className="mt-5">
         <div className="p-3 flex justify-between">
           <section className="inline-block">
             <Link
@@ -76,6 +89,7 @@ export const ArticleContent = async ({
               <div
                 key={report.id}
                 className="relative my-8 p-5 rounded-lg overflow-hidden"
+                id={`report-${report.id}`}
               >
                 <div className="flex items-baseline gap-2 mb-2">
                   <span className="text-xs">
@@ -88,7 +102,12 @@ export const ArticleContent = async ({
                   <span className="text-red-600">
                     <CiLocationOn size={20} />
                   </span>
-                  <p className="">{report.prefecture}{report.city}{report.streetAddress}{report.spotName}</p>
+                  <p className="">
+                    {report.prefecture}
+                    {report.city}
+                    {report.streetAddress}
+                    {report.spotName}
+                  </p>
                 </div>
 
                 {/* 画像エリア */}

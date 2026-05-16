@@ -61,6 +61,8 @@ export const handler = async (
         updatedAt: report.updated_at,
         description: report.description,
         displayOrder: report.display_order,
+        latitude: report.latitude,
+        longitude: report.longitude,
         reportImages: report.report_images.map((image: any) => ({
           id: image.id,
           imageUrl: getArticleImageUrl(image.s3_key),

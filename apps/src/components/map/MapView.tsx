@@ -15,9 +15,19 @@ import Image from "next/image";
 
 type Props = {
   initialReports: Report[];
+  initialViewState: {
+    longitude: number;
+    latitude: number;
+    zoom: number;
+  };
+  popType: "navigation" | "router";
 };
 
-export const MapView = ({ initialReports }: Props) => {
+export const MapView = ({
+  initialReports,
+  initialViewState,
+  popType,
+}: Props) => {
   const [popupInfo, setPopupInfo] = useState<null | Report>(null);
   const mapRef = useRef<MapRef>(null);
   const router = useRouter();
@@ -76,11 +86,7 @@ export const MapView = ({ initialReports }: Props) => {
     <div style={{ width: "100%", height: "70vh" }}>
       <Map
         ref={mapRef}
-        initialViewState={{
-          longitude: 139.767,
-          latitude: 35.681,
-          zoom: 12,
-        }}
+        initialViewState={initialViewState}
         mapStyle={mapStyle}
         maxZoom={18}
       >
@@ -104,8 +110,11 @@ export const MapView = ({ initialReports }: Props) => {
               </div>
               <h3 className="font-bold ml-2 text-sm">{popupInfo.title}</h3>
               <div className="flex items-center mt-2">
-                <IoMdPin size={20} className="text-red-500"/>
-                <p className="text-xs">{`${popupInfo.prefecture} ${popupInfo.city} ${popupInfo.streetAddress} ${popupInfo.spotName}` || "住所不明"}</p>
+                <IoMdPin size={20} className="text-red-500" />
+                <p className="text-xs">
+                  {`${popupInfo.prefecture} ${popupInfo.city} ${popupInfo.streetAddress} ${popupInfo.spotName}` ||
+                    "住所不明"}
+                </p>
               </div>
               <Image
                 src={popupInfo.reportImages[0].imageUrl}
@@ -115,10 +124,16 @@ export const MapView = ({ initialReports }: Props) => {
                 className="mt-2 w-full h-auto object-cover rounded-md"
               />
               <div className="mt-2">
-                <Button
-                  text="詳細を見る"
-                  onClick={() => router.push(`/article/${popupInfo.articleId}`)}
-                />
+                {popType === "router" ? (
+                  <Button
+                    text="記事を見る"
+                    onClick={() =>
+                      router.push(`/article/${popupInfo.articleId}`)
+                    }
+                  />
+                ) : (
+                  <a href={`#report-${popupInfo.id}`}>詳細を見る↓</a>
+                )}
               </div>
             </div>
           </Popup>
