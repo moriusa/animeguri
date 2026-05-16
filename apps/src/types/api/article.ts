@@ -19,8 +19,8 @@ export interface Report {
   city: string;
   streetAddress?: string;
   spotName?: string;
-  latitude?: number;
-  longitude?: number;
+  latitude: number;
+  longitude: number;
   geocodedAddress?: string;
   displayOrder: number;
   articleId: string;
