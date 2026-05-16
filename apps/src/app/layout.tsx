@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Yomogi } from "next/font/google";
 import "./globals.css";
 import { Header } from "../layout";
 import { Providers } from "./providers";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({
           </main>
         </Providers>
       </body>
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ''} />
     </html>
   );
 }

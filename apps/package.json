@@ -10,6 +10,7 @@
     "deploy:prod:frontend": "npm run build && aws s3 sync out/ s3://animeguri-frontend-prod --delete"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.6",
     "@radix-ui/react-dialog": "^1.1.15",
     "@reduxjs/toolkit": "^2.9.0",
     "aws-amplify": "^6.17.0",
