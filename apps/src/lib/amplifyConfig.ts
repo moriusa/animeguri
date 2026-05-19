@@ -2,12 +2,12 @@ import { Amplify } from "aws-amplify";
 
 const redirectUrl =
   process.env.NODE_ENV === "production"
-    ? "https://www.animeguri.app/"
-    : "http://localhost:3000/";
+    ? "https://www.animeguri.app"
+    : "http://localhost:3000";
 const oAuthDomain =
   process.env.NODE_ENV === "production"
-    ? "animeguri-auth-dev.auth.ap-northeast-1.amazoncognito.com"
-    : "animeguri-auth-prod.auth.ap-northeast-1.amazoncognito.com";
+    ? "animeguri-auth-prod.auth.ap-northeast-1.amazoncognito.com"
+    : "animeguri-auth-dev.auth.ap-northeast-1.amazoncognito.com";
 
 Amplify.configure({
   Auth: {
