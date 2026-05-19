@@ -155,7 +155,7 @@ export class InfraStack extends cdk.Stack {
             s3.HttpMethods.PUT,
           ],
           allowedOrigins:
-            envName === "prod" ? ["https://animeguri.app"] : ["*"],
+            envName === "prod" ? ["https://www.animeguri.app"] : ["*"],
           allowedHeaders: ["*"],
         },
       ],

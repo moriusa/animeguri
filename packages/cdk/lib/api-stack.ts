@@ -516,7 +516,7 @@ export class ApiStack extends cdk.Stack {
       apiName: `animeguri-api-${envName}`,
       corsPreflight: {
         allowHeaders: ["Content-Type", "Authorization"],
-        allowOrigins: envName === "prod" ? ["https://animeguri.app"] : ["*"],
+        allowOrigins: envName === "prod" ? ["https://www.animeguri.app"] : ["*"],
         allowMethods: [
           CorsHttpMethod.GET,
           CorsHttpMethod.POST,

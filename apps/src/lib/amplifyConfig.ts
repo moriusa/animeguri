@@ -1,5 +1,10 @@
 import { Amplify } from "aws-amplify";
 
+const redirectUrl =
+  process.env.NODE_ENV === "production"
+    ? "https://www.animeguri.app/"
+    : "http://localhost:3000/";
+
 Amplify.configure({
   Auth: {
     Cognito: {
@@ -9,14 +14,8 @@ Amplify.configure({
         oauth: {
           domain: "animeguri-auth-dev.auth.ap-northeast-1.amazoncognito.com",
           scopes: ["email", "openid", "profile"],
-          redirectSignIn: [
-            "http://localhost:3000/",
-            "https://www.animeguri.app/",
-          ],
-          redirectSignOut: [
-            "http://localhost:3000/",
-            "https://www.animeguri.app/",
-          ],
+          redirectSignIn: [redirectUrl],
+          redirectSignOut: [redirectUrl],
           responseType: "code",
         },
       },
