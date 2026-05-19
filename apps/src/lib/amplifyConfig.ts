@@ -11,11 +11,11 @@ Amplify.configure({
           scopes: ["email", "openid", "profile"],
           redirectSignIn: [
             "http://localhost:3000/",
-            "https://animeguri.app/",
+            "https://www.animeguri.app/",
           ],
           redirectSignOut: [
             "http://localhost:3000/",
-            "https://animeguri.app/",
+            "https://www.animeguri.app/",
           ],
           responseType: "code",
         },

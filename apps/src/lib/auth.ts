@@ -158,7 +158,11 @@ export const confirmPassword = async (
   confirmationCode: string,
   newPassword: string,
 ): Promise<string> => {
-  await confirmResetPassword({ username: email, confirmationCode, newPassword });
+  await confirmResetPassword({
+    username: email,
+    confirmationCode,
+    newPassword,
+  });
   return "SUCCESS";
 };
 
@@ -179,5 +183,10 @@ export const deleteUserViaBackend = async (idToken: string): Promise<void> => {
 
 // Googleログイン
 export const signInWithGoogle = async (): Promise<void> => {
-  await signInWithRedirect({ provider: "Google" });
+  try {
+    await signInWithRedirect({ provider: "Google" });
+  } catch (error) {
+    console.error("Googleログインの起動に失敗しました:", error);
+    alert("エラーが発生しました。もう一度お試しください。");
+  }
 };

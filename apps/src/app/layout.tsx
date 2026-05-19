@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "../layout";
 import { Providers } from "./providers";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import "aws-amplify/auth/enable-oauth-listener";
 
 export const metadata: Metadata = {
   title: {

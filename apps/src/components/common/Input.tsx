@@ -53,7 +53,7 @@ export const Input = <T extends FieldValues>({
           <input
             id={id}
             type={isVisible ? "text" : type}
-            className={`bg-white w-full rounded-sm border px-2 py-1.5 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60 ${error ? "border-red-400" : "border-gray-300"}`}
+            className={`bg-white text-black w-full rounded-sm border px-2 py-1.5 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60 ${error ? "border-red-400" : "border-gray-300"}`}
             placeholder={placeholder}
             defaultValue={defaultValue}
             {...register(name, validation)}

@@ -126,7 +126,8 @@ const Page = () => {
             />
           </div>
         </div>
-        <div className="border-t-1 border-gray-300 p-10">
+      </form>
+      <div className="border-t-1 border-gray-300 p-10">
           <GoogleButton type="signUp"/>
           <div className="block text-center mt-8">
             <Link href="/login">
@@ -136,7 +137,6 @@ const Page = () => {
             </Link>
           </div>
         </div>
-      </form>
     </div>
   );
 };
