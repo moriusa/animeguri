@@ -66,19 +66,19 @@ const Page = () => {
             />
           </div>
         </div>
-      </form>
-      <div className="border-t-1 border-gray-300 p-10">
-        <div className="block text-center">
-          <GoogleButton type="login" />
-          <div className="block text-center mt-8">
-            <Link href="/signUp">
-              <p className="border-b-1 inline hover:opacity-80 cursor-pointer">
-                会員登録はこちら
-              </p>
-            </Link>
+        <div className="border-t-1 border-gray-300 p-10">
+          <div className="block text-center">
+            <GoogleButton type="login" />
+            <div className="block text-center mt-8">
+              <Link href="/signUp">
+                <p className="border-b-1 inline hover:opacity-80 cursor-pointer">
+                  会員登録はこちら
+                </p>
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

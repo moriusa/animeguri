@@ -126,9 +126,8 @@ const Page = () => {
             />
           </div>
         </div>
-      </form>
-      <div className="border-t-1 border-gray-300 p-10">
-          <GoogleButton type="signUp"/>
+        <div className="border-t-1 border-gray-300 p-10">
+          <GoogleButton type="signUp" />
           <div className="block text-center mt-8">
             <Link href="/login">
               <p className="border-b-1 inline hover:opacity-80 cursor-pointer">
@@ -137,6 +136,7 @@ const Page = () => {
             </Link>
           </div>
         </div>
+      </form>
     </div>
   );
 };

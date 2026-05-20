@@ -96,12 +96,12 @@ export class InfraStack extends cdk.Stack {
             cognito.OAuthScope.PROFILE,
           ],
           callbackUrls: [
-            "http://localhost:3000/",
-            "https://animeguri.vercel.app/",
+            "http://localhost:3000",
+            "https://www.animeguri.app",
           ],
           logoutUrls: [
-            "http://localhost:3000/",
-            "https://animeguri.vercel.app/",
+            "http://localhost:3000",
+            "https://www.animeguri.app",
           ],
         },
         supportedIdentityProviders: [
