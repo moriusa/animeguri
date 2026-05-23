@@ -33,7 +33,28 @@ export class InfraStack extends cdk.Stack {
         ? process.env.SUPABASE_SERVICE_ROLE_KEY_DEV!
         : process.env.SUPABASE_SERVICE_ROLE_KEY_PROD!;
 
-    // Cognito UserPool
+    // 1. まず先にLambda関数を定義する（UserPoolより上に移動！）
+    const createGoogleUserProfile = new NodejsFunction(
+      this,
+      `CreateGoogleUserProfile-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(
+          __dirname,
+          "../lambda/trigger/createGoogleUserProfile/index.ts",
+        ),
+        functionName: `animeguri-create-google-user-profile-${envName}`,
+        environment: {
+          SUPABASE_URL: supabaseUrl,
+          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
+        },
+        timeout: Duration.seconds(10),
+        memorySize: 128,
+      },
+    );
+
+    // 2. UserPoolの作成時に、lambdaTriggers プロパティで直接指定する
     this.userPool = new cognito.UserPool(this, `UserPool-${envName}`, {
       userPoolName: `animeguri-user-pool-${envName}`,
       selfSignUpEnabled: true,
@@ -44,6 +65,10 @@ export class InfraStack extends cdk.Stack {
         requireUppercase: true,
         requireDigits: true,
         requireSymbols: false,
+      },
+      // 🔥 ここで最初からトリガーを紐付ける（POST_CONFIRMATION に変更）
+      lambdaTriggers: {
+        postConfirmation: createGoogleUserProfile,
       },
     });
 
@@ -95,14 +120,8 @@ export class InfraStack extends cdk.Stack {
             cognito.OAuthScope.OPENID,
             cognito.OAuthScope.PROFILE,
           ],
-          callbackUrls: [
-            "http://localhost:3000",
-            "https://www.animeguri.app",
-          ],
-          logoutUrls: [
-            "http://localhost:3000",
-            "https://www.animeguri.app",
-          ],
+          callbackUrls: ["http://localhost:3000", "https://www.animeguri.app"],
+          logoutUrls: ["http://localhost:3000", "https://www.animeguri.app"],
         },
         supportedIdentityProviders: [
           cognito.UserPoolClientIdentityProvider.COGNITO,
@@ -111,29 +130,6 @@ export class InfraStack extends cdk.Stack {
       },
     );
     this.userPoolClient.node.addDependency(googleProvider);
-    const createGoogleUserProfile = new NodejsFunction(
-      this,
-      `CreateGoogleUserProfile-${envName}`,
-      {
-        handler: "handler",
-        runtime: lambda.Runtime.NODEJS_22_X,
-        entry: path.join(
-          __dirname,
-          "../lambda/trigger/createGoogleUserProfile/index.ts",
-        ),
-        functionName: `animeguri-create-google-user-profile-${envName}`,
-        environment: {
-          SUPABASE_URL: supabaseUrl,
-          SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey,
-        },
-        timeout: Duration.seconds(10),
-        memorySize: 128,
-      },
-    );
-    this.userPool.addTrigger(
-      cognito.UserPoolOperation.POST_AUTHENTICATION,
-      createGoogleUserProfile,
-    );
 
     // S3バケット
     this.imagesBucket = new s3.Bucket(this, `ImagesBucket-${envName}`, {

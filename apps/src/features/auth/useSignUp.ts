@@ -1,11 +1,14 @@
+"use client";
 import { SignUpFormValues } from "@/app/signUp/page";
 import { confirmSignUp, resendConfirmationCode, signIn, signUp } from "@/lib";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCreateUserProfile } from "../user/hooks/useCreateUserProfile";
+import { useGetUserProfile } from "../user/hooks/useGetUserProfile";
 
 export const useSignUp = () => {
   const { createProfile } = useCreateUserProfile();
+  const { refreshUser } = useGetUserProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState<"signup" | "confirm">("signup");
@@ -50,7 +53,8 @@ export const useSignUp = () => {
       // 3. idTokenを使用してAPI叩く
       await createProfile();
       alert("アカウントが正常に作成されました");
-      router.push("/login");
+      refreshUser();
+      router.push("/");
     } catch (err: any) {
       setError(err.message || "確認コードの検証に失敗しました");
     } finally {
