@@ -6,16 +6,22 @@ import { authFetcher } from "@/lib/fetcher";
 import { useState } from "react";
 import { BookmarkCheckResponse } from "@/types/api/bookmark";
 
+interface UseBookmarkProps {
+  isLoggedIn: boolean;
+}
+
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
-export const useBookmark = () => {
+export const useBookmark = (
+  { isLoggedIn }: UseBookmarkProps = { isLoggedIn: true },
+) => {
   const params = useParams();
   const articleId = params.id as string;
   const [isToggling, setIsToggling] = useState(false);
 
-  // GET：SWRでブックマーク状態を取得
+  const shouldFetch = articleId && isLoggedIn;
   const { data, error, isLoading, mutate } = useSWR<BookmarkCheckResponse>(
-    articleId ? `${API_ENDPOINT}/bookmarks/check?articleId=${articleId}` : null,
+    shouldFetch ? `${API_ENDPOINT}/bookmarks/check?articleId=${articleId}` : null,
     authFetcher<BookmarkCheckResponse>,
   );
 
@@ -23,6 +29,9 @@ export const useBookmark = () => {
 
   // トグル：楽観的更新
   const toggleBookmark = async () => {
+    if (!isLoggedIn) {
+      throw new Error("UNAUTHENTICATED");
+    }
     if (!articleId || isToggling) return;
 
     setIsToggling(true);
@@ -65,7 +74,7 @@ export const useBookmark = () => {
     isBookmarked,
     toggleBookmark,
     isToggling,
-    isLoading, // 初回取得中
+    isLoading: shouldFetch ? isLoading : false, // 未ログイン時はローディングにさせない
     error,
   };
 };

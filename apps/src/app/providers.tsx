@@ -4,6 +4,7 @@ import { useAuthInit } from "@/features/auth/useAuthInit";
 import { ConfirmDialogProvider } from "@/components/common/ConfirmDialog";
 import { SWRConfig } from "swr";
 import "@/lib/amplifyConfig";
+import { AuthProvider } from "@/context/AuthContext";
 
 const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   useAuthInit(); // アプリ起動時に認証状態をチェック
@@ -27,7 +28,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }}
     >
       <AuthInitializer>
-        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+        <AuthProvider>
+          <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+        </AuthProvider>
       </AuthInitializer>
     </SWRConfig>
   );

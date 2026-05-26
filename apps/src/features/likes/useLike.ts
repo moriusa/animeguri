@@ -6,16 +6,22 @@ import { authFetcher } from "@/lib/fetcher";
 import { useState } from "react";
 import { LikeCheckResponse } from "@/types/api/like";
 
+interface UseLikeProps {
+  isLoggedIn: boolean;
+}
+
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
 
-export const useLike = () => {
+export const useLike = (
+  { isLoggedIn }: UseLikeProps = { isLoggedIn: true },
+) => {
   const params = useParams();
   const articleId = params.id as string;
   const [isToggling, setIsToggling] = useState(false);
 
-  // GET：SWRでいいね状態を取得
+  const shouldFetch = articleId && isLoggedIn;
   const { data, error, isLoading, mutate } = useSWR<LikeCheckResponse>(
-    articleId ? `${API_ENDPOINT}/likes/check?articleId=${articleId}` : null,
+    shouldFetch ? `${API_ENDPOINT}/likes/check?articleId=${articleId}` : null,
     authFetcher<LikeCheckResponse>,
   );
 
@@ -23,6 +29,9 @@ export const useLike = () => {
 
   // トグル：楽観的更新
   const toggleLike = async () => {
+    if (!isLoggedIn) {
+      throw new Error("UNAUTHENTICATED");
+    }
     if (!articleId || isToggling) return;
 
     setIsToggling(true);
@@ -65,7 +74,7 @@ export const useLike = () => {
     isLiked,
     toggleLike,
     isToggling,
-    isLoading, // 初回取得中
+    isLoading: shouldFetch ? isLoading : false, // 未ログイン時はローディングにさせない
     error,
   };
 };
