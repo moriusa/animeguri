@@ -1,4 +1,8 @@
-import { genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
+import {
+  convertHeicFilesIfNeeded,
+  genPresignedUrl,
+  uploadImageToS3,
+} from "@/lib/presignedUrl";
 import { authFetcher } from "@/lib/fetcher";
 import { extractS3Key } from "@/utils/extractS3Key";
 import { useGetUserProfile } from "./useGetUserProfile";
@@ -67,11 +71,13 @@ const resolveProfileImage = async (
   // 画像が File型（新規アップロード）の場合のみ処理
   if (profileImage instanceof File) {
     console.log("新しい画像をアップロード中...");
-    // 1. 署名付きURLを取得
-    const presigned = await genPresignedUrl([
+    // 1. HEICを変換
+    const jpegFilesWithMeta = await convertHeicFilesIfNeeded([
       { file: profileImage, imageType: "profile" },
     ]);
-    // 2. S3 にアップロード
+    // 2. 署名付きURLを取得
+    const presigned = await genPresignedUrl(jpegFilesWithMeta);
+    // 3. S3 にアップロード
     const uploaded = await uploadImageToS3(presigned, [profileImage]);
     return uploaded[0].urlInfo.s3Key;
   }

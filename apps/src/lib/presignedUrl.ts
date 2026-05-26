@@ -1,5 +1,6 @@
 import { PresignedUrlResponse } from "@/types/api/presignedUrl";
 import { getValidIdToken } from "./common/authFetch";
+import { heicTo } from "heic-to";
 
 export interface FileWithMeta {
   file: File;
@@ -79,4 +80,51 @@ export const uploadImageToS3 = async (
 
   // そのまま返してもいいし、必要な情報だけ抽出して返してもOK
   return results;
+};
+
+export const convertHeicFilesIfNeeded = async (
+  items: FileWithMeta[],
+): Promise<FileWithMeta[]> => {
+  return Promise.all(
+    items.map(async (item) => {
+      const { file } = item;
+
+      const isHeicOrHeif =
+        file.type.includes("heic") ||
+        file.type.includes("heif") ||
+        file.name.toLowerCase().endsWith(".heic") ||
+        file.name.toLowerCase().endsWith(".heif");
+
+      if (!isHeicOrHeif) {
+        return item; // HEIC以外はそのまま無加工で返す
+      }
+
+      try {
+        console.log(`HEIC/HEIF検出・JPEG変換中: ${file.name}`);
+        // 💡 heic-toの戻り値は Blob 型になります
+        const convertedBlob = await heicTo({
+          blob: file,
+          type: "image/jpeg",
+          quality: 0.8,
+        });
+
+        // 💡 【ここを修正】Blob から正式な「File」オブジェクトを再生成する
+        // 元の拡張子（.heicなど）を .jpg に置換したファイル名を作る
+        const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+
+        const convertedFile = new File([convertedBlob], newFileName, {
+          type: "image/jpeg",
+          lastModified: file.lastModified, // 元の更新日時を引き継ぐ
+        });
+
+        return {
+          ...item,
+          file: convertedFile, // 新しいJPEGのFileオブジェクトに差し替え
+        };
+      } catch (error) {
+        console.error(`画像の変換に失敗 (${file.name}):`, error);
+        return item; // 失敗時は安全のため元のファイルを流す
+      }
+    }),
+  );
 };

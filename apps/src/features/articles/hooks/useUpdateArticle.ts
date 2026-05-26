@@ -1,5 +1,5 @@
 import { PostFormValues } from "@/components/post/PostFrom";
-import { FileWithMeta, genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
+import { convertHeicFilesIfNeeded, FileWithMeta, genPresignedUrl, uploadImageToS3 } from "@/lib/presignedUrl";
 import { useState } from "react";
 import { geocodeAddress } from "../geocoding";
 import { ArticleResponse } from "@/types/api/article";
@@ -121,7 +121,8 @@ export const useUpdateArticle = () => {
       let uploadedS3Keys: string[] = [];
       if (filesWithMeta.length > 0) {
         console.log(`${filesWithMeta.length}個の新規画像をアップロード中...`);
-        const presigned = await genPresignedUrl(filesWithMeta);
+        const jpegFilesWithMeta = await convertHeicFilesIfNeeded(filesWithMeta);
+        const presigned = await genPresignedUrl(jpegFilesWithMeta);
         const uploaded = await uploadImageToS3(
           presigned,
           filesWithMeta.map((f) => f.file),
