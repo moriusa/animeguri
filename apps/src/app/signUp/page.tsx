@@ -15,7 +15,6 @@ export interface SignUpFormValues {
 const Page = () => {
   const {
     isLoading,
-    error,
     step,
     handleSignUp,
     handleConfirmSignUp,
@@ -27,7 +26,6 @@ const Page = () => {
     formState: { errors },
   } = useForm<SignUpFormValues>({ mode: "onChange" });
   const onSubmit: SubmitHandler<SignUpFormValues> = (data) => {
-    console.log(data);
     handleSignUp(data);
   };
   const onConfirmSubmit: SubmitHandler<SignUpFormValues> = (data) => {
@@ -76,8 +74,6 @@ const Page = () => {
                 確認コードを再送信
               </button>
             </div>
-
-            {error && <p className="text-red-500 mt-2">{error}</p>}
           </div>
         </form>
       </div>
@@ -113,6 +109,15 @@ const Page = () => {
               register={register}
               validation={{
                 required: "パスワードは必須です",
+                minLength: {
+                  value: 8,
+                  message: "8文字以上で入力してください",
+                },
+                pattern: {
+                  value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                  message:
+                    "大文字、小文字、数字をそれぞれ1文字以上含めてください",
+                },
               }}
               error={errors.password?.message}
               mask={true}

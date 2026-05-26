@@ -185,8 +185,7 @@ export const deleteUserViaBackend = async (idToken: string): Promise<void> => {
 export const signInWithGoogle = async (): Promise<void> => {
   try {
     await signInWithRedirect({ provider: "Google" });
-  } catch (error) {
-    console.error("Googleログインの起動に失敗しました:", error);
-    alert("エラーが発生しました。もう一度お試しください。");
+  } catch (error: any) {
+    throw new Error(error);
   }
 };
