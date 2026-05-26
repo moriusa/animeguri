@@ -11,8 +11,7 @@ export const metadata: Metadata = {
     template: "%s | animeguri",
     default: "animeguri",
   },
-  description:
-    "聖地巡礼の記録を投稿することができるプラットフォームです。",
+  description: "聖地巡礼の記録を投稿することができるプラットフォームです。",
   robots: {
     index: true,
     follow: true,
@@ -43,8 +42,8 @@ export default function RootLayout({
           <Header />
           <main className="py-8 min-h-screen">{children}</main>
         </Providers>
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
       </body>
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
     </html>
   );
 }
