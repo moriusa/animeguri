@@ -4,6 +4,7 @@ import { HiOutlineXMark } from "react-icons/hi2";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { Input } from "../common";
 import { ImageItem, PostFormValues } from "./PostFrom";
+import { heicTo } from "heic-to";
 
 interface Props {
   register: UseFormRegister<PostFormValues>;
@@ -18,7 +19,13 @@ interface Props {
 // バリデーション設定
 const VALIDATION = {
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
-  ALLOWED_TYPES: ["image/png", "image/jpeg", "image/jpg"],
+  ALLOWED_TYPES: [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/heic",
+    "image/heif",
+  ],
   ALLOWED_EXTENSIONS: [".png", ".jpg", ".jpeg"],
   MAX_CAPTION_LENGTH: 100,
 };
@@ -32,7 +39,7 @@ export const UploadImage = ({
   reportIdx,
   onChange,
 }: Props) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
     const newFiles = Array.from(e.target.files);
@@ -56,26 +63,59 @@ export const UploadImage = ({
       }
 
       // ファイル形式チェック
-      if (!VALIDATION.ALLOWED_TYPES.includes(file.type)) {
+      // 拡張子とMIMEタイプの両面でHEIC/HEIFかどうかを柔軟に判定
+      const isHeicOrHeif =
+        VALIDATION.ALLOWED_TYPES.includes(file.type) ||
+        file.name.toLowerCase().endsWith(".heic") ||
+        file.name.toLowerCase().endsWith(".heif");
+      if (!isHeicOrHeif) {
         alert(
-          `"${file.name}" は対応していない形式です。\n対応形式: PNG, JPG, JPEG`,
+          `"${file.name}" は対応していない形式です。\n対応形式: PNG, JPG, JPEG, HEIC`,
         );
         e.target.value = "";
         return;
       }
     }
-    // File → ImageItem に変換
-    const newImageItems: ImageItem[] = newFiles.map((file, i) => ({
-      file,
-      url: URL.createObjectURL(file),
-      isExisting: false,
-      displayOrder: images.length + i,
-    }));
+    // 選択されたファイルをループし、HEICがあればその場でJPEGに変換する
+    const processedImageItems: ImageItem[] = await Promise.all(
+      newFiles.map(async (file, i) => {
+        let finalFile = file;
 
-    const updatedImages = [...images, ...newImageItems];
-    // 親に変更したデータを通知
+        const isHeic =
+          file.type.includes("heic") ||
+          file.type.includes("heif") ||
+          file.name.toLowerCase().endsWith(".heic") ||
+          file.name.toLowerCase().endsWith(".heif");
+
+        if (isHeic) {
+          try {
+            const convertedBlob = await heicTo({
+              blob: file,
+              type: "image/jpeg",
+              quality: 0.8,
+            });
+            const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+            finalFile = new File([convertedBlob], newFileName, {
+              type: "image/jpeg",
+              lastModified: file.lastModified,
+            });
+          } catch (error) {
+            console.error("プレビュー生成用のHEIC変換に失敗しました:", error);
+          }
+        }
+
+        // 💡 完全にJPEG化された finalFile を使ってオブジェクトURLを生成
+        return {
+          file: finalFile,
+          url: URL.createObjectURL(finalFile), // これでブラウザに表示できるようになります！
+          isExisting: false,
+          displayOrder: images.length + i,
+        };
+      }),
+    );
+
+    const updatedImages = [...images, ...processedImageItems];
     onChange(reportIdx, updatedImages);
-    // inputをリセット（同じファイルを再選択可能にする）
     e.target.value = "";
   };
 
@@ -101,14 +141,14 @@ export const UploadImage = ({
               type="file"
               multiple
               className="hidden"
-              accept=".png, .jpg, .jpeg"
+              accept=".png, .jpg, .jpeg, .heic, .heif"
               onChange={handleFileChange}
             />
           </label>
           {/* ✅ アップロード可能な情報を表示 */}
           <p className="text-sm text-gray-500 mt-2">
             {images.length}/{maxFiles} 枚 | 最大{" "}
-            {VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB | PNG, JPG, JPEG
+            {VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB | PNG, JPG, JPEG, HEIC
           </p>
         </div>
       )}

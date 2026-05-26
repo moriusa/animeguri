@@ -1,6 +1,5 @@
 import { PostFormValues, ReportTypes } from "@/components/post/PostFrom";
 import {
-  convertHeicFilesIfNeeded,
   FileWithMeta,
   genPresignedUrl,
   uploadImageToS3,
@@ -172,9 +171,8 @@ export const useCreateArticle = () => {
       // ==========================================
       let uploadedS3Keys: string[] = [];
       if (filesWithMeta.length > 0) {
-        const jpegFilesWithMeta = await convertHeicFilesIfNeeded(filesWithMeta);
         console.log(`${filesWithMeta.length}個の新規画像をアップロード中...`);
-        const presigned = await genPresignedUrl(jpegFilesWithMeta);
+        const presigned = await genPresignedUrl(filesWithMeta);
         const uploaded = await uploadImageToS3(
           presigned,
           filesWithMeta.map((f) => f.file),
