@@ -5,6 +5,7 @@ import { Header } from "../layout";
 import { Providers } from "./providers";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "aws-amplify/auth/enable-oauth-listener";
+import { Footer } from "@/layout/Footer";
 
 export const metadata: Metadata = {
   title: {
@@ -41,6 +42,7 @@ export default function RootLayout({
         <Providers>
           <Header />
           <main className="py-8 min-h-screen">{children}</main>
+          <Footer />
         </Providers>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
       </body>

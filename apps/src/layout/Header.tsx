@@ -15,7 +15,10 @@ export const Header: FC = () => {
     <nav className="text-black">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between p-3">
         {!isSearchBox && (
-          <Link href={"/"} className="cursor-pointer text-2xl font-bold">
+          <Link
+            href={"/"}
+            className="cursor-pointer text-2xl md:text-3xl font-bold"
+          >
             animeguri
           </Link>
         )}
