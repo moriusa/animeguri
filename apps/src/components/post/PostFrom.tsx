@@ -4,12 +4,12 @@ import { Thumbnail } from "@/components/post/Thumbnail";
 import { Report } from "@/components/post";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { getValidIdToken } from "@/lib/common/authFetch";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { GoPlus } from "react-icons/go";
 import { useConfirm } from "../common/ConfirmDialog";
 import { useCreateArticle } from "@/features/articles/hooks/useCreateArticle";
 import { useUpdateArticle } from "@/features/articles/hooks/useUpdateArticle";
+import { InputAnime } from "../article/InputAnime";
 
 export interface ImageItem {
   id?: string; // 既存画像のID（編集時のみ使用）
@@ -248,18 +248,8 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
           error={errors?.title?.message}
           required={true}
         />
-        <div className="mt-4">
-          <Input
-            id={"animeName"}
-            text="アニメ名"
-            name={"animeName"}
-            register={register}
-            placeholder="アニメ名を入力"
-            validation={{ required: "アニメ名を入力してください" }}
-            error={errors?.animeName?.message}
-            required={true}
-          />
-        </div>
+        <InputAnime register={register} setValue={setValue} errors={errors} />
+
         <div className="mt-8">
           <Thumbnail control={control} errors={errors} />
         </div>

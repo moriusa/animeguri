@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { ChangeEventHandler, useState } from "react";
 import { UseFormRegister, FieldValues, Path } from "react-hook-form";
 import { PiEyeSlashFill } from "react-icons/pi";
 import { PiEye } from "react-icons/pi";
@@ -16,6 +16,8 @@ interface Props<T extends FieldValues> {
   mask?: boolean;
   defaultValue?: string;
   required?: boolean;
+  autoComplete?: boolean;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
 export const Input = <T extends FieldValues>({
@@ -30,6 +32,8 @@ export const Input = <T extends FieldValues>({
   mask = undefined,
   defaultValue,
   required = false,
+  autoComplete = true,
+  onChange,
 }: Props<T>) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -57,6 +61,8 @@ export const Input = <T extends FieldValues>({
             placeholder={placeholder}
             defaultValue={defaultValue}
             {...register(name, validation)}
+            onChange={onChange}
+            autoComplete={autoComplete ? "on" : "off"}
           />
           {mask ? (
             isVisible ? (
