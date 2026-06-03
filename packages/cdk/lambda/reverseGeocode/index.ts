@@ -45,6 +45,8 @@ export const handler = async (
     const response = await client.send(command);
     const result = response.Results?.[0]?.Place;
 
+    console.log(result);
+
     if (!result) {
       return {
         statusCode: 200,

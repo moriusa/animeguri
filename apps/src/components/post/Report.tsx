@@ -144,8 +144,8 @@ export const Report = ({
   const handleMetadataExtracted = async (meta: ExtractedMetadata) => {
     if (!isAutoAddressEnabled) return;
 
-    setValue(`reports.${index}.latitude` as any, meta.lat);
-    setValue(`reports.${index}.longitude` as any, meta.lng);
+    setValue(`reports.${index}.latitude`, meta.lat);
+    setValue(`reports.${index}.longitude`, meta.lng);
 
     try {
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
@@ -167,6 +167,7 @@ export const Report = ({
 
       // 2 Lambdaから送られてくる { place: { prefecture, municipality, ... } } の構造を受け取る
       if (response && response.place) {
+        console.log(response);
         const {
           prefecture,
           subRegion,
@@ -178,7 +179,7 @@ export const Report = ({
 
         // 3. 都道府県を自動セット (例: "神奈川県")
         if (prefecture) {
-          setValue(`reports.${index}.prefecture` as any, prefecture);
+          setValue(`reports.${index}.prefecture`, prefecture);
         }
 
         // 4. 市区町村を自動セット (例: "足柄上郡大井町")
@@ -195,21 +196,25 @@ export const Report = ({
         );
 
         if (foundCity) {
-          setValue(`reports.${index}.city` as any, foundCity);
+          setValue(`reports.${index}.city`, foundCity);
         } else {
           // 万が一見つからなかった場合は安全のため空にしてユーザーに選ばせる
-          setValue(`reports.${index}.city` as any, "");
+          setValue(`reports.${index}.city`, "");
         }
 
         // 5. 町名・番地を自動セット (例: "河原町123")
         // AWSからパーツごとに綺麗に分かれて届くので、合体させてインプットに流し込みます
         const streetAddress = `${street || ""}${addressNumber || ""}`;
-        setValue(`reports.${index}.streetAddress` as any, streetAddress);
+        setValue(`reports.${index}.streetAddress`, streetAddress);
 
         // 6. 周辺のスポット名（施設名）が取れていれば自動入力
         // AWSのラベルに観光地や駅名が入っている場合、それを「スポット名称」の初期値に
-        if (label && !label.startsWith(prefecture)) {
-          setValue(`reports.${index}.spotName` as any, label);
+        if (
+          label &&
+          !label.includes(prefecture || "") &&
+          !label.includes(municipality || "")
+        ) {
+          setValue(`reports.${index}.spotName`, label);
         }
         await confirm({
           type: "alert",
