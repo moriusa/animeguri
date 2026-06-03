@@ -17,6 +17,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    google: "c5wPJBmh5aMNJt9X5giLCrAHK9sOU3Yd4lQCALTmCN8",
+  },
 };
 
 const geistSans = Geist({
