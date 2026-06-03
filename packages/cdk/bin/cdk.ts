@@ -28,4 +28,5 @@ new ApiStack(app, `ApiStack-${envName}`, {
   userPoolClient: infra.userPoolClient,
   imagesBucket: infra.imagesBucket,
   cloudFrontDistribution: infra.imagesDistribution,
+  placeIndex: infra.placeIndex,
 });

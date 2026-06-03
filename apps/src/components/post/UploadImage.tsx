@@ -5,6 +5,14 @@ import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { Input } from "../common";
 import { ImageItem, PostFormValues } from "./PostFrom";
 import { heicTo } from "heic-to";
+import EXIF from "exif-js";
+import { useConfirm } from "../common/ConfirmDialog";
+
+export interface ExtractedMetadata {
+  lat: number;
+  lng: number;
+  dateTime?: string;
+}
 
 interface Props {
   register: UseFormRegister<PostFormValues>;
@@ -14,6 +22,7 @@ interface Props {
   images: ImageItem[]; // 親から受け取る画像
   reportIdx: number; // レポート番号
   onChange: (index: number, images: ImageItem[]) => void; // 状態変更を親に伝える
+  onMetadataExtracted?: (metadata: ExtractedMetadata) => void; // 抽出した位置情報を親に伝えるための通知関数
 }
 
 // バリデーション設定
@@ -30,6 +39,24 @@ const VALIDATION = {
   MAX_CAPTION_LENGTH: 100,
 };
 
+// 💡 Exif読み取り用ヘルパー関数
+const getPhotoMetadata = (file: File): Promise<any> => {
+  return new Promise((resolve) => {
+    EXIF.getData(file as any, function (this: any) {
+      resolve(EXIF.getAllTags(this));
+    });
+  });
+};
+
+const convertGPSToDecimal = (
+  gpsMinSec: number[],
+  ref: string,
+): number | null => {
+  if (!gpsMinSec || gpsMinSec.length < 3) return null;
+  const coordinate = gpsMinSec[0] + gpsMinSec[1] / 60 + gpsMinSec[2] / 3600;
+  return ref === "S" || ref === "W" ? -coordinate : coordinate;
+};
+
 export const UploadImage = ({
   maxFiles = 4,
   error,
@@ -38,7 +65,9 @@ export const UploadImage = ({
   images,
   reportIdx,
   onChange,
+  onMetadataExtracted,
 }: Props) => {
+  const confirm = useConfirm();
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
@@ -76,11 +105,78 @@ export const UploadImage = ({
         return;
       }
     }
-    // 選択されたファイルをループし、HEICがあればその場でJPEGに変換する
+    // 💡 1️⃣ HEIC/HEIFからJPEGに「変換する前」にメタ情報を抽出する（先んじて1枚目などで代表抽出）
+    // ループの中で最初に位置情報が見つかったものを採用するロジック
+    if (onMetadataExtracted) {
+      let foundMetadata: {
+        lat: number;
+        lng: number;
+        dateTime?: string;
+      } | null = null;
+      let hasError = false;
+      let errorMsg = "";
+
+      for (const file of newFiles) {
+        try {
+          const metadata = await getPhotoMetadata(file);
+
+          // メタデータがない、またはGPS情報がない場合は次の画像へ（ここではアラートを出さない）
+          if (!metadata || !metadata.GPSLatitude || !metadata.GPSLongitude) {
+            continue;
+          }
+
+          const lat = convertGPSToDecimal(
+            metadata.GPSLatitude,
+            metadata.GPSLatitudeRef,
+          );
+          const lng = convertGPSToDecimal(
+            metadata.GPSLongitude,
+            metadata.GPSLongitudeRef,
+          );
+          const dateTime = metadata.DateTimeOriginal || metadata.DateTime;
+
+          if (lat && lng) {
+            // 💡 見つかったらオブジェクトに保持してループを即抜ける
+            foundMetadata = { lat, lng, dateTime };
+            break;
+          }
+        } catch (err) {
+          // エラーが発生した事実だけを記録して処理は続ける
+          hasError = true;
+          errorMsg = String(err);
+        }
+      }
+
+      // 【ループ終了後】最終的な結果をもとに1回だけアクションを起こす
+      if (foundMetadata) {
+        // 1. 位置情報が見つかった場合（これが最優先）
+        onMetadataExtracted(foundMetadata);
+      } else if (hasError) {
+        // 2. 位置情報はなかったが、解析エラーが発生していた場合
+        await confirm({
+          type: "alert",
+          title: "Exif解析エラー",
+          description: errorMsg,
+          confirmText: "閉じる",
+          confirmVariant: "default",
+        });
+      } else {
+        // 3. エラーはないが、アップロードされたどの画像にも位置情報がなかった場合
+        await confirm({
+          type: "alert",
+          title: "住所自動入力スキップ",
+          description:
+            "選択された画像に位置情報（GPS）が含まれていないため、手動入力モードになります。",
+          confirmText: "了解",
+          confirmVariant: "default",
+        });
+      }
+    }
+
+    // 2️⃣ HEICのJPEG変換およびプレビューURL作成処理
     const processedImageItems: ImageItem[] = await Promise.all(
       newFiles.map(async (file, i) => {
         let finalFile = file;
-
         const isHeic =
           file.type.includes("heic") ||
           file.type.includes("heif") ||
@@ -104,10 +200,9 @@ export const UploadImage = ({
           }
         }
 
-        // 💡 完全にJPEG化された finalFile を使ってオブジェクトURLを生成
         return {
           file: finalFile,
-          url: URL.createObjectURL(finalFile), // これでブラウザに表示できるようになります！
+          url: URL.createObjectURL(finalFile),
           isExisting: false,
           displayOrder: images.length + i,
         };
@@ -132,6 +227,10 @@ export const UploadImage = ({
 
   return (
     <div>
+      <p className="font-bold">
+        画像
+        <span className="text-red-500 ml-1">&#42;</span>
+      </p>
       {/* ファイル選択ボタン */}
       {images.length < maxFiles && (
         <div>

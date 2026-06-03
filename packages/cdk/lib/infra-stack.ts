@@ -8,6 +8,7 @@ import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 import { Duration } from "aws-cdk-lib";
+import * as location from "aws-cdk-lib/aws-location";
 
 interface InfraStackProps extends cdk.StackProps {
   envName: string;
@@ -19,6 +20,7 @@ export class InfraStack extends cdk.Stack {
   public readonly userPoolClient: cognito.UserPoolClient;
   public readonly imagesBucket: s3.Bucket;
   public readonly imagesDistribution: cloudfront.Distribution;
+  public readonly placeIndex: location.CfnPlaceIndex;
 
   constructor(scope: Construct, id: string, props: InfraStackProps) {
     super(scope, id, props);
@@ -171,6 +173,17 @@ export class InfraStack extends cdk.Stack {
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
+      },
+    );
+
+    // locationService
+    this.placeIndex = new location.CfnPlaceIndex(
+      this,
+      `HolyPlaceIndex-${props.envName}`,
+      {
+        indexName: `HolyPlaceIndex-${props.envName}`,
+        dataSource: "Here", // 日本の住所精度に強い HERE（または Esri）を選択
+        pricingPlan: "RequestBasedUsage", // リクエストベースの料金プラン
       },
     );
   }

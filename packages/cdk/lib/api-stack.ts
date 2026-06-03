@@ -14,6 +14,8 @@ import {
   CorsHttpMethod,
 } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import * as location from "aws-cdk-lib/aws-location";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 interface ApiStackProps extends cdk.StackProps {
   envName: string;
@@ -21,6 +23,7 @@ interface ApiStackProps extends cdk.StackProps {
   userPoolClient: cognito.IUserPoolClient;
   imagesBucket: s3.IBucket;
   cloudFrontDistribution: cloudfront.Distribution;
+  placeIndex: location.CfnPlaceIndex;
 }
 
 export class ApiStack extends cdk.Stack {
@@ -32,6 +35,7 @@ export class ApiStack extends cdk.Stack {
       userPoolClient,
       imagesBucket,
       cloudFrontDistribution,
+      placeIndex,
     } = props;
 
     const supabaseUrl =
@@ -396,6 +400,21 @@ export class ApiStack extends cdk.Stack {
       },
     );
 
+    const reverseGeocode = new NodejsFunction(
+      this,
+      `ReverseGeocodeFunction-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(__dirname, "../lambda/reverseGeocode/index.ts"),
+        functionName: `animeguri-reverse-geocode-${envName}`,
+        environment: {
+          PLACE_INDEX_NAME: placeIndex.indexName,
+        },
+        timeout: Duration.seconds(10),
+      },
+    );
+
     // cognito authorizer
     const authorizer = new HttpUserPoolAuthorizer(
       "UserPoolAuthorizer",
@@ -511,12 +530,18 @@ export class ApiStack extends cdk.Stack {
       getLikeCheckSingle,
     );
 
+    const reverseGeocodeIntegration = new HttpLambdaIntegration(
+      "ReverseGeocodeIntegration",
+      reverseGeocode,
+    );
+
     // API Gateway
     const api = new HttpApi(this, "AnimeguriApi", {
       apiName: `animeguri-api-${envName}`,
       corsPreflight: {
         allowHeaders: ["Content-Type", "Authorization"],
-        allowOrigins: envName === "prod" ? ["https://www.animeguri.app"] : ["*"],
+        allowOrigins:
+          envName === "prod" ? ["https://www.animeguri.app"] : ["*"],
         allowMethods: [
           CorsHttpMethod.GET,
           CorsHttpMethod.POST,
@@ -670,6 +695,13 @@ export class ApiStack extends cdk.Stack {
       authorizer,
     });
 
+    api.addRoutes({
+      path: "/geocode/reverse",
+      methods: [HttpMethod.GET],
+      integration: reverseGeocodeIntegration,
+      authorizer,
+    });
+
     // s3読み許可
     imagesBucket.grantReadWrite(getMeFn);
     imagesBucket.grantRead(getListArticles);
@@ -677,5 +709,12 @@ export class ApiStack extends cdk.Stack {
     imagesBucket.grantRead(getArticle);
     // S3への署名付きURL生成権限を付与
     imagesBucket.grantPut(generatePresignedUrl);
+    // LambdaにAmazon Location Service を検索する権限（IAM）を付与
+    reverseGeocode.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["geo:SearchPlaceIndexForPosition"],
+        resources: [placeIndex.attrIndexArn],
+      }),
+    );
   }
 }

@@ -17,28 +17,29 @@
     "destroy:prod": "cross-env APP_ENV=prod npx cdk destroy --all"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.159",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^24.10.9",
-    "aws-cdk": "2.1033.0",
+    "@types/aws-lambda": "^8.10.161",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.9.1",
+    "aws-cdk": "^2.1125.0",
     "cross-env": "^10.1.0",
-    "esbuild": "^0.27.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
+    "esbuild": "^0.28.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.3"
   },
   "dependencies": {
     "@aws-cdk/aws-apigatewayv2-authorizers-alpha": "^2.114.1-alpha.0",
     "@aws-cdk/aws-apigatewayv2-integrations-alpha": "^2.114.1-alpha.0",
-    "@aws-cdk/aws-lambda-nodejs": "^1.203.0",
-    "@aws-sdk/client-s3": "^3.940.0",
-    "@aws-sdk/client-ssm": "^3.940.0",
-    "@aws-sdk/s3-request-presigner": "^3.940.0",
-    "@supabase/supabase-js": "^2.86.0",
-    "aws-cdk-lib": "^2.215.0",
-    "aws-lambda": "^1.0.7",
-    "constructs": "^10.0.0",
-    "dotenv": "^17.2.3"
+    "@aws-cdk/aws-lambda-nodejs": "^1.36.1",
+    "@aws-sdk/client-location": "^3.1057.0",
+    "@aws-sdk/client-s3": "^3.1057.0",
+    "@aws-sdk/client-ssm": "^3.1057.0",
+    "@aws-sdk/s3-request-presigner": "^3.1057.0",
+    "@supabase/supabase-js": "^2.106.2",
+    "aws-cdk-lib": "^2.257.0",
+    "aws-lambda": "^1.0.6",
+    "constructs": "^10.6.0",
+    "dotenv": "^17.4.2"
   }
 }

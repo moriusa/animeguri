@@ -1,5 +1,5 @@
 "use client";
-import { TextArea, UploadImage } from ".";
+import { ExtractedMetadata, TextArea, UploadImage } from ".";
 import {
   FieldErrors,
   UseFormClearErrors,
@@ -14,6 +14,8 @@ import { Input } from "../common";
 import { ImageItem, PostFormValues, ReportTypes } from "./PostFrom";
 import { useEffect, useState } from "react";
 import { SelectField } from "./SelectField";
+import { authFetcher } from "@/lib/fetcher";
+import { useConfirm } from "../common/ConfirmDialog";
 
 const PREFECTURES = [
   "北海道",
@@ -108,11 +110,14 @@ export const Report = ({
   watch: UseFormWatch<PostFormValues>;
   setValue: UseFormSetValue<PostFormValues>;
 }) => {
+  const confirm = useConfirm();
   const [citiesMap, setCitiesMap] = useState<Record<string, string[]>>(
     cachedCitiesMap ?? {},
   );
   const [citiesLoading, setCitiesLoading] = useState(!cachedCitiesMap);
   const [citiesError, setCitiesError] = useState<string | null>(null);
+  const [isAutoAddressEnabled, setIsAutoAddressEnabled] =
+    useState<boolean>(true);
 
   // 初回マウント時にAPIからデータ取得（キャッシュ済みなら即反映）
   useEffect(() => {
@@ -135,21 +140,107 @@ export const Report = ({
     selectedPrefecture && citiesMap[selectedPrefecture]
       ? citiesMap[selectedPrefecture]
       : [];
+
+  const handleMetadataExtracted = async (meta: ExtractedMetadata) => {
+    if (!isAutoAddressEnabled) return;
+
+    setValue(`reports.${index}.latitude` as any, meta.lat);
+    setValue(`reports.${index}.longitude` as any, meta.lng);
+
+    try {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT;
+
+      type Res = {
+        place: {
+          prefecture: string;
+          subRegion: string;
+          municipality: string;
+          street: string;
+          addressNumber: string;
+          label: string;
+        };
+      };
+
+      const response = await authFetcher<Res>(
+        `${API_BASE_URL}/geocode/reverse?lat=${meta.lat}&lng=${meta.lng}`,
+      );
+
+      // 2 Lambdaから送られてくる { place: { prefecture, municipality, ... } } の構造を受け取る
+      if (response && response.place) {
+        const {
+          prefecture,
+          subRegion,
+          municipality,
+          street,
+          addressNumber,
+          label,
+        } = response.place;
+
+        // 3. 都道府県を自動セット (例: "神奈川県")
+        if (prefecture) {
+          setValue(`reports.${index}.prefecture` as any, prefecture);
+        }
+
+        // 4. 市区町村を自動セット (例: "足柄上郡大井町")
+        // Geoloniaのマスターデータ（citiesMap）の表記に合わせるため、
+        // subRegion（郡など）が存在する場合は結合（郡 + 市区町村）してマッチングさせます
+        const availableCities = citiesMap[prefecture] || [];
+        const fullCityName = subRegion
+          ? `${subRegion}${municipality}`
+          : municipality;
+
+        // 完全一致、または部分一致でセレクトボックスの値と合致するものを探す
+        const foundCity = availableCities.find(
+          (city) => city === fullCityName || city === municipality,
+        );
+
+        if (foundCity) {
+          setValue(`reports.${index}.city` as any, foundCity);
+        } else {
+          // 万が一見つからなかった場合は安全のため空にしてユーザーに選ばせる
+          setValue(`reports.${index}.city` as any, "");
+        }
+
+        // 5. 町名・番地を自動セット (例: "河原町123")
+        // AWSからパーツごとに綺麗に分かれて届くので、合体させてインプットに流し込みます
+        const streetAddress = `${street || ""}${addressNumber || ""}`;
+        setValue(`reports.${index}.streetAddress` as any, streetAddress);
+
+        // 6. 周辺のスポット名（施設名）が取れていれば自動入力
+        // AWSのラベルに観光地や駅名が入っている場合、それを「スポット名称」の初期値に
+        if (label && !label.startsWith(prefecture)) {
+          setValue(`reports.${index}.spotName` as any, label);
+        }
+        await confirm({
+          type: "alert",
+          title: "住所自動入力に成功",
+          description: `巡礼レポート ${index + 1}：写真の位置から住所を自動入力しました！`,
+          confirmText: "閉じる",
+          confirmVariant: "default",
+        });
+        return;
+      }
+
+      await confirm({
+        type: "alert",
+        title: "住所自動入力に失敗しました。",
+        description: `写真に位置情報はありましたが、住所を特定できませんでした。`,
+        confirmText: "閉じる",
+        confirmVariant: "default",
+      });
+    } catch (err) {
+      await confirm({
+        type: "alert",
+        title: "住所の自動入力中にエラーが発生しました",
+        description: String(err),
+        confirmText: "閉じる",
+        confirmVariant: "default",
+      });
+    }
+  };
   return (
     <div className="p-4 mb-4 bg-white rounded border">
       <h2 className="font-bold text-lg mb-2">巡礼レポート {index + 1}</h2>
-
-      {/* 画像アップロード */}
-      <UploadImage
-        maxFiles={10}
-        error={errors.reports?.[index]?.images?.message}
-        register={register}
-        images={reportData.images}
-        onChange={onImageChange}
-        reportIdx={index}
-        errors={errors}
-      />
-
       {/* タイトル */}
       <div className="mt-8">
         <Input
@@ -162,6 +253,45 @@ export const Report = ({
           error={errors?.reports?.[index]?.title?.message}
           required={true}
         />
+      </div>
+
+      {/* 画像アップロード */}
+      <div className="mt-4">
+        <UploadImage
+          maxFiles={10}
+          error={errors.reports?.[index]?.images?.message}
+          register={register}
+          images={reportData.images}
+          onChange={onImageChange}
+          reportIdx={index}
+          errors={errors}
+          onMetadataExtracted={handleMetadataExtracted}
+        />
+      </div>
+
+      <div className="flex items-center space-x-3 bg-gray-50 p-2 px-3 rounded border border-gray-200 w-fit select-none mt-4">
+        <span className="text-xs text-gray-600 tracking-wider">
+          画像から住所を自動入力:
+          <span
+            className={`ml-1 font-bold ${isAutoAddressEnabled ? "text-yellow-600" : "text-gray-400"}`}
+          >
+            {isAutoAddressEnabled ? "ON" : "OFF"}
+          </span>
+        </span>
+
+        <button
+          type="button"
+          onClick={() => setIsAutoAddressEnabled(!isAutoAddressEnabled)}
+          className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+            isAutoAddressEnabled ? "bg-yellow-500" : "bg-gray-300"
+          }`}
+        >
+          <span
+            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              isAutoAddressEnabled ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
       </div>
 
       {/* 聖地の場所 */}
