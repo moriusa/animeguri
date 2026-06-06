@@ -77,13 +77,12 @@ export const UploadImage = ({
       alert(`アップロード可能な画像は最大 ${maxFiles} 枚までです。`);
       return;
     }
-
-    // ✅ 各ファイルのバリデーション
+    // 各ファイルのバリデーション
     for (const file of newFiles) {
       // ファイルサイズチェック
       if (file.size > VALIDATION.MAX_FILE_SIZE) {
         alert(
-          `"${file.name}" のサイズが大きすぎます。\n最大 ${
+          `"${file.name}" のサイズが大きすぎます(${file.size})。\n最大 ${
             VALIDATION.MAX_FILE_SIZE / 1024 / 1024
           }MB までアップロード可能です。`,
         );
