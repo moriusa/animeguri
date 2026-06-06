@@ -14,8 +14,8 @@ const ALLOWED_CONTENT_TYPES = [
   "image/gif",
 ];
 
-// 最大ファイルサイズ（5MB）
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// 最大ファイルサイズ（8MB）
+const MAX_FILE_SIZE = 8 * 1024 * 1024;
 
 interface PresignedUrlRequest {
   fileName: string;
