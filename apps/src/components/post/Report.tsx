@@ -270,7 +270,9 @@ export const Report = ({
           onChange={onImageChange}
           reportIdx={index}
           errors={errors}
-          onMetadataExtracted={handleMetadataExtracted}
+          onMetadataExtracted={
+            isAutoAddressEnabled ? handleMetadataExtracted : undefined
+          }
         />
       </div>
 
