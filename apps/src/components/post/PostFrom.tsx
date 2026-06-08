@@ -18,6 +18,7 @@ export interface ImageItem {
   caption?: string;
   isExisting: boolean; // 既存画像かどうか
   displayOrder: number;
+  isUploading?: boolean;
 }
 
 export interface ThumbnailItem {

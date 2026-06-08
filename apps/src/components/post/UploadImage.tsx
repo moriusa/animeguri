@@ -104,113 +104,133 @@ export const UploadImage = ({
         return;
       }
     }
-    // 💡 1️⃣ HEIC/HEIFからJPEGに「変換する前」にメタ情報を抽出する（先んじて1枚目などで代表抽出）
-    // ループの中で最初に位置情報が見つかったものを採用するロジック
-    if (onMetadataExtracted) {
-      let foundMetadata: {
-        lat: number;
-        lng: number;
-        dateTime?: string;
-      } | null = null;
-      let hasError = false;
-      let errorMsg = "";
-
-      for (const file of newFiles) {
-        try {
-          const metadata = await getPhotoMetadata(file);
-
-          // メタデータがない、またはGPS情報がない場合は次の画像へ（ここではアラートを出さない）
-          if (!metadata || !metadata.GPSLatitude || !metadata.GPSLongitude) {
-            continue;
-          }
-
-          const lat = convertGPSToDecimal(
-            metadata.GPSLatitude,
-            metadata.GPSLatitudeRef,
-          );
-          const lng = convertGPSToDecimal(
-            metadata.GPSLongitude,
-            metadata.GPSLongitudeRef,
-          );
-          const dateTime = metadata.DateTimeOriginal || metadata.DateTime;
-
-          if (lat && lng) {
-            // 💡 見つかったらオブジェクトに保持してループを即抜ける
-            foundMetadata = { lat, lng, dateTime };
-            break;
-          }
-        } catch (err) {
-          // エラーが発生した事実だけを記録して処理は続ける
-          hasError = true;
-          errorMsg = String(err);
-        }
-      }
-
-      // 【ループ終了後】最終的な結果をもとに1回だけアクションを起こす
-      if (foundMetadata) {
-        // 1. 位置情報が見つかった場合（これが最優先）
-        onMetadataExtracted(foundMetadata);
-      } else if (hasError) {
-        // 2. 位置情報はなかったが、解析エラーが発生していた場合
-        await confirm({
-          type: "alert",
-          title: "Exif解析エラー",
-          description: errorMsg,
-          confirmText: "閉じる",
-          confirmVariant: "default",
-        });
-      } else {
-        // 3. エラーはないが、アップロードされたどの画像にも位置情報がなかった場合
-        await confirm({
-          type: "alert",
-          title: "住所自動入力スキップ",
-          description:
-            "選択された画像に位置情報（GPS）が含まれていないため、手動入力モードになります。",
-          confirmText: "了解",
-          confirmVariant: "default",
-        });
-      }
-    }
-
-    // 2️⃣ HEICのJPEG変換およびプレビューURL作成処理
-    const processedImageItems: ImageItem[] = await Promise.all(
-      newFiles.map(async (file, i) => {
-        let finalFile = file;
-        const isHeic =
-          file.type.includes("heic") ||
-          file.type.includes("heif") ||
-          file.name.toLowerCase().endsWith(".heic") ||
-          file.name.toLowerCase().endsWith(".heif");
-
-        if (isHeic) {
-          try {
-            const convertedBlob = await heicTo({
-              blob: file,
-              type: "image/jpeg",
-              quality: 0.8,
-            });
-            const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
-            finalFile = new File([convertedBlob], newFileName, {
-              type: "image/jpeg",
-              lastModified: file.lastModified,
-            });
-          } catch (error) {
-            console.error("プレビュー生成用のHEIC変換に失敗しました:", error);
-          }
-        }
-
-        return {
-          file: finalFile,
-          url: URL.createObjectURL(finalFile),
-          isExisting: false,
-          displayOrder: images.length + i,
-        };
-      }),
-    );
-
-    const updatedImages = [...images, ...processedImageItems];
-    onChange(reportIdx, updatedImages);
+    // loading
+    const initialLoadingItems: ImageItem[] = newFiles.map((file, i) => ({
+      id: `temp-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 9)}`, // 重複しない一時ID
+      url: "",
+      isExisting: false,
+      displayOrder: images.length + i,
+      isUploading: true,
+    }));
+    let currentImages = [...images, ...initialLoadingItems];
+    onChange(reportIdx, currentImages);
     e.target.value = "";
+
+    newFiles.forEach(async (file, i) => {
+      const targetTempId = initialLoadingItems[i].id;
+      let previewUrl = "";
+
+      // 1. メタデータ抽出
+      if (onMetadataExtracted) {
+        const processExif = async () => {
+          let foundMetadata: {
+            lat: number;
+            lng: number;
+            dateTime?: string;
+          } | null = null;
+          let hasError = false;
+          let errorMsg = "";
+
+          for (const file of newFiles) {
+            try {
+              const metadata = await getPhotoMetadata(file);
+
+              // メタデータがない、またはGPS情報がない場合は次の画像へ（ここではアラートを出さない）
+              if (
+                !metadata ||
+                !metadata.GPSLatitude ||
+                !metadata.GPSLongitude
+              ) {
+                continue;
+              }
+
+              const lat = convertGPSToDecimal(
+                metadata.GPSLatitude,
+                metadata.GPSLatitudeRef,
+              );
+              const lng = convertGPSToDecimal(
+                metadata.GPSLongitude,
+                metadata.GPSLongitudeRef,
+              );
+              const dateTime = metadata.DateTimeOriginal || metadata.DateTime;
+
+              if (lat && lng) {
+                // 💡 見つかったらオブジェクトに保持してループを即抜ける
+                foundMetadata = { lat, lng, dateTime };
+                break;
+              }
+            } catch (err) {
+              // エラーが発生した事実だけを記録して処理は続ける
+              hasError = true;
+              errorMsg = String(err);
+            }
+          }
+          // 【ループ終了後】最終的な結果をもとに1回だけアクションを起こす
+          if (foundMetadata) {
+            // 1. 位置情報が見つかった場合（これが最優先）
+            onMetadataExtracted(foundMetadata);
+          } else if (hasError) {
+            // 2. 位置情報はなかったが、解析エラーが発生していた場合
+            await confirm({
+              type: "alert",
+              title: "Exif解析エラー",
+              description: errorMsg,
+              confirmText: "閉じる",
+              confirmVariant: "default",
+            });
+          } else {
+            // 3. エラーはないが、アップロードされたどの画像にも位置情報がなかった場合
+            await confirm({
+              type: "alert",
+              title: "住所自動入力スキップ",
+              description:
+                "選択された画像に位置情報（GPS）が含まれていないため、手動入力モードになります。",
+              confirmText: "了解",
+              confirmVariant: "default",
+            });
+          }
+        };
+        // ここで関数を呼び出しますが、await はつけません！（画像のローディングを止めないため）
+        processExif();
+      }
+
+      // 2. HEICのJPEG変換およびプレビューURL作成処理
+      const isHeic =
+        file.name.toLowerCase().endsWith(".heic") ||
+        file.name.toLowerCase().endsWith(".heif");
+      if (isHeic) {
+        try {
+          const convertedBlob = await heicTo({
+            blob: file,
+            type: "image/jpeg",
+            quality: 0.1,
+          });
+          const targetBlob = Array.isArray(convertedBlob)
+            ? convertedBlob[0]
+            : convertedBlob;
+          previewUrl = URL.createObjectURL(targetBlob);
+        } catch (error) {
+          console.error("プレビュー生成用のHEIC変換に失敗しました:", error);
+        }
+      } else {
+        previewUrl = URL.createObjectURL(file);
+      }
+
+      currentImages = currentImages.map((item, idx) => {
+        if (item.id === targetTempId) {
+          return {
+            file: file, // 生のHEIC（またはJPG）を保持
+            url: previewUrl,
+            isExisting: false,
+            displayOrder: idx,
+            isUploading: false, // 💡 ローディング終了！
+          };
+        }
+        return item;
+      });
+      // 1枚終わるたびに親に通知（画面がパラパラと順番に実画像に切り替わっていく）
+      onChange(reportIdx, [...currentImages]);
+    });
   };
 
   const handleRemoveImage = (removeIndex: number) => {
@@ -259,52 +279,63 @@ export const UploadImage = ({
         <div className="mt-3 grid grid-cols-2 gap-4">
           {images.map((imageItem, imageIdx) => (
             <div key={imageItem.id || imageIdx} className="relative">
-              <Image
-                src={imageItem.url}
-                alt={`プレビュー ${imageIdx + 1}`}
-                width={500}
-                height={500}
-                className="w-full mx-auto object-cover rounded-lg border aspect-video"
-              />
+              {imageItem.isUploading ? (
+                // スケルトン（ローディング中）の表示
+                <div className="w-full aspect-video rounded-lg border bg-gray-200 animate-pulse flex flex-col items-center justify-center text-gray-400">
+                  <div className="w-6 h-6 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                  <span className="text-xs">画像を処理中...</span>
+                </div>
+              ) : (
+                <>
+                  <Image
+                    src={imageItem.url}
+                    alt={`プレビュー ${imageIdx + 1}`}
+                    width={500}
+                    height={500}
+                    className="w-full mx-auto object-cover rounded-lg border aspect-video"
+                  />
 
-              {/* 既存画像の場合はバッジを表示 */}
-              {imageItem.isExisting && (
-                <span className="absolute left-2 top-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                  既存
-                </span>
+                  {/* 既存画像の場合はバッジを表示 */}
+                  {imageItem.isExisting && (
+                    <span className="absolute left-2 top-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                      既存
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(imageIdx)}
+                    className="cursor-pointer p-2 rounded-full bg-black/50 absolute right-3 top-3"
+                  >
+                    <HiOutlineXMark size={25} color="white" />
+                  </button>
+                  <div className="mt-2">
+                    <Input
+                      id={`reports.${reportIdx}.captions.${imageIdx}`}
+                      text={``}
+                      name={`reports.${reportIdx}.images.${imageIdx}.caption`}
+                      register={register}
+                      placeholder="キャプションを入力（例：駐車場から見た景色）"
+                      defaultValue={imageItem.caption}
+                      error={
+                        errors?.reports?.[reportIdx]?.images?.[imageIdx]
+                          ?.caption?.message
+                      }
+                      validation={{
+                        maxLength: {
+                          value: 100,
+                          message:
+                            "キャプションは100文字以内で入力してください",
+                        },
+                      }}
+                    />
+                  </div>
+                  {/* ✅ 文字数カウント */}
+                  <p className="text-xs text-gray-500 mt-1">
+                    {VALIDATION.MAX_CAPTION_LENGTH} 文字まで
+                  </p>
+                </>
               )}
-
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(imageIdx)}
-                className="cursor-pointer p-2 rounded-full bg-black/50 absolute right-3 top-3"
-              >
-                <HiOutlineXMark size={25} color="white" />
-              </button>
-              <div className="mt-2">
-                <Input
-                  id={`reports.${reportIdx}.captions.${imageIdx}`}
-                  text={``}
-                  name={`reports.${reportIdx}.images.${imageIdx}.caption`}
-                  register={register}
-                  placeholder="キャプションを入力（例：駐車場から見た景色）"
-                  defaultValue={imageItem.caption}
-                  error={
-                    errors?.reports?.[reportIdx]?.images?.[imageIdx]?.caption
-                      ?.message
-                  }
-                  validation={{
-                    maxLength: {
-                      value: 100,
-                      message: "キャプションは100文字以内で入力してください",
-                    },
-                  }}
-                />
-              </div>
-              {/* ✅ 文字数カウント */}
-              <p className="text-xs text-gray-500 mt-1">
-                {VALIDATION.MAX_CAPTION_LENGTH} 文字まで
-              </p>
             </div>
           ))}
         </div>
