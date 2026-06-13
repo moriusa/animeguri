@@ -32,6 +32,7 @@ export const Thumbnail = ({ control, errors }: Props) => {
               isExisting: false,
             };
             field.onChange(thumbnailItem); // React Hook Form に値を渡す
+            console.log(thumbnailItem.file!.size! / (1024 * 1024), 'MB')
           }}
           onImageRemove={() => {
             field.onChange(null); // React Hook Form の値をクリア

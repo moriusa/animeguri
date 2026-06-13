@@ -24,7 +24,7 @@ export const CropImageModal = ({
     const cropper = cropperRef.current?.cropper;
     if (cropper) {
       const croppedCanvas = cropper.getCroppedCanvas(); // 切り取られた結果をキャンバスとして取得
-      const croppedDataUrl = croppedCanvas.toDataURL("image/png"); // Base64形式として取得
+      const croppedDataUrl = croppedCanvas.toDataURL("image/jpeg"); // Base64形式として取得
       onCrop(croppedDataUrl); // トリミング結果を親に渡す
       onClose(); // モーダルを閉じる
     }

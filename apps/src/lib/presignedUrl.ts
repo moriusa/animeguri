@@ -1,6 +1,5 @@
 import { PresignedUrlResponse } from "@/types/api/presignedUrl";
 import { getValidIdToken } from "./common/authFetch";
-import { heicTo } from "heic-to";
 
 export interface FileWithMeta {
   file: File;
