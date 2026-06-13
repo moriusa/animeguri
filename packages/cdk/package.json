@@ -14,7 +14,8 @@
     "deploy:prod:api": "cross-env APP_ENV=prod npx cdk deploy ApiStack*",
     "deploy:prod:infra": "cross-env APP_ENV=prod npx cdk deploy InfraStack*",
     "destroy:dev": "cross-env APP_ENV=dev npx cdk destroy --all",
-    "destroy:prod": "cross-env APP_ENV=prod npx cdk destroy --all"
+    "destroy:prod": "cross-env APP_ENV=prod npx cdk destroy --all",
+    "deploy:dev": "cross-env APP_ENV=dev npx cdk deploy AnimeguriStack*"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
@@ -40,6 +41,7 @@
     "aws-cdk-lib": "^2.257.0",
     "aws-lambda": "^1.0.6",
     "constructs": "^10.6.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "sharp": "^0.35.1"
   }
 }

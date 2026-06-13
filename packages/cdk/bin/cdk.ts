@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import { ApiStack } from "../lib/api-stack";
-import { InfraStack } from "../lib/infra-stack";
 import * as dotenv from "dotenv";
 import * as path from "path";
+import { AnimeguriStack } from "../lib/animeguri-stack";
 
 // .envファイルを読み込み
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -16,17 +15,6 @@ const awsEnv = {
 
 const envName = process.env.APP_ENV || "dev";
 
-const infra = new InfraStack(app, `InfraStack-${envName}`, {
-  env: awsEnv,
+new AnimeguriStack(app, `AnimeguriStack-${envName}`, {
   envName: envName,
-});
-
-new ApiStack(app, `ApiStack-${envName}`, {
-  env: awsEnv,
-  envName: envName,
-  userPool: infra.userPool,
-  userPoolClient: infra.userPoolClient,
-  imagesBucket: infra.imagesBucket,
-  cloudFrontDistribution: infra.imagesDistribution,
-  placeIndex: infra.placeIndex,
 });

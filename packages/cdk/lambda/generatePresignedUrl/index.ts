@@ -79,14 +79,17 @@ export const handler = async (
         // =============================
         const imageId = randomUUID();
         const extension = file.contentType.split("/")[1];
-        const timestamp = new Date().toISOString().split("T")[0];
 
-        const s3Key =
+        const baseKey =
           file.imageType === "thumbnail"
             ? `${sub}/articles/${file.articleId}/thumbnail/${imageId}.${extension}`
             : file.imageType === "report"
               ? `${sub}/articles/${file.articleId}/reports/${file.reportId}/${imageId}.${extension}`
-              : `${sub}/profile/${imageId}.${extension}`; // profile
+              : `${sub}/profile/${imageId}.${extension}`;
+
+        const s3Key = `originals/${baseKey}`;
+        const deliveryKey = s3Key.replace(/^originals\//, "resized/").replace(/\.[^/.]+$/, ".webp");
+        const publicUrl = `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${deliveryKey}`;
 
         const command = new PutObjectCommand({
           Bucket: BUCKET_NAME,
@@ -111,7 +114,7 @@ export const handler = async (
           presignedUrl: presignedUrl,
           imageId: imageId,
           s3Key: s3Key,
-          publicUrl: `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${s3Key}`,
+          publicUrl: publicUrl,
           expiresAt: new Date(Date.now() + 3600000).toISOString(),
         };
       }),

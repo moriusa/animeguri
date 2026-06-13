@@ -9,6 +9,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
 import { Duration } from "aws-cdk-lib";
 import * as location from "aws-cdk-lib/aws-location";
+import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 
 interface InfraStackProps extends cdk.StackProps {
   envName: string;
@@ -185,6 +186,39 @@ export class InfraStack extends cdk.Stack {
         dataSource: "Here", // 日本の住所精度に強い HERE（または Esri）を選択
         pricingPlan: "RequestBasedUsage", // リクエストベースの料金プラン
       },
+    );
+
+    // trigger
+    const imageCompression = new NodejsFunction(
+      this,
+      `ImageCompression-${envName}`,
+      {
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_22_X,
+        entry: path.join(
+          __dirname,
+          "../lambda/trigger/imageCompression/index.ts",
+        ),
+        functionName: `animeguri-image-compression-${envName}`,
+        timeout: Duration.seconds(30),
+        memorySize: 1024,
+        architecture: lambda.Architecture.ARM_64, // コスト効率と速度重視
+        bundling: {
+          minify: true, // コードを軽量化する
+          sourceMap: true, // エラー時に元のTSコードの行数をログに出す
+          nodeModules: ["sharp"], // 💡 超重要：sharpは1つに固めず、node_modulesの形のままLambdaへ持っていく
+        },
+      },
+    );
+    // バケットへの読み込み・書き込み・削除権限をLambdaに付与
+    this.imagesBucket.grantReadWrite(imageCompression);
+    this.imagesBucket.grantDelete(imageCompression); // 元画像削除のために必須
+
+    // S3のトリガーを設定 (originals/ 配下のオブジェクト作成時のみ)
+    this.imagesBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(imageCompression),
+      { prefix: "originals/" }, // これで無限ループを完全に防ぐ
     );
   }
 }
