@@ -15,7 +15,7 @@ export type ImageType = "user" | "article";
  */
 export const buildImageUrl = (
   s3Key: string | null | undefined,
-  type: ImageType = "user"
+  type: ImageType = "user",
 ): string | null => {
   if (!s3Key) {
     return type === "user"
@@ -37,4 +37,9 @@ export const getUserImageUrl = (s3Key?: string | null) => {
  */
 export const getArticleImageUrl = (s3Key?: string | null) => {
   return buildImageUrl(s3Key, "article");
+};
+
+export const replaceResizedS3Key = (s3Key: string | null) => {
+  if (!s3Key) return null;
+  return s3Key.replace(/^originals\//, "resized/").replace(/\.[^/.]+$/, ".webp");;
 };

@@ -16,5 +16,6 @@ const awsEnv = {
 const envName = process.env.APP_ENV || "dev";
 
 new AnimeguriStack(app, `AnimeguriStack-${envName}`, {
+  env: awsEnv,
   envName: envName,
 });

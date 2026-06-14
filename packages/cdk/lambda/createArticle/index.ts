@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { supabase } from "../common/supabaseClient";
-import { getArticleImageUrl, getUserImageUrl } from "../common/imageHelper";
+import { getArticleImageUrl, getUserImageUrl, replaceResizedS3Key } from "../common/imageHelper";
 
 interface Report {
   id: string;
@@ -89,7 +89,7 @@ export const handler = async (
         id: body.id,
         user_id: sub,
         title: body.title,
-        thumbnail_s3_key: body.thumbnailS3Key || null,
+        thumbnail_s3_key: replaceResizedS3Key(body.thumbnailS3Key),
         anime_name: body.animeName,
         article_status: body.articleStatus,
         published_at: body.articleStatus === "published" ? now : null,
@@ -156,7 +156,7 @@ export const handler = async (
           const imagesToInsert = reportImages.map((img) => ({
             id: img.id,
             report_id: reports[i].id,
-            s3_key: img.s3Key,
+            s3_key: replaceResizedS3Key(img.s3Key),
             caption: img.caption || null,
             display_order: img.displayOrder,
           }));

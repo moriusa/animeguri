@@ -21,13 +21,13 @@ const CONFIGS: Record<"thumbnail" | "reports" | "profile", ImageTypeConfig> = {
   thumbnail: {
     maxWidth: 1200, // 記事のアイキャッチ用
     maxHeight: 1200,
-    quality: 82,
+    quality: 85,
     fit: "inside",
   },
   reports: {
     maxWidth: 1200, // 聖地巡礼レポートの写真用
     maxHeight: 1200,
-    quality: 82,
+    quality: 85,
     fit: "inside",
   },
   profile: {
