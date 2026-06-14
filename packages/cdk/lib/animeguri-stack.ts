@@ -565,7 +565,7 @@ export class AnimeguriStack extends cdk.Stack {
     createApiRoute(
       {
         id: "ReverseGeocode",
-        lambdaFn: getLikeCheckSingle,
+        lambdaFn: reverseGeocode,
         apiPath: "/geocode/reverse",
         methods: [HttpMethod.GET],
       },

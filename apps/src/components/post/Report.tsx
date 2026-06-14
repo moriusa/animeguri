@@ -117,7 +117,7 @@ export const Report = ({
   const [citiesLoading, setCitiesLoading] = useState(!cachedCitiesMap);
   const [citiesError, setCitiesError] = useState<string | null>(null);
   const [isAutoAddressEnabled, setIsAutoAddressEnabled] =
-    useState<boolean>(true);
+    useState<boolean>(false);
 
   // 初回マウント時にAPIからデータ取得（キャッシュ済みなら即反映）
   useEffect(() => {
