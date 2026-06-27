@@ -4,7 +4,6 @@ import { HiOutlineXMark } from "react-icons/hi2";
 import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { Input } from "../common";
 import { ImageItem, PostFormValues } from "./PostFrom";
-import { heicTo } from "heic-to";
 import EXIF from "exif-js";
 import { useConfirm } from "../common/ConfirmDialog";
 
@@ -194,28 +193,8 @@ export const UploadImage = ({
         processExif();
       }
 
-      // 2. HEICのJPEG変換およびプレビューURL作成処理
-      const isHeic =
-        file.name.toLowerCase().endsWith(".heic") ||
-        file.name.toLowerCase().endsWith(".heif");
-      if (isHeic) {
-        try {
-          const convertedBlob = await heicTo({
-            blob: file,
-            type: "image/jpeg",
-            quality: 0.1,
-          });
-          const targetBlob = Array.isArray(convertedBlob)
-            ? convertedBlob[0]
-            : convertedBlob;
-          previewUrl = URL.createObjectURL(targetBlob);
-        } catch (error) {
-          console.error("プレビュー生成用のHEIC変換に失敗しました:", error);
-        }
-      } else {
-        previewUrl = URL.createObjectURL(file);
-      }
-
+      // 2. プレビューURL作成処理
+      previewUrl = URL.createObjectURL(file);
       currentImages = currentImages.map((item, idx) => {
         if (item.id === targetTempId) {
           return {
@@ -259,14 +238,14 @@ export const UploadImage = ({
               type="file"
               multiple
               className="hidden"
-              accept=".png, .jpg, .jpeg, .heic, .heif"
+              accept=".png, .jpg, .jpeg"
               onChange={handleFileChange}
             />
           </label>
-          {/* ✅ アップロード可能な情報を表示 */}
+          {/* アップロード可能な情報を表示 */}
           <p className="text-sm text-gray-500 mt-2">
             {images.length}/{maxFiles} 枚 | 最大{" "}
-            {VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB | PNG, JPG, JPEG, HEIC
+            {VALIDATION.MAX_FILE_SIZE / 1024 / 1024}MB | PNG, JPG, JPEG
           </p>
         </div>
       )}

@@ -4,7 +4,6 @@ import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { HiOutlineXMark } from "react-icons/hi2";
 import { CropImageModal } from "../common";
 import Image from "next/image";
-import { heicTo } from "heic-to";
 
 interface ImageUploadWithCropProps {
   label: string;
@@ -37,47 +36,12 @@ export const ImageUploadWithCrop = ({
     const originalFile = event.target.files?.[0];
     if (!originalFile) return;
 
-    let targetFile = originalFile;
-
-    // 💡 HEIC / HEIF の判定
-    const isHeicOrHeif =
-      originalFile.type.includes("heic") ||
-      originalFile.type.includes("heif") ||
-      originalFile.name.toLowerCase().endsWith(".heic") ||
-      originalFile.name.toLowerCase().endsWith(".heif");
-
-    if (isHeicOrHeif) {
-      try {
-        console.log(
-          `クロップ前にHEIC/HEIFを検出。JPEGに変換中: ${originalFile.name}`,
-        );
-
-        // JPEGへ変換（Blobが返る）
-        const convertedBlob = await heicTo({
-          blob: originalFile,
-          type: "image/jpeg",
-          quality: 0.8,
-        });
-
-        // 拡張子を .jpg に差し替えた File オブジェクトを作成
-        const newFileName = originalFile.name.replace(/\.[^/.]+$/, "") + ".jpg";
-        targetFile = new File([convertedBlob], newFileName, {
-          type: "image/jpeg",
-          lastModified: originalFile.lastModified,
-        });
-      } catch (error) {
-        console.error("HEICファイルのクロップ前変換に失敗しました:", error);
-        // 失敗した場合はそのまま進みます（FileReader側で弾かれるかエラーになります）
-      }
-    }
-
-    // 💡 完全にJPEG化された targetFile を使ってデータURLを読み込む
     const reader = new FileReader();
     reader.onload = () => {
       setImageSrc(reader.result as string);
       setIsModalShow(true);
     };
-    reader.readAsDataURL(targetFile);
+    reader.readAsDataURL(originalFile);
   };
 
   const handleCrop = (cropped: string) => {
