@@ -9,13 +9,10 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy:dev:api": "cross-env APP_ENV=dev npx cdk deploy ApiStack*",
-    "deploy:dev:infra": "cross-env APP_ENV=dev npx cdk deploy InfraStack*",
-    "deploy:prod:api": "cross-env APP_ENV=prod npx cdk deploy ApiStack*",
-    "deploy:prod:infra": "cross-env APP_ENV=prod npx cdk deploy InfraStack*",
+    "deploy:dev": "cross-env APP_ENV=dev npx cdk deploy AnimeguriStack*",
+    "deploy:prod": "cross-env APP_ENV=prod npx cdk deploy AnimeguriStack*",
     "destroy:dev": "cross-env APP_ENV=dev npx cdk destroy --all",
-    "destroy:prod": "cross-env APP_ENV=prod npx cdk destroy --all",
-    "deploy:dev": "cross-env APP_ENV=dev npx cdk deploy AnimeguriStack*"
+    "destroy:prod": "cross-env APP_ENV=prod npx cdk destroy --all"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.161",
@@ -44,5 +41,8 @@
     "constructs": "^10.6.0",
     "dotenv": "^17.4.2",
     "sharp": "^0.35.1"
+  },
+  "optionalDependencies": {
+    "@img/sharp-linux-arm64": "^0.33.0"
   }
 }

@@ -6,14 +6,6 @@ import { randomUUID } from "crypto";
 const s3Client = new S3Client({});
 const BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
-// 許可する画像タイプ
-const ALLOWED_CONTENT_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-];
-
 // 最大ファイルサイズ（8MB）
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 
@@ -60,10 +52,6 @@ export const handler = async (
         // =============================
         // バリデーション
         // =============================
-        if (!ALLOWED_CONTENT_TYPES.includes(file.contentType)) {
-          throw new Error(`Invalid content type: ${file.contentType}`);
-        }
-
         if (file.fileSize > MAX_FILE_SIZE) {
           throw new Error(
             `File size exceeds limit of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
@@ -78,7 +66,16 @@ export const handler = async (
         // S3キーの生成
         // =============================
         const imageId = randomUUID();
-        const extension = file.contentType.split("/")[1];
+        function getExtension(file: PresignedUrlRequest): string {
+          // file.type があればそこから、無ければファイル名から取得
+          if (file.contentType) {
+            const extFromType = file.contentType.split("/")[1];
+            if (extFromType) return extFromType.toLowerCase();
+          }
+          // file.name から最後のドット以降を取得（万が一ドットがない場合は名前全体が返る）
+          return file.fileName.split(".").pop()?.toLowerCase() ?? "";
+        }
+        const extension = getExtension(file);
 
         const baseKey =
           file.imageType === "thumbnail"
@@ -88,7 +85,9 @@ export const handler = async (
               : `${sub}/profile/${imageId}.${extension}`;
 
         const s3Key = `originals/${baseKey}`;
-        const deliveryKey = s3Key.replace(/^originals\//, "resized/").replace(/\.[^/.]+$/, ".webp");
+        const deliveryKey = s3Key
+          .replace(/^originals\//, "resized/")
+          .replace(/\.[^/.]+$/, ".webp");
         const publicUrl = `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${deliveryKey}`;
 
         const command = new PutObjectCommand({

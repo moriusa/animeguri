@@ -1,6 +1,11 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { supabase } from "../common/supabaseClient";
-import { getArticleImageUrl, getUserImageUrl, replaceResizedS3Key } from "../common/imageHelper";
+import {
+  getArticleImageUrl,
+  getUserImageUrl,
+  imageConvert,
+  replaceResizedS3Key,
+} from "../common/imageHelper";
 
 interface Report {
   id: string;
@@ -150,35 +155,30 @@ export const handler = async (
       reports = insertedReports || [];
 
       // Step 3: 各レポートの画像を作成
-      for (let i = 0; i < body.reports.length; i++) {
-        const reportImages = body.reports[i].images;
-        if (reportImages && reportImages.length > 0) {
-          const imagesToInsert = reportImages.map((img) => ({
-            id: img.id,
-            report_id: reports[i].id,
-            s3_key: replaceResizedS3Key(img.s3Key),
-            caption: img.caption || null,
-            display_order: img.displayOrder,
-          }));
-
-          const { error: imagesError } = await supabase
-            .from("report_images")
-            .insert(imagesToInsert);
-
-          if (imagesError) {
-            console.error("Failed to create images:", imagesError);
-            // ロールバック
-            await supabase.from("articles").delete().eq("id", body.id);
-
-            return {
-              statusCode: 500,
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                message: "Failed to create report images",
-                error: imagesError.message,
-              }),
-            };
-          }
+      for (const report of body.reports) {
+        const reportImages = report.images;
+        const imagesData = reportImages.map((img) => ({
+          id: img.id,
+          report_id: report.id,
+          s3_key: replaceResizedS3Key(img.s3Key),
+          caption: img.caption || null,
+          display_order: img.displayOrder,
+        }));
+        const { error: imagesError } = await supabase
+          .from("report_images")
+          .insert(imagesData);
+        if (imagesError) {
+          console.error("Failed to create images:", imagesError);
+          // ロールバック
+          await supabase.from("articles").delete().eq("id", body.id);
+          return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: "Failed to create report images",
+              error: imagesError.message,
+            }),
+          };
         }
       }
     }
@@ -214,6 +214,18 @@ export const handler = async (
         body: JSON.stringify(article), // 記事だけ返す
       };
     }
+
+    const convertWebpImage = async () => {
+      const promises = [];
+      promises.push(imageConvert(body.thumbnailS3Key));
+      for (const report of body.reports) {
+        for (const image of report.images) {
+          promises.push(imageConvert(image.s3Key));
+        }
+      }
+      await Promise.all(promises);
+    };
+    await convertWebpImage();
 
     const transReportsData = fullArticle.reports.map((report: any) => {
       return {

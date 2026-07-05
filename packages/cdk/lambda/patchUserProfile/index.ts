@@ -1,6 +1,10 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { supabase } from "../common/supabaseClient";
-import { getUserImageUrl, replaceResizedS3Key } from "../common/imageHelper";
+import {
+  getUserImageUrl,
+  imageConvert,
+  replaceResizedS3Key,
+} from "../common/imageHelper";
 
 export interface ProfileFormValues {
   userName: string;
@@ -68,6 +72,13 @@ export const handler = async (
         }),
       };
     }
+
+    const convertWebpImage = async () => {
+      if (body.profileImageS3Key) {
+        await imageConvert(body.profileImageS3Key);
+      }
+    };
+    await convertWebpImage()
 
     // データが存在しない場合
     if (!data) {

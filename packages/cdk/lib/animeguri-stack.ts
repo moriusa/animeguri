@@ -300,6 +300,9 @@ export class AnimeguriStack extends cdk.Stack {
       id: "PatchUserProfile",
       entryPath: "../lambda/patchUserProfile/index.ts",
       functionName: "patch-user-profile",
+      bundling: {
+        nodeModules: ["sharp"],
+      },
     });
     createApiRoute(
       {
@@ -381,6 +384,9 @@ export class AnimeguriStack extends cdk.Stack {
       id: "CreateArticle",
       entryPath: "../lambda/createArticle/index.ts",
       functionName: "create-article",
+      bundling: {
+        nodeModules: ["sharp"],
+      },
     });
     createApiRoute(
       {
@@ -396,6 +402,9 @@ export class AnimeguriStack extends cdk.Stack {
       id: "PatchArticle",
       entryPath: "../lambda/patchArticle/index.ts",
       functionName: "patch-article",
+      bundling: {
+        nodeModules: ["sharp"],
+      },
     });
     createApiRoute(
       {
@@ -579,19 +588,16 @@ export class AnimeguriStack extends cdk.Stack {
       functionName: "create-google-user-profile",
     });
 
-    const imageCompression = createLambdaFn(this, {
-      id: "ImageCompression",
-      entryPath: "../lambda/trigger/imageCompression/index.ts",
-      functionName: "image-compression",
-      timeoutSeconds: 30,
-      memorySize: 1024,
-      architecture: Architecture.X86_64,
-      bundling: {
-        minify: true,
-        sourceMap: true,
-        nodeModules: ["sharp"],
-      },
-    });
+    // const imageCompression = createLambdaFn(this, {
+    //   id: "ImageCompression",
+    //   entryPath: "../lambda/trigger/imageCompression/index.ts",
+    //   functionName: "image-compression",
+    //   timeoutSeconds: 30,
+    //   memorySize: 1024,
+    //   bundling: {
+    //     nodeModules: ["sharp"],
+    //   },
+    // });
 
     // addTrigger
     userPool.addTrigger(
@@ -599,16 +605,16 @@ export class AnimeguriStack extends cdk.Stack {
       createGoogleUserProfile,
     );
 
-    imagesBucket.addEventNotification(
-      s3.EventType.OBJECT_CREATED,
-      new s3n.LambdaDestination(imageCompression),
-      { prefix: "originals/" }, // originals直下で無限ループ防止
-    );
+    // imagesBucket.addEventNotification(
+    //   s3.EventType.OBJECT_CREATED,
+    //   new s3n.LambdaDestination(imageCompression),
+    //   { prefix: "originals/" }, // originals直下で無限ループ防止
+    // );
 
     // IAM権限付与
     // S3
-    imagesBucket.grantReadWrite(imageCompression);
-    imagesBucket.grantDelete(imageCompression);
+    imagesBucket.grantReadWrite(createArticle);
+    imagesBucket.grantDelete(createArticle);
     // S3への署名付きURL生成権限
     imagesBucket.grantPut(generatePresignedUrl);
     // AmazonLocationServiceを検索する権限
