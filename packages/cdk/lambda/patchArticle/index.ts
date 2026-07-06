@@ -1,7 +1,7 @@
 import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { supabase } from "../common/supabaseClient";
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { replaceResizedS3Key } from "../common/imageHelper";
+import { replaceProcessedS3Key } from "../common/imageHelper";
 
 export interface UpdateArticleBody {
   id: string;
@@ -250,7 +250,7 @@ export const handler = async (
           await supabase.from("report_images").insert({
             id: crypto.randomUUID(),
             report_id: reportId,
-            s3_key: replaceResizedS3Key(image.s3Key),
+            s3_key: replaceProcessedS3Key(image.s3Key),
             caption: image.caption,
             display_order: image.displayOrder,
           });

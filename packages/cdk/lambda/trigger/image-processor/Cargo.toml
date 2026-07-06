@@ -19,4 +19,4 @@ serde_json = "1.0"
 
 # 画像処理（WebPを有効化）
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
-urlencoding = "2.1.3"
+webp = "0.3.0"

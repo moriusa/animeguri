@@ -3,7 +3,7 @@ import { supabase } from "../common/supabaseClient";
 import {
   getArticleImageUrl,
   getUserImageUrl,
-  replaceResizedS3Key,
+  replaceProcessedS3Key,
 } from "../common/imageHelper";
 
 interface Report {
@@ -93,7 +93,7 @@ export const handler = async (
         id: body.id,
         user_id: sub,
         title: body.title,
-        thumbnail_s3_key: replaceResizedS3Key(body.thumbnailS3Key),
+        thumbnail_s3_key: replaceProcessedS3Key(body.thumbnailS3Key),
         anime_name: body.animeName,
         article_status: body.articleStatus,
         published_at: body.articleStatus === "published" ? now : null,
@@ -159,7 +159,7 @@ export const handler = async (
         const imagesData = reportImages.map((img) => ({
           id: img.id,
           report_id: report.id,
-          s3_key: replaceResizedS3Key(img.s3Key),
+          s3_key: replaceProcessedS3Key(img.s3Key),
           caption: img.caption || null,
           display_order: img.displayOrder,
         }));

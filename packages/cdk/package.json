@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
+    "build:rust": "cd lambda/trigger/image-processor && cargo lambda build --release --arm64",
     "deploy:dev": "cross-env APP_ENV=dev npx cdk deploy AnimeguriStack*",
     "deploy:prod": "cross-env APP_ENV=prod npx cdk deploy AnimeguriStack*",
     "destroy:dev": "cross-env APP_ENV=dev npx cdk destroy --all",

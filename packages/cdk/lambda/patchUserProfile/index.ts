@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
 import { supabase } from "../common/supabaseClient";
-import { getUserImageUrl, replaceResizedS3Key } from "../common/imageHelper";
+import { getUserImageUrl, replaceProcessedS3Key } from "../common/imageHelper";
 
 export interface ProfileFormValues {
   userName: string;
@@ -35,7 +35,7 @@ export const handler = async (
     const bodyTrans = {
       user_name: body.userName,
       bio: body.bio,
-      profile_image_s3_key: replaceResizedS3Key(body.profileImageS3Key),
+      profile_image_s3_key: replaceProcessedS3Key(body.profileImageS3Key),
       x_url: body.xUrl,
       facebook_url: body.facebookUrl,
       youtube_url: body.youtubeUrl,

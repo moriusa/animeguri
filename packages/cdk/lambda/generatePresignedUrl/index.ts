@@ -86,7 +86,7 @@ export const handler = async (
 
         const s3Key = `originals/${baseKey}`;
         const deliveryKey = s3Key
-          .replace(/^originals\//, "resized/")
+          .replace(/^originals\//, "processed/")
           .replace(/\.[^/.]+$/, ".webp");
         const publicUrl = `https://${BUCKET_NAME}.s3.ap-northeast-1.amazonaws.com/${deliveryKey}`;
 

@@ -606,7 +606,7 @@ export class AnimeguriStack extends cdk.Stack {
         code: lambda.Code.fromAsset(
           path.join(
             __dirname,
-            "../image-processor/target/lambda/image-processor",
+            "../lambda/trigger/image-processor/target/lambda/image-processor",
           ),
         ),
         timeout: cdk.Duration.seconds(30), // 30秒あれば何枚でも処理可能

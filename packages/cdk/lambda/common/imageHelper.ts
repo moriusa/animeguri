@@ -46,10 +46,10 @@ export const getArticleImageUrl = (s3Key?: string | null) => {
   return buildImageUrl(s3Key, "article");
 };
 
-export const replaceResizedS3Key = (s3Key: string | null) => {
+export const replaceProcessedS3Key = (s3Key: string | null) => {
   if (!s3Key) return null;
   return s3Key
-    .replace(/^originals\//, "resized/")
+    .replace(/^originals\//, "processed/")
     .replace(/\.[^/.]+$/, ".webp");
 };
 
