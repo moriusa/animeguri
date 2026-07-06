@@ -40,6 +40,7 @@ export class AnimeguriStack extends cdk.Stack {
       envName === "dev"
         ? process.env.SUPABASE_SERVICE_ROLE_KEY_DEV!
         : process.env.SUPABASE_SERVICE_ROLE_KEY_PROD!;
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 
     // S3Bucket
     const imagesBucket = new s3.Bucket(this, `ImagesBucket-${envName}`, {
@@ -123,7 +124,7 @@ export class AnimeguriStack extends cdk.Stack {
       `GoogleProvider-${envName}`,
       {
         userPool: userPool,
-        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientId: GOOGLE_CLIENT_ID,
         clientSecretValue: cdk.SecretValue.unsafePlainText(
           process.env.GOOGLE_CLIENT_SECRET!,
         ),
@@ -300,9 +301,6 @@ export class AnimeguriStack extends cdk.Stack {
       id: "PatchUserProfile",
       entryPath: "../lambda/patchUserProfile/index.ts",
       functionName: "patch-user-profile",
-      bundling: {
-        nodeModules: ["sharp"],
-      },
     });
     createApiRoute(
       {
@@ -384,9 +382,6 @@ export class AnimeguriStack extends cdk.Stack {
       id: "CreateArticle",
       entryPath: "../lambda/createArticle/index.ts",
       functionName: "create-article",
-      bundling: {
-        nodeModules: ["sharp"],
-      },
     });
     createApiRoute(
       {
@@ -402,9 +397,6 @@ export class AnimeguriStack extends cdk.Stack {
       id: "PatchArticle",
       entryPath: "../lambda/patchArticle/index.ts",
       functionName: "patch-article",
-      bundling: {
-        nodeModules: ["sharp"],
-      },
     });
     createApiRoute(
       {
@@ -588,16 +580,55 @@ export class AnimeguriStack extends cdk.Stack {
       functionName: "create-google-user-profile",
     });
 
-    // const imageCompression = createLambdaFn(this, {
-    //   id: "ImageCompression",
-    //   entryPath: "../lambda/trigger/imageCompression/index.ts",
-    //   functionName: "image-compression",
-    //   timeoutSeconds: 30,
-    //   memorySize: 1024,
-    //   bundling: {
-    //     nodeModules: ["sharp"],
-    //   },
-    // });
+    // =========================================================================
+    // Rust 画像変換 Lambda の配置
+    // =========================================================================
+
+    // 1. Rust Lambda 用の IAM ロール（ログ出力とS3アクセスのため）
+    const rustLambdaRole = new iam.Role(this, `RustLambdaRole-${envName}`, {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaBasicExecutionRole",
+        ),
+      ],
+    });
+
+    // 2. Rust Lambda 本体の定義
+    const imageProcessorLambda = new lambda.Function(
+      this,
+      `ImageProcessor-${envName}`,
+      {
+        runtime: lambda.Runtime.PROVIDED_AL2023, // Rustバイナリ用の軽量OS
+        handler: "bootstrap", // 固定
+        architecture: lambda.Architecture.ARM_64, // コストが安いARM
+        // 先ほど cargo lambda build で生成された ZIP のパスを指定
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            "../image-processor/target/lambda/image-processor",
+          ),
+        ),
+        timeout: cdk.Duration.seconds(30), // 30秒あれば何枚でも処理可能
+        memorySize: 256, // Rustなので256MBで超余裕
+        role: rustLambdaRole,
+        environment: {
+          S3_BUCKET_NAME: imagesBucket.bucketName,
+          SUPABASE_URL: SUPABASE_URL,
+          SUPABASE_SERVICE_ROLE_KEY: SUPABASE_SERVICE_ROLE_KEY,
+        },
+      },
+    );
+
+    // 3. Rust Lambda に S3 バケットの読み書き権限を与える
+    imagesBucket.grantReadWrite(imageProcessorLambda);
+
+    // 4. S3イベントトリガーの結合（既にコメントアウトされていた部分をリプレイス）
+    imagesBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(imageProcessorLambda),
+      { prefix: "originals/" }, // フロントは必ず originals/ フォルダ以下にアップロードする運用
+    );
 
     // addTrigger
     userPool.addTrigger(

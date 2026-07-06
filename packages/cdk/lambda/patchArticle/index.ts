@@ -1,7 +1,7 @@
 import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { supabase } from "../common/supabaseClient";
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda";
-import { imageConvert, replaceResizedS3Key } from "../common/imageHelper";
+import { replaceResizedS3Key } from "../common/imageHelper";
 
 export interface UpdateArticleBody {
   id: string;
@@ -257,33 +257,6 @@ export const handler = async (
         }
       }
     }
-
-    const convertWebpImage = async () => {
-      const promises = [];
-
-      // 1. サムネイルの判定：
-      // 既存のサムネイルと異なる（新しく指定された）場合のみ変換
-      if (
-        body.thumbnailS3Key &&
-        existingArticle.thumbnail_s3_key !== body.thumbnailS3Key
-      ) {
-        promises.push(imageConvert(body.thumbnailS3Key));
-      }
-
-      // 2. レポート画像の判定：
-      // image.id が無いもの（＝今回新しく追加された画像）だけを変換対象にする
-      for (const report of body.reports) {
-        for (const image of report.images) {
-          if (!image.id && image.s3Key) {
-            promises.push(imageConvert(image.s3Key));
-          }
-        }
-      }
-
-      // すべて同時に並列処理！
-      await Promise.all(promises);
-    };
-    convertWebpImage();
 
     // ==========================================
     // Step 5: 更新後のデータを返す

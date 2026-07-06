@@ -1,0 +1,22 @@
+[package]
+name = "image-processor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# AWS Lambda 関連
+lambda_runtime = "0.13"
+aws_lambda_events = { version = "0.15", default-features = false, features = ["s3"] }
+
+# AWS SDK 関連
+aws-config = { version = "1.5", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.42"
+
+# 非同期・便利ツール
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# 画像処理（WebPを有効化）
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+urlencoding = "2.1.3"

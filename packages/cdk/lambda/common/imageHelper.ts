@@ -4,7 +4,6 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import sharp from "sharp";
 
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN!;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
@@ -84,68 +83,4 @@ const CONVERT_IMG_CONFIGS: Record<
     quality: 85,
     fit: "cover",
   },
-};
-
-export const imageConvert = async (s3Key: string) => {
-  const s3 = new S3Client({});
-  let imageType: "thumbnail" | "reports" | "profile" | null = null;
-  if (s3Key.includes("/thumbnail/")) {
-    imageType = "thumbnail";
-  } else if (s3Key.includes("/reports/")) {
-    imageType = "reports";
-  } else if (s3Key.includes("/profile/")) {
-    imageType = "profile";
-  }
-
-  if (!imageType) {
-    console.log(`Unknown image category for key: ${s3Key}. Skipping.`);
-    return;
-  }
-  const currentConfig = CONVERT_IMG_CONFIGS[imageType];
-  try {
-    const getCommand = new GetObjectCommand({ Bucket: S3_BUCKET_NAME, Key: s3Key });
-    const response = await s3.send(getCommand);
-
-    if (!response.Body) {
-      throw new Error("Response body is empty");
-    }
-    const responseByteArray = await response.Body.transformToByteArray();
-    const inputBuffer = Buffer.from(responseByteArray);
-
-    const dstKey = s3Key
-      .replace(/^originals\//, "resized/")
-      .replace(/\.[^/.]+$/, ".webp");
-    // sharpによる画像処理
-    const resizedBuffer = await sharp(inputBuffer)
-      .rotate()
-      .resize({
-        width: currentConfig.maxWidth,
-        height: currentConfig.maxHeight,
-        fit: currentConfig.fit,
-        withoutEnlargement: true,
-      })
-      .webp({ quality: currentConfig.quality })
-      .toBuffer();
-
-    // 最適化した画像をS3に保存
-    const putCommand = new PutObjectCommand({
-      Bucket: S3_BUCKET_NAME,
-      Key: dstKey,
-      Body: resizedBuffer,
-      ContentType: "image/webp",
-    });
-    await s3.send(putCommand);
-    console.log(`Successfully generated ${imageType} image: ${dstKey}`);
-
-    // delete
-    const deleteCommand = new DeleteObjectCommand({
-      Bucket: S3_BUCKET_NAME,
-      Key: s3Key,
-    });
-    await s3.send(deleteCommand);
-    console.log(`Successfully deleted original source file: ${s3Key}`);
-  } catch (error) {
-    console.error(`Error processing ${imageType} image:`, error);
-    throw error;
-  }
 };

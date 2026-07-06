@@ -3,7 +3,6 @@ import { supabase } from "../common/supabaseClient";
 import {
   getArticleImageUrl,
   getUserImageUrl,
-  imageConvert,
   replaceResizedS3Key,
 } from "../common/imageHelper";
 
@@ -214,18 +213,6 @@ export const handler = async (
         body: JSON.stringify(article), // 記事だけ返す
       };
     }
-
-    const convertWebpImage = async () => {
-      const promises = [];
-      promises.push(imageConvert(body.thumbnailS3Key));
-      for (const report of body.reports) {
-        for (const image of report.images) {
-          promises.push(imageConvert(image.s3Key));
-        }
-      }
-      await Promise.all(promises);
-    };
-    await convertWebpImage();
 
     const transReportsData = fullArticle.reports.map((report: any) => {
       return {
