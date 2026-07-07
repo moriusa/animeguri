@@ -4,7 +4,6 @@ import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { HiOutlineXMark } from "react-icons/hi2";
 import { CropImageModal } from "../common";
 import Image from "next/image";
-// ⭕ 実行時エラーを防ぐため、モジュール全体を安全にインポートする形式に統一
 import * as heicToModule from "heic-to";
 
 interface ImageUploadWithCropProps {
