@@ -76,8 +76,10 @@ const createDefaultValues = (): PostFormValues => ({
 export const PostForm = ({ mode, initialData }: PostFormProps) => {
   const confirm = useConfirm();
   const router = useRouter();
-  const { createArticle } = useCreateArticle();
-  const { updateArticle } = useUpdateArticle();
+  const { createArticle, isSubmitting: createIsSubmitting } =
+    useCreateArticle();
+  const { updateArticle, isSubmitting: updateIsSubmitting } =
+    useUpdateArticle();
 
   const {
     register,
@@ -200,8 +202,44 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
     console.log("送信:", status, data);
     if (mode === "create") {
       await createArticle(data, status);
+      if (status === "draft") {
+        await confirm({
+          type: "alert",
+          title: "下書きを保存しました！",
+          description: "下書き記事は「記事管理」から見ることができます。",
+          confirmText: "ホーム画面へ",
+          confirmVariant: "default",
+        });
+      } else if (status === "published") {
+        await confirm({
+          type: "alert",
+          title: "投稿に成功しました!!",
+          description:
+            "自分が投稿した記事は「記事管理」から見ることができます。",
+          confirmText: "ホーム画面へ",
+          confirmVariant: "default",
+        });
+      }
     } else if (mode === "edit") {
       await updateArticle(data.id, data, status);
+      if (status === "draft") {
+        await confirm({
+          type: "alert",
+          title: "下書きを保存しました！",
+          description: "下書き記事は「記事管理」から見ることができます。",
+          confirmText: "ホーム画面へ",
+          confirmVariant: "default",
+        });
+      } else if (status === "published") {
+        await confirm({
+          type: "alert",
+          title: "投稿に成功しました!!",
+          description:
+            "自分が投稿した記事は「記事管理」から見ることができます。",
+          confirmText: "ホーム画面へ",
+          confirmVariant: "default",
+        });
+      }
     }
     reset(createDefaultValues());
     router.push("/");
@@ -289,12 +327,26 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
         {/* フォーム送信ボタン */}
         <div className="flex gap-4 mt-8 sm:w-1/3 ml-auto">
           <Button
-            text="下書き保存"
+            text={
+              createIsSubmitting || updateIsSubmitting
+                ? "処理中..."
+                : "下書き保存"
+            }
             btnColor="white"
             onClick={handleDraftSubmit}
             type="button"
+            disabled={createIsSubmitting || updateIsSubmitting}
           />
-          <Button text="公開する" onClick={handlePublishSubmit} type="button" />
+          <Button
+            text={
+              createIsSubmitting || updateIsSubmitting
+                ? "処理中..."
+                : "公開する"
+            }
+            onClick={handlePublishSubmit}
+            type="button"
+            disabled={createIsSubmitting || updateIsSubmitting}
+          />
         </div>
       </form>
     </div>
