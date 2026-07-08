@@ -16,7 +16,7 @@ export const RakutenItems = async ({ animeName, startIdx, len }: Props) => {
   }
   return (
     <div className="bg-white rounded">
-      <span className=" tracking-wider text-gray-500 p-2 text-xs">
+      <span className="inline-block bg-red-700 text-white p-2 text-xs">
         この記事の関連商品（楽天アフィリエイト）
       </span>
       <div className="grid grid-cols-3 items-center w-full gap-4 px-2 py-5 sm:grid-cols-6">
