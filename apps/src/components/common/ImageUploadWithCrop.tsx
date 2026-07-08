@@ -4,7 +4,6 @@ import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { HiOutlineXMark } from "react-icons/hi2";
 import { CropImageModal } from "../common";
 import Image from "next/image";
-import * as heicToModule from "heic-to";
 
 interface ImageUploadWithCropProps {
   label: string;
@@ -30,7 +29,6 @@ export const ImageUploadWithCrop = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isModalShow, setIsModalShow] = useState<boolean>(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -45,73 +43,25 @@ export const ImageUploadWithCrop = ({
       return;
     }
 
-    let activeFile = originalFile;
-    setIsProcessing(true);
-
-    const isHeic = 
-      originalFile.name.toLowerCase().endsWith(".heic") || 
-      originalFile.name.toLowerCase().endsWith(".heif") ||
-      originalFile.type === "image/heic";
-
-    if (isHeic) {
-      try {
-        // ⭕ 実行時エラー（CJS/ESM互換性）を完全に潰す呼び出し方
-        const heicToFn = (heicToModule as any).heicTo || (heicToModule as any).default || heicToModule;
-        
-        const jpegBlob = await heicToFn({
-          blob: originalFile,
-          type: "image/jpeg",
-          quality: 0.8
-        });
-
-        activeFile = new File(
-          [jpegBlob],
-          originalFile.name.replace(/\.[^.]+$/, ".jpg"),
-          { type: "image/jpeg" }
-        );
-      } catch (err) {
-        console.error("サムネイルのHEIC変換に失敗しました:", err);
-        // 変換にコケた場合は、元のファイルで強行突破を試みる
-        activeFile = originalFile;
-      }
-    }
-
-    // 💡 解決策：重くて不安定な FileReader をやめ、超軽量・確実な ObjectURL に変更
-    try {
-      const blobUrl = URL.createObjectURL(activeFile);
-      setImageSrc(blobUrl); // トリミングモーダルにこのURLを渡す
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageSrc(reader.result as string);
       setIsModalShow(true);
-    } catch (err) {
-      console.error("プレビューURLの生成に失敗しました:", err);
-      alert("画像の読み込みに失敗しました。");
-    } finally {
-      setIsProcessing(false);
-    }
+    };
   };
 
   const handleCrop = (cropped: string) => {
     fetch(cropped)
       .then((res) => res.blob())
       .then((blob) => {
-        const file = new File([blob], "thumbnail.jpg", { type: "image/jpeg" });
+        const file = new File([blob], "image.jpg", { type: "image/jpeg" });
         onImageChange(file, cropped);
-        
-        // ⭕ メモリリーク防止：使い終わった古いBlob URLをブラウザから解放
-        if (imageSrc && imageSrc.startsWith("blob:")) {
-          URL.revokeObjectURL(imageSrc);
-        }
-        
         setIsModalShow(false);
         setImageSrc(null);
-        if (inputRef.current) inputRef.current.value = "";
       });
   };
 
   const closeModal = () => {
-    // ⭕ メモリリーク防止：キャンセル時もURLを解放
-    if (imageSrc && imageSrc.startsWith("blob:")) {
-      URL.revokeObjectURL(imageSrc);
-    }
     setIsModalShow(false);
     setImageSrc(null);
     if (inputRef.current) {
@@ -138,14 +88,13 @@ export const ImageUploadWithCrop = ({
 
       {currentImage ? (
         shape === "circle" ? (
-          <label className={`cursor-pointer flex flex-col items-center gap-3 text-gray-400 hover:text-black transition-colors ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+          <label className="cursor-pointer flex flex-col items-center gap-3 text-gray-400 hover:text-black transition-colors">
             <input
               type="file"
-              accept="image/*, .heic, .heif, .HEIC"
+              accept="image/png, image/jpeg"
               ref={inputRef}
               onChange={handleFileChange}
               className="hidden"
-              disabled={isProcessing}
             />
             <div className="relative group">
               <Image
@@ -168,7 +117,7 @@ export const ImageUploadWithCrop = ({
               alt={label}
               width={150}
               height={150}
-              className={"w-full max-w-md object-cover aspect-video rounded-lg border"}
+              className={"w-full max-w-md"}
             />
             <button
               type="button"
@@ -181,24 +130,18 @@ export const ImageUploadWithCrop = ({
         )
       ) : (
         <label
-          className={`cursor-pointer inline-block bg-black/70 p-3 rounded-full mt-3 ${
-            isProcessing ? "animate-pulse bg-gray-400 pointer-events-none" : ""
-          }`}
+          className={
+            "cursor-pointer inline-block bg-black/70 p-3 rounded-full mt-3"
+          }
         >
-          {isProcessing ? (
-            <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <>
-              <MdOutlineAddPhotoAlternate size={30} color="white" />
-              <input
-                type="file"
-                accept="image/*, .heic, .heif, .HEIC"
-                ref={inputRef}
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </>
-          )}
+          <MdOutlineAddPhotoAlternate size={30} color="white" />
+          <input
+            type="file"
+            accept="image/png, image/jpeg"
+            ref={inputRef}
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </label>
       )}
 
