@@ -6,8 +6,8 @@ import { randomUUID } from "crypto";
 const s3Client = new S3Client({});
 const BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 
-// 最大ファイルサイズ（8MB）
-const MAX_FILE_SIZE = 8 * 1024 * 1024;
+// 最大ファイルサイズ（20MB）
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 interface PresignedUrlRequest {
   fileName: string;

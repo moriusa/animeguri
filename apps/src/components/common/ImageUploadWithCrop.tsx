@@ -36,9 +36,9 @@ export const ImageUploadWithCrop = ({
     const originalFile = event.target.files?.[0];
     if (!originalFile) return;
 
-    const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
     if (originalFile.size > MAX_SIZE) {
-      alert("画像のサイズが大きすぎます。8MB以下の画像を選択してください。");
+      alert("画像のサイズが大きすぎます。20MB以下の画像を選択してください。");
       if (inputRef.current) inputRef.current.value = "";
       return;
     }

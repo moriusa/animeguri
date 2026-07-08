@@ -26,7 +26,7 @@ interface Props {
 
 // バリデーション設定
 const VALIDATION = {
-  MAX_FILE_SIZE: 8 * 1024 * 1024, // 8MB
+  MAX_FILE_SIZE: 20 * 1024 * 1024, // 20MB
   ALLOWED_TYPES: ["image/png", "image/jpeg", "image/jpg"],
   MAX_CAPTION_LENGTH: 100,
 };
