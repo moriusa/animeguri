@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
           ]
         : []),
     ],
+    // 変換処理などを行わない(コスト0に)
+    unoptimized: true,
   },
   experimental: {
     serverActions: {

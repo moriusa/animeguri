@@ -97,6 +97,7 @@ export const useCreateArticle = () => {
     formValues: PostFormValues,
     status: ArticleStatus = "draft",
   ) => {
+    setIsSubmitting(true);
     try {
       // ==========================================
       // Step 0: Geocoding（住所→緯度経度）

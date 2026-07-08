@@ -6,6 +6,7 @@ import { Input } from "../common";
 import { ImageItem, PostFormValues } from "./PostFrom";
 import EXIF from "exif-js";
 import { useConfirm } from "../common/ConfirmDialog";
+import { heicTo } from "heic-to";
 
 export interface ExtractedMetadata {
   lat: number;
@@ -34,7 +35,6 @@ const VALIDATION = {
     "image/heic",
     "image/heif",
   ],
-  ALLOWED_EXTENSIONS: [".png", ".jpg", ".jpeg"],
   MAX_CAPTION_LENGTH: 100,
 };
 
@@ -115,101 +115,102 @@ export const UploadImage = ({
     onChange(reportIdx, currentImages);
     e.target.value = "";
 
-    newFiles.forEach(async (file, i) => {
-      const targetTempId = initialLoadingItems[i].id;
+    let hasExifError = false;
+    let exifErrorMsg = "";
+    let foundMetadata: ExtractedMetadata | null = null;
+
+    let index = 0;
+    for (const originalFile of newFiles) {
+      const targetTempId = initialLoadingItems[index].id;
+      let activeFile = originalFile;
       let previewUrl = "";
 
-      // 1. メタデータ抽出
-      if (onMetadataExtracted) {
-        const processExif = async () => {
-          let foundMetadata: {
-            lat: number;
-            lng: number;
-            dateTime?: string;
-          } | null = null;
-          let hasError = false;
-          let errorMsg = "";
-
-          for (const file of newFiles) {
-            try {
-              const metadata = await getPhotoMetadata(file);
-
-              // メタデータがない、またはGPS情報がない場合は次の画像へ（ここではアラートを出さない）
-              if (
-                !metadata ||
-                !metadata.GPSLatitude ||
-                !metadata.GPSLongitude
-              ) {
-                continue;
-              }
-
-              const lat = convertGPSToDecimal(
-                metadata.GPSLatitude,
-                metadata.GPSLatitudeRef,
-              );
-              const lng = convertGPSToDecimal(
-                metadata.GPSLongitude,
-                metadata.GPSLongitudeRef,
-              );
-              const dateTime = metadata.DateTimeOriginal || metadata.DateTime;
-
-              if (lat && lng) {
-                // 💡 見つかったらオブジェクトに保持してループを即抜ける
-                foundMetadata = { lat, lng, dateTime };
-                break;
-              }
-            } catch (err) {
-              // エラーが発生した事実だけを記録して処理は続ける
-              hasError = true;
-              errorMsg = String(err);
-            }
-          }
-          // 【ループ終了後】最終的な結果をもとに1回だけアクションを起こす
-          if (foundMetadata) {
-            // 1. 位置情報が見つかった場合（これが最優先）
-            onMetadataExtracted(foundMetadata);
-          } else if (hasError) {
-            // 2. 位置情報はなかったが、解析エラーが発生していた場合
-            await confirm({
-              type: "alert",
-              title: "Exif解析エラー",
-              description: errorMsg,
-              confirmText: "閉じる",
-              confirmVariant: "default",
-            });
-          } else {
-            // 3. エラーはないが、アップロードされたどの画像にも位置情報がなかった場合
-            await confirm({
-              type: "alert",
-              title: "住所自動入力スキップ",
-              description:
-                "選択された画像に位置情報（GPS）が含まれていないため、手動入力モードになります。",
-              confirmText: "了解",
-              confirmVariant: "default",
-            });
-          }
-        };
-        // ここで関数を呼び出しますが、await はつけません！（画像のローディングを止めないため）
-        processExif();
+      // A. HEIC形式だった場合は、まずここでJPEGに安全デコード（1枚ずつなので安全）
+      if (
+        originalFile.name.toLowerCase().endsWith(".heic") ||
+        originalFile.type === "image/heic"
+      ) {
+        try {
+          const jpegBlob = await heicTo({
+            blob: originalFile,
+            type: "image/jpeg",
+            quality: 0.8,
+          });
+          activeFile = new File(
+            [jpegBlob],
+            originalFile.name.replace(/\.[^.]+$/, ".jpg"),
+            { type: "image/jpeg" },
+          );
+        } catch (err) {
+          console.error("HEIC conversion failed:", err);
+          // 変換失敗時は生ファイルをフォールバック（またはエラースキップ）
+        }
       }
 
-      // 2. プレビューURL作成処理
-      previewUrl = URL.createObjectURL(file);
+      // B. 1枚ずつ順番にExifを解析（二重ループを撤廃）
+      if (onMetadataExtracted && !foundMetadata) {
+        try {
+          const metadata = await getPhotoMetadata(originalFile); // Exifはオリジナルから抜く
+          if (metadata && metadata.GPSLatitude && metadata.GPSLongitude) {
+            const lat = convertGPSToDecimal(
+              metadata.GPSLatitude,
+              metadata.GPSLatitudeRef,
+            );
+            const lng = convertGPSToDecimal(
+              metadata.GPSLongitude,
+              metadata.GPSLongitudeRef,
+            );
+            const dateTime = metadata.DateTimeOriginal || metadata.DateTime;
+            if (lat && lng) {
+              foundMetadata = { lat, lng, dateTime };
+            }
+          }
+        } catch (err) {
+          hasExifError = true;
+          exifErrorMsg = String(err);
+        }
+      }
+
+      // C. 変換が終わった綺麗なJPEGでプレビューURLを作成
+      previewUrl = URL.createObjectURL(activeFile);
       currentImages = currentImages.map((item, idx) => {
         if (item.id === targetTempId) {
           return {
-            file: file, // 生のHEIC（またはJPG）を保持
+            file: activeFile, // 👈 S3にはここでおねんねした「JEPG化済み」のファイルが渡る！
             url: previewUrl,
             isExisting: false,
             displayOrder: idx,
-            isUploading: false, // 💡 ローディング終了！
+            isUploading: false, // ローディング完了
           };
         }
         return item;
       });
-      // 1枚終わるたびに親に通知（画面がパラパラと順番に実画像に切り替わっていく）
+
+      // 1枚完了するごとに画面にパラパラと反映
       onChange(reportIdx, [...currentImages]);
-    });
+      index++;
+    }
+
+    if (onMetadataExtracted) {
+      if (foundMetadata) {
+        onMetadataExtracted(foundMetadata);
+      } else if (hasExifError) {
+        await confirm({
+          type: "alert",
+          title: "Exif解析エラー",
+          description: exifErrorMsg,
+          confirmText: "閉じる",
+        });
+      } else {
+        await confirm({
+          type: "alert",
+          title: "住所自動入力スキップ",
+          description:
+            "選択された画像に位置情報（GPS）が含まれていないため、手動入力モードになります。",
+          confirmText: "了解",
+        });
+      }
+    }
   };
 
   const handleRemoveImage = (removeIndex: number) => {
@@ -238,7 +239,7 @@ export const UploadImage = ({
               type="file"
               multiple
               className="hidden"
-              accept=".png, .jpg, .jpeg"
+              accept="image/*, .heic, .heif, .HEIC"
               onChange={handleFileChange}
             />
           </label>
