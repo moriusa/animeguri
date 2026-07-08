@@ -10,7 +10,10 @@ interface Props {
 
 export const RakutenItems = async ({ animeName, startIdx, len }: Props) => {
   const ads = await fetchRakutenAds(animeName);
-  const organizedData = ads ? ads.Items.slice(startIdx, startIdx + len) : [];
+  const organizedData = ads?.Items?.slice(startIdx, startIdx + len) || [];
+  if (organizedData.length === 0) {
+    return null;
+  }
   return (
     <div className="bg-white rounded">
       <span className=" tracking-wider text-gray-500 p-2 text-xs">
