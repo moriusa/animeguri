@@ -42,12 +42,21 @@ export const ImageUploadWithCrop = ({
       if (inputRef.current) inputRef.current.value = "";
       return;
     }
+    const isValidType =
+      ["image/jpeg", "image/png", "image/jpg"].includes(originalFile.type) ||
+      /\.(jpg|jpeg|png)$/i.test(originalFile.name);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageSrc(reader.result as string);
-      setIsModalShow(true);
-    };
+    if (!isValidType) {
+      alert(
+        "対応していないファイル形式です。PNGまたはJPG画像を選択してください。",
+      );
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    const blobUrl = URL.createObjectURL(originalFile);
+    setImageSrc(blobUrl);
+    setIsModalShow(true);
   };
 
   const handleCrop = (cropped: string) => {
