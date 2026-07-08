@@ -7,6 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { CiLocationOn } from "react-icons/ci";
 import { MapView } from "../map/MapView";
+import { RakutenItems } from "./RakutenItems";
+import { Suspense } from "react";
 
 export const ArticleContent = async ({
   params,
@@ -41,6 +43,11 @@ export const ArticleContent = async ({
           </p>
         </div>
       </section>
+      <div className="mt-8">
+        <Suspense>
+          <RakutenItems animeName={article.animeName} startIdx={0} len={6} />
+        </Suspense>
+      </div>
       <div className="mt-8">
         <MapView
           initialReports={article.reports}
@@ -132,6 +139,11 @@ export const ArticleContent = async ({
             );
           })}
         </section>
+      </div>
+      <div className="mt-8">
+        <Suspense>
+          <RakutenItems animeName={article.animeName} startIdx={6} len={12} />
+        </Suspense>
       </div>
     </article>
   );

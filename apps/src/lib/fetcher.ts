@@ -16,7 +16,7 @@ export const fetcher = async <T>(
   });
 
   if (!res.ok) {
-    const error = new Error("An error occurred while fetching the data.");
+    const error = new Error(`An error occurred while fetching the data. ${res.status}`);
     throw error;
   }
 
