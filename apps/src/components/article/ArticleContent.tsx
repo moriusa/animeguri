@@ -30,17 +30,19 @@ export const ArticleContent = async ({
             className="object-cover"
             priority
           />
-          <span className="absolute bottom-3 left-3 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded-full backdrop-blur-sm">
-            {article.animeName}
-          </span>
         </div>
         <div className="mt-10 text-center">
           <h1 className="font-bold text-2xl sm:text-3xl leading-snug">
             {article.title}
           </h1>
-          <p className="mt-1 text-sm text-gray-400">
-            {new JapaneseDateTime(article.publishedAt).toJST()}
+          <p className="mt-1 text-sm text-gray-500">
+            {new JapaneseDateTime(article.publishedAt).toJST()} に公開
           </p>
+        </div>
+        <div className="mt-8 flex justify-end">
+          <span className=" px-4 py-2 font-bold text-white bg-secondary border-2 border-gray-800">
+            {article.animeName}
+          </span>
         </div>
       </section>
       <div className="mt-8">
