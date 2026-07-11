@@ -12,7 +12,9 @@ export interface User {
   facebookUrl: string;
   youtubeUrl: string;
   websiteUrl: string;
+  authProvider: "email" | "google";
   createdAt: string;
+  updatedAt: string;
 }
 
 export type UserResponse = ApiResponse<User>;

@@ -24,6 +24,7 @@ export const handler = async (
       facebookUrl: data.facebook_url,
       youtubeUrl: data.youtube_url,
       websiteUrl: data.website_url,
+      authProvider: data.auth_provider,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };

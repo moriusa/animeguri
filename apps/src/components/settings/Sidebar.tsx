@@ -1,25 +1,32 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { IoSettingsSharp } from 'react-icons/io5';
-import { MdAccountCircle } from 'react-icons/md';
+import { useGetUserProfile } from "@/features/user/hooks/useGetUserProfile";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { IoSettingsSharp } from "react-icons/io5";
+import { MdAccountCircle } from "react-icons/md";
 
-const menuItems = [
+const getMenuItems = (authProvider?: string) => [
   {
-    href: '/settings/profile',
-    label: 'プロフィール',
-    icon: <MdAccountCircle size={20}/>,
+    href: "/settings/profile",
+    label: "プロフィール",
+    icon: <MdAccountCircle size={20} />,
+    show: true, // 常に表示
   },
   {
-    href: '/settings/account',
-    label: 'アカウント',
-    icon: <IoSettingsSharp size={20}/>,
+    href: "/settings/account",
+    label: "アカウント",
+    icon: <IoSettingsSharp size={20} />,
+    show: authProvider === "email",
   },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useGetUserProfile();
+  const menuItems = getMenuItems(user?.authProvider).filter(
+    (item) => item.show,
+  );
 
   return (
     <nav className="space-y-2">
@@ -35,14 +42,12 @@ export function Sidebar() {
               font-medium transition-all
               ${
                 isActive
-                  ? 'bg-[#5c3d2e] text-white shadow-lg'
-                  : 'text-[#5c3d2e] hover:bg-[#d4c4b5]'
+                  ? "bg-[#5c3d2e] text-white shadow-lg"
+                  : "text-[#5c3d2e] hover:bg-[#d4c4b5]"
               }
             `}
           >
-            <span className={isActive ? '' : 'opacity-60'}>
-              {item.icon}
-            </span>
+            <span className={isActive ? "" : "opacity-60"}>{item.icon}</span>
             <span>{item.label}</span>
           </Link>
         );
