@@ -28,7 +28,7 @@ export const SelectField = ({
   required?: boolean;
 }) => (
   <div className="flex flex-col gap-1">
-    <label htmlFor={id} className="font-bold text-gray-700">
+    <label htmlFor={id} className="font-bold">
       {label}
       {required && <span className="text-red-500 ml-1">&#42;</span>}
     </label>

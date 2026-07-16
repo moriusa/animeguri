@@ -44,7 +44,7 @@ export default function RootLayout({
       >
         <Providers>
           <Header />
-          <main className="py-8 min-h-screen">{children}</main>
+          <main className="py-8 min-h-screen text-black">{children}</main>
           <Footer />
         </Providers>
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
