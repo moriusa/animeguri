@@ -88,7 +88,7 @@ export function ConfirmDialogProvider({
               </Dialog.Close>
             )}
 
-            <Dialog.Title className="text-lg font-semibold mb-2">
+            <Dialog.Title className="text-lg font-semibold mb-2 text-black">
               {options.title}
             </Dialog.Title>
 
