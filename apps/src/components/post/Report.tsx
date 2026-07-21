@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { SelectField } from "./SelectField";
 import { authFetcher } from "@/lib/fetcher";
 import { useConfirm } from "../common/ConfirmDialog";
+import { MarkdownRenderer } from "../article/MarkdownRederer";
 
 const PREFECTURES = [
   "北海道",
@@ -374,6 +375,7 @@ export const Report = ({
           register={register}
           text="説明"
           placeholder="この聖地はどうだった？"
+          value={reportData.description}
         />
       </div>
 
