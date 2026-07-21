@@ -92,6 +92,9 @@ export const ArticleContent = async ({
           </div>
         </div>
         <hr className="" />
+        <section className="mt-6 bg-white p-3">
+          <MarkdownRenderer content={article.description} />
+        </section>
         {/* レポート一覧 */}
         <section>
           {article.reports.map((report, idx) => {

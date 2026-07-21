@@ -52,7 +52,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </h3>
           ),
           p: ({ children }) => (
-            <div className="mb-4 whitespace-pre-wrap">{children}</div>
+            <div className="whitespace-pre-wrap">{children}</div>
           ),
           hr: () => (
             <hr className="border-t-2 border-dashed border-gray-300 my-8" />

@@ -20,6 +20,7 @@ const Page = () => {
         ? { url: article.thumbnailUrl, isExisting: true }
         : null,
       animeName: article.animeName,
+      description: article.description,
       reports: article.reports.map((report) => ({
         id: report.id,
         title: report.title,

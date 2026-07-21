@@ -64,7 +64,7 @@ const toReqArticle = (
       return {
         id: report.id,
         title: report.title,
-        description: report.description, // フォームに description があればここでマッピング
+        description: report.description,
         prefecture: report.prefecture,
         city: report.city,
         streetAddress: report.streetAddress,
@@ -82,6 +82,7 @@ const toReqArticle = (
     id: form.id,
     title: form.title,
     thumbnailS3Key: thumbnailS3Key,
+    description: form.description,
     animeName: form.animeName,
     articleStatus: articleStatus,
     reports,

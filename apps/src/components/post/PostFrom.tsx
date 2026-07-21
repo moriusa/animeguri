@@ -1,7 +1,7 @@
 "use client";
 import { Button, Input } from "@/components/common";
 import { Thumbnail } from "@/components/post/Thumbnail";
-import { Report } from "@/components/post";
+import { Report, TextArea } from "@/components/post";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -45,6 +45,7 @@ export interface PostFormValues {
   id: string;
   title: string;
   thumbnail: ThumbnailItem | null;
+  description: string;
   animeName: string;
   reports: ReportTypes[];
 }
@@ -58,6 +59,7 @@ const createDefaultValues = (): PostFormValues => ({
   id: crypto.randomUUID(),
   title: "",
   thumbnail: null,
+  description: "",
   animeName: "",
   reports: [
     {
@@ -288,7 +290,15 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
           required={true}
         />
         <InputAnime register={register} setValue={setValue} errors={errors} />
-
+        <div className="mt-8">
+          <TextArea
+            name={"description"}
+            register={register}
+            text="説明"
+            placeholder="この聖地はどうだった？"
+            value={watch("description")}
+          />
+        </div>
         <div className="mt-8">
           <Thumbnail control={control} errors={errors} />
         </div>

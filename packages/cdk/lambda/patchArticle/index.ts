@@ -7,6 +7,7 @@ export interface UpdateArticleBody {
   id: string;
   title: string;
   thumbnailS3Key: string | null;
+  description: string;
   animeName: string;
   articleStatus: "draft" | "published";
   reports: {
@@ -146,6 +147,7 @@ export const handler = async (
       .update({
         title: body.title,
         thumbnail_s3_key: body.thumbnailS3Key,
+        description: body.description,
         anime_name: body.animeName,
         article_status: body.articleStatus,
         updated_at: new Date().toISOString(),

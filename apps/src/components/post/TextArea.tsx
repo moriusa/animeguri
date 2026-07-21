@@ -71,7 +71,7 @@ export const TextArea = <T extends FieldValues>({
         </button>
       </div>
       {isPreview && (
-        <div className="border-2 border-dashed border-gray-400 p-2 overflow-y-auto">
+        <div className="min-h-40 border-2 border-dashed border-gray-400 p-2 overflow-y-auto bg-white">
           <MarkdownRenderer content={value} />
         </div>
       )}
@@ -82,7 +82,7 @@ export const TextArea = <T extends FieldValues>({
           ref={textareaRef}
           placeholder={placeholder}
           onInput={(e) => adjustHeight(e.currentTarget)}
-          className="min-h-40 leading-4.5 bg-white w-full rounded-sm border border-gray-300 px-2 py-1.5 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60 resize-none overflow-hidden"
+          className="min-h-40 leading-relaxed bg-white w-full rounded-sm border border-gray-300 px-2 py-1.5 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60 resize-none overflow-hidden"
         />
       </div>
     </div>
