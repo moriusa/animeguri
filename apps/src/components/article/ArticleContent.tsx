@@ -9,6 +9,7 @@ import { CiLocationOn } from "react-icons/ci";
 import { MapView } from "../map/MapView";
 import { RakutenItems } from "./RakutenItems";
 import { Suspense } from "react";
+import { MarkdownRenderer } from "./MarkdownRederer";
 
 export const ArticleContent = async ({
   params,
@@ -131,9 +132,9 @@ export const ArticleContent = async ({
                     <ReportImage reportImages={report.reportImages} />
                   </div>
                 )}
-                <p className="text-sm text-gray-700 whitespace-pre-line mt-4">
-                  {report.description}
-                </p>
+                <div className="whitespace-pre-line mt-6">
+                  <MarkdownRenderer content={report.description} />
+                </div>
                 {idx < article.reports.length - 1 && (
                   <hr className="my-8 border-gray-200" />
                 )}
