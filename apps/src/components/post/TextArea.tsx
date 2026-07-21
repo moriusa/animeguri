@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useCallback, useState } from "react";
 import { FieldValues, Path, UseFormRegister } from "react-hook-form";
 import { MarkdownRenderer } from "../article/MarkdownRederer";
 
@@ -22,6 +22,28 @@ export const TextArea = <T extends FieldValues>({
   value,
 }: Props<T>) => {
   const [isPreview, setIsPreview] = useState(false);
+  // 高さを調整する共通関数
+  const adjustHeight = (elem: HTMLTextAreaElement | null) => {
+    if (!elem) return;
+    elem.style.height = "auto";
+    elem.style.height = `${elem.scrollHeight}px`;
+  };
+
+  // register の ref と 自前の高さ調整ロジックを合体させる
+  const { ref: registerRef, ...registerProps } = register(name, validation);
+
+  const textareaRef = useCallback(
+    (node: HTMLTextAreaElement | null) => {
+      // 1. react-hook-form 側に ref を渡す
+      registerRef(node);
+
+      // 2. 初期データが入った状態でDOMがバインドされたら、即座に高さを調整する
+      if (node) {
+        adjustHeight(node);
+      }
+    },
+    [registerRef],
+  );
   return (
     <div>
       <div className="flex gap-2 items-center">
@@ -56,15 +78,11 @@ export const TextArea = <T extends FieldValues>({
       <div className={isPreview ? "hidden" : "block"}>
         <textarea
           id={name}
-          {...register(name, validation)}
+          {...registerProps}
+          ref={textareaRef}
           placeholder={placeholder}
-          onInput={(e) => {
-            const textarea = e.target as HTMLTextAreaElement;
-            textarea.style.height = "auto"; // 高さをリセット
-            textarea.style.height = `${textarea.scrollHeight}px`; // 必要な高さを設定
-          }}
+          onInput={(e) => adjustHeight(e.currentTarget)}
           className="min-h-40 leading-4.5 bg-white w-full rounded-sm border border-gray-300 px-2 py-1.5 focus:outline-none transition duration-15 focus:bg-orange-50 focus:ring-2 focus:ring-orange-500/60 resize-none overflow-hidden"
-          // style={{ minHeight: "50px", lineHeight: "1.5" }}
         />
       </div>
     </div>
