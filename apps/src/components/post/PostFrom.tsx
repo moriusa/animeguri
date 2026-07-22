@@ -291,16 +291,16 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
         />
         <InputAnime register={register} setValue={setValue} errors={errors} />
         <div className="mt-8">
+          <Thumbnail control={control} errors={errors} />
+        </div>
+        <div className="mt-8">
           <TextArea
             name={"description"}
             register={register}
-            text="説明"
-            placeholder="この聖地はどうだった？"
+            text="概要"
+            placeholder="この記事の全体的な概要や、巡礼のハイライト"
             value={watch("description")}
           />
-        </div>
-        <div className="mt-8">
-          <Thumbnail control={control} errors={errors} />
         </div>
 
         {/* レポート一覧 */}
