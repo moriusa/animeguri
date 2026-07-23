@@ -45,7 +45,7 @@ export interface PostFormValues {
   id: string;
   title: string;
   thumbnail: ThumbnailItem | null;
-  description: string;
+  overview: string;
   animeName: string;
   reports: ReportTypes[];
 }
@@ -59,7 +59,7 @@ const createDefaultValues = (): PostFormValues => ({
   id: crypto.randomUUID(),
   title: "",
   thumbnail: null,
-  description: "",
+  overview: "",
   animeName: "",
   reports: [
     {
@@ -295,11 +295,11 @@ export const PostForm = ({ mode, initialData }: PostFormProps) => {
         </div>
         <div className="mt-8">
           <TextArea
-            name={"description"}
+            name={"overview"}
             register={register}
             text="概要"
             placeholder="この記事の全体的な概要や、巡礼のハイライト"
-            value={watch("description")}
+            value={watch("overview")}
           />
         </div>
 

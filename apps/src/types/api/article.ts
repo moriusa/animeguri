@@ -34,7 +34,7 @@ export interface Article {
   userId: string;
   title: string;
   animeName: string;
-  description: string;
+  overview: string;
   thumbnailUrl: string;
   likesCount: number;
   commentCount: number;

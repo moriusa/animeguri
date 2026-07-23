@@ -30,7 +30,7 @@ interface CreateArticleBody {
   id: string;
   title: string;
   thumbnailS3Key: string;
-  description: string;
+  overview: string;
   animeName: string;
   articleStatus: "draft" | "published";
   reports: Report[];
@@ -95,7 +95,7 @@ export const handler = async (
         user_id: sub,
         title: body.title,
         thumbnail_s3_key: replaceProcessedS3Key(body.thumbnailS3Key),
-        description: body.description,
+        overview: body.overview,
         anime_name: body.animeName,
         article_status: body.articleStatus,
         published_at: body.articleStatus === "published" ? now : null,
@@ -250,7 +250,7 @@ export const handler = async (
       title: fullArticle.title,
       animeName: fullArticle.anime_name,
       thumbnailUrl: getArticleImageUrl(fullArticle.thumbnail_s3_key),
-      description: fullArticle.description,
+      overview: fullArticle.overview,
       likesCount: fullArticle.likes_count,
       bookmarkCount: fullArticle.bookmark_count,
       commentCount: fullArticle.comment_count,

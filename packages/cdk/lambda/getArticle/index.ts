@@ -81,7 +81,7 @@ export const handler = async (
       title: data.title,
       animeName: data.anime_name,
       thumbnailUrl: getArticleImageUrl(data.thumbnail_s3_key),
-      description: data.description,
+      overview: data.overview,
       likesCount: data.likes_count,
       bookmarkCount: data.bookmark_count,
       commentCount: data.comment_count,

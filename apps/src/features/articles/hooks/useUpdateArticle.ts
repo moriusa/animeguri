@@ -192,7 +192,7 @@ export const useUpdateArticle = () => {
         id: articleId,
         title: formValues.title,
         thumbnailS3Key,
-        description: formValues.description,
+        overview: formValues.overview,
         animeName: formValues.animeName,
         articleStatus: status,
         reports,

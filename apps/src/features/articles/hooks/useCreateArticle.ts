@@ -82,7 +82,7 @@ const toReqArticle = (
     id: form.id,
     title: form.title,
     thumbnailS3Key: thumbnailS3Key,
-    description: form.description,
+    overview: form.overview,
     animeName: form.animeName,
     articleStatus: articleStatus,
     reports,

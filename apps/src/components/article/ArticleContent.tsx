@@ -9,7 +9,7 @@ import { CiLocationOn } from "react-icons/ci";
 import { MapView } from "../map/MapView";
 import { RakutenItems } from "./RakutenItems";
 import { Suspense } from "react";
-import { MarkdownRenderer } from "./MarkdownRederer";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 export const ArticleContent = async ({
   params,
@@ -80,14 +80,14 @@ export const ArticleContent = async ({
       </section>
 
       {/* 4. 記事概要（Official Comment風） */}
-      {article.description && (
+      {article.overview && (
         <section className="mt-10 px-4 sm:px-0">
           <div className="bg-[#fbf9f5] border-2 border-stone-900 p-5 shadow-[4px_4px_0px_rgba(28,25,23,1)] relative">
             <span className="absolute -top-3 left-4 bg-stone-900 text-[#f0c24d] text-[10px] font-black px-2 py-0.5 border border-stone-900 uppercase tracking-widest">
               OVERVIEW
             </span>
             <div className="mt-2">
-              <MarkdownRenderer content={article.description} />
+              <MarkdownRenderer content={article.overview} />
             </div>
           </div>
         </section>

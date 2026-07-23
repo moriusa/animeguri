@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { FieldValues, Path, UseFormRegister } from "react-hook-form";
-import { MarkdownRenderer } from "../article/MarkdownRederer";
+import { MarkdownRenderer } from "../article/MarkdownRenderer";
 
 interface Props<T extends FieldValues> {
   register: UseFormRegister<T>;
